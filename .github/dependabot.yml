@@ -1,0 +1,51 @@
+version: 2
+updates:
+  # Python dependencies in the reference ComfyUI implementation.
+  - package-ecosystem: pip
+    directory: /comfyui-loovie
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+      minor-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]
+
+  # Python dependencies in the framework-agnostic FastAPI example.
+  - package-ecosystem: pip
+    directory: /examples/minimal-server
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+      minor-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]
+
+  # Container base image.
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+
+  # GitHub Actions, pinned by SHA — Dependabot updates the SHAs.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        applies-to: version-updates
+        patterns: ["*"]

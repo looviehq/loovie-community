@@ -1,0 +1,77 @@
+name: Spec change (OpenAPI contract)
+description: Propose a change to the BYO HTTP contract — adding, removing, or modifying behaviour of an endpoint, field, or enum.
+title: "[Spec]: "
+labels: ["spec-change", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Spec changes affect every BYO server implementation and every client that consumes the contract. Please be thorough — this template intentionally has more fields than the feature template.
+
+        Read [the contract](../../openapi/loovie-server.openapi.yaml) and `docs/90-the-contract.md` before filing.
+
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint or schema affected
+      description: Which path, schema, or field?
+      placeholder: "/videos/create — `duration` field; or `ByoVideoMode` enum"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Is this a breaking change?
+      description: A change is breaking if it removes a field, narrows an enum, makes an optional field required, or changes the shape of a response. Additive changes are non-breaking.
+      options:
+        - Non-breaking (additive only)
+        - Breaking (removes, narrows, or reshapes)
+        - Unclear / would like to discuss
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Why does the contract need to change? What can a user or implementer not do today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Show the YAML diff or describe precisely what the new shape is. Include enum values, field types, requiredness.
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other ways to solve the same problem. Why is this one better?
+    validations:
+      required: true
+
+  - type: textarea
+    id: migration
+    attributes:
+      label: Migration story
+      description: How do existing servers and clients move to the new contract? Is there a compatibility window? Does `schemaVersion` need to bump?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I've read the existing contract and confirmed this isn't already supported.
+          required: true
+        - label: I understand spec changes require maintainer approval and may need an `info.version` bump (and possibly a `schemaVersion` bump).
+          required: true
+        - label: If approved, I'm willing to also update the reference implementation to match.
+          required: false

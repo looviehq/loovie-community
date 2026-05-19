@@ -1,0 +1,55 @@
+name: Feature request
+description: Suggest something new in the reference implementation, examples, Docker image, or docs.
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for additions that don't change the OpenAPI contract. For spec changes, use the "Spec change" template — those need extra rigour.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation that this feature would address. "I want to do X but I can't" is a good shape.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Roughly what would the change look like? File paths, new commands, new config keys.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Did you consider other approaches? Why is this one better?
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - comfyui-loovie reference implementation
+        - examples/minimal-server
+        - Docker image / RunPod template
+        - Docs
+        - Repo tooling (CI, releases, etc.)
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: This does not change the OpenAPI contract. (If it does, use the "Spec change" template instead.)
+          required: true
+        - label: I searched the existing issues and didn't find a duplicate.
+          required: true

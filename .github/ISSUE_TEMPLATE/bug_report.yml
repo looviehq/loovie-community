@@ -1,0 +1,118 @@
+name: Bug report
+description: Something is broken in the reference server, the OpenAPI contract, the Docker image, or the docs.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. The more of these fields you fill in, the faster we can help.
+
+        **If this is a configuration or "how do I" question, please use the Discord `#byo-help` channel instead — it's much faster.** Issues left as bare questions are typically closed.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Which component?
+      description: Where does the bug live?
+      options:
+        - comfyui-loovie reference implementation
+        - examples/minimal-server
+        - Docker image
+        - OpenAPI spec
+        - Docs
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hosting
+    attributes:
+      label: Hosting target
+      description: Where is the server running?
+      options:
+        - RunPod (via our template)
+        - RunPod (custom config)
+        - Local CUDA (own machine)
+        - Local CPU / Apple Silicon
+        - Cloudflare Tunnel to a local server
+        - Other cloud
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: server-version
+    attributes:
+      label: Server version
+      description: The release tag or commit SHA of `loovie-community` you're running.
+      placeholder: "v0.1.0-beta or 0a1b2c3"
+    validations:
+      required: true
+
+  - type: input
+    id: comfyui-sha
+    attributes:
+      label: ComfyUI commit SHA
+      description: If running the reference implementation, the ComfyUI commit you have checked out. Otherwise leave blank.
+      placeholder: "9e3f1a..."
+
+  - type: input
+    id: app-version
+    attributes:
+      label: Loovie app version (if applicable)
+      description: Build number visible in Settings → About in the Loovie iOS app.
+
+  - type: input
+    id: failcode
+    attributes:
+      label: failCode
+      description: The `failCode` value from the failure response, if there was one.
+      placeholder: "BYO_OUTPUT_MISSING, EXECUTION_ERROR, BYO_INVALID_RESULT, etc."
+
+  - type: textarea
+    id: capabilities
+    attributes:
+      label: Capabilities response
+      description: Paste the JSON response from `GET /loovie/capabilities` on your server. (`curl http://localhost:8188/loovie/capabilities | jq`)
+      render: json
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: What did you do, exactly? Numbered steps please.
+      placeholder: |
+        1. Deployed the RunPod template
+        2. Saved the URL in the Loovie app
+        3. Picked "Your server (BYO)" and tapped Generate
+        4. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      description: What did you expect to happen? What happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server logs
+      description: Relevant lines from your server log. Trim aggressively — first 50 and last 100 lines around the failure are usually enough.
+      render: shell
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched the existing issues and didn't find a duplicate.
+          required: true
+        - label: I've read the troubleshooting guide (`docs/70-troubleshooting.md`) where relevant.
+          required: false
+        - label: This is reproducible (not a one-off network blip or transient GPU error).
+          required: true
