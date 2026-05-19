@@ -29,6 +29,7 @@ Loovie provides the user interface (the iOS app) that lets you send prompts to *
 We store the same generation metadata and final output media we store for any Loovie generation. The exhaustive list lives at [https://loovie.app/privacy](https://loovie.app/privacy); we summarise it in `docs/15-terms-and-privacy.md` once it ships.
 
 **We do NOT store:**
+
 - Your server URL.
 - Your bearer token.
 - Intermediate frames or any traffic between the Loovie app and your server.

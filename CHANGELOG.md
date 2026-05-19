@@ -5,6 +5,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 ## [Unreleased]
 
 ### Added
+
 - Initial repository scaffold: LICENSE (Apache-2.0), NOTICE, README, CHANGELOG, CONTRIBUTING (DCO), CODE_OF_CONDUCT (Contributor Covenant 2.1), SECURITY, LEGAL.
 - `.github/` issue forms (bug, feature, spec change), PR template, Dependabot configuration.
 - Standard editor and Git configuration (`.editorconfig`, `.nvmrc`, `.gitignore`).

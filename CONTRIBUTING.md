@@ -8,7 +8,7 @@ This is a free public beta. We watch issues and PRs as best we can, but we do no
 
 ## What lives where
 
-```
+```text
 openapi/                 # The HTTP contract any BYO server implements (normative).
 comfyui-loovie/          # Reference ComfyUI implementation (Python).
 examples/minimal-server/ # Framework-agnostic FastAPI reference (Python).
@@ -40,7 +40,7 @@ git commit -s -m "feat(comfyui-loovie): add LoRA stacking support"
 
 This adds `Signed-off-by: Your Real Name <you@example.com>` to the commit message. By signing off, you certify the [DCO 1.1](https://developercertificate.org/) for that contribution:
 
-```
+```text
 Developer Certificate of Origin
 Version 1.1
 
@@ -77,7 +77,7 @@ Pull requests without DCO sign-off on every commit will be blocked by the `dco` 
 
 Subjects follow [Conventional Commits 1.0](https://www.conventionalcommits.org/en/v1.0.0/):
 
-```
+```text
 <type>(<scope>)<!>: <description>
 ```
 
@@ -85,7 +85,7 @@ Where `<type>` is one of `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `bu
 
 Examples:
 
-```
+```text
 feat(openapi): add fl2v video mode to capabilities schema
 fix(comfyui-loovie): handle missing seed in /images/create
 docs(security): clarify localhost auth bypass
