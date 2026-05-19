@@ -1,0 +1,37 @@
+name: link-check
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - '.lycheeignore'
+      - '.github/workflows/lychee.yml'
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  lychee:
+    name: Check links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Restore lychee cache
+        uses: actions/cache@v4.2.0
+        with:
+          path: .lycheecache
+          key: cache-lychee-${{ github.sha }}
+          restore-keys: cache-lychee-
+
+      - name: Run lychee
+        id: lychee
+        uses: lycheeverse/lychee-action@v2.4.1
+        with:
+          args: --cache --max-cache-age 7d --no-progress --exclude-mail './**/*.md'
+          fail: ${{ github.event_name == 'pull_request' }}
+          jobSummary: true

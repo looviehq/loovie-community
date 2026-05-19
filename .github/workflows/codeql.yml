@@ -1,0 +1,47 @@
+name: codeql
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 5 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: 'Analyze (${{ matrix.language }})'
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Python is added in Phase A.4 when the Python sources land.
+          # - language: python
+          #   build-mode: none
+          - language: actions
+            build-mode: none
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Initialise CodeQL
+        uses: github/codeql-action/init@v3.27.5
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-and-quality
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3.27.5
+        with:
+          category: '/language:${{ matrix.language }}'

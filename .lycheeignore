@@ -1,0 +1,20 @@
+# Patterns lychee should skip.
+# - localhost / loopback URLs are expected in docs (example servers).
+^https?://localhost(:\d+)?(/|$)
+^https?://127\.0\.0\.1(:\d+)?(/|$)
+^https?://0\.0\.0\.0(:\d+)?(/|$)
+
+# - placeholder hostnames in examples.
+your-server\.example
+byo\.yourdomain\.com
+example\.com
+
+# - Discord invite is a placeholder until the server is created (Part I item 6).
+discord\.gg/loovie$
+
+# - GHCR image links resolve only once images are published (Phase A.8).
+ghcr\.io/looviehq/loovie-server
+
+# - RunPod template deep-link contains a placeholder TEMPLATE_ID until the
+#   template is published in RunPod's catalog (Part I item 1).
+runpod\.io/console/deploy\?template=<TEMPLATE_ID>
