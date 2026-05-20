@@ -26,7 +26,7 @@ _CACHE_SUBDIR = "loovie_cache"
 def _get_input_dir() -> Path:
     """Resolve ComfyUI's input directory, falling back to `./input`."""
     try:
-        import folder_paths  # type: ignore[import-not-found]
+        import folder_paths
     except ImportError:
         return Path("input")
     return Path(folder_paths.get_input_directory())

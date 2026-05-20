@@ -14,6 +14,7 @@ import logging
 import subprocess
 import urllib.request
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import torch
@@ -28,7 +29,7 @@ _DEFAULT_SAMPLE_RATE = 44100
 
 def _input_dir() -> Path:
     try:
-        import folder_paths  # type: ignore[import-not-found]
+        import folder_paths
     except ImportError:
         return Path("input")
     return Path(folder_paths.get_input_directory())
@@ -69,12 +70,12 @@ def _download(url: str) -> Path:
     return filepath
 
 
-def _decode_frames(path: Path, max_frames: int) -> tuple[np.ndarray, float]:
+def _decode_frames(path: Path, max_frames: int) -> tuple[np.ndarray[Any, Any], float]:
     import imageio.v3 as iio
 
     meta = iio.immeta(str(path), exclude_applied=False)
     fps = float(meta.get("fps") or 24.0)
-    frames: list[np.ndarray] = []
+    frames: list[np.ndarray[Any, Any]] = []
     for i, frame in enumerate(iio.imiter(str(path))):
         if max_frames > 0 and i >= max_frames:
             break

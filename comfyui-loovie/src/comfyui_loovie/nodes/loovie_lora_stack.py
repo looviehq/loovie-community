@@ -13,7 +13,7 @@ _MAX_LORAS = 5
 class LoovieLoraStack:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, object]:
-        inputs: dict[str, dict[str, object]] = {
+        inputs: dict[str, Any] = {
             "required": {
                 "model": ("MODEL",),
                 "clip": ("CLIP",),
@@ -34,9 +34,9 @@ class LoovieLoraStack:
     CATEGORY = "loovie"
 
     def process(self, model: Any, clip: Any, **kwargs: object) -> tuple[Any, Any]:
-        import comfy.sd  # type: ignore[import-not-found]
-        import comfy.utils  # type: ignore[import-not-found]
-        import folder_paths  # type: ignore[import-not-found]
+        import comfy.sd
+        import comfy.utils
+        import folder_paths
 
         current_model = model
         current_clip = clip
@@ -45,7 +45,8 @@ class LoovieLoraStack:
             name = raw_name.strip() if isinstance(raw_name, str) else ""
             if not name:
                 continue
-            strength = float(kwargs.get(f"strength_{i}", 0.8) or 0.8)
+            raw_strength = kwargs.get(f"strength_{i}", 0.8)
+            strength = float(raw_strength) if isinstance(raw_strength, (int, float, str)) else 0.8
             path = folder_paths.get_full_path("loras", name)
             if path is None:
                 logger.warning("LoRA not found: %s", name)

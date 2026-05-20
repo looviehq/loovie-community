@@ -17,7 +17,7 @@ logger = logging.getLogger("comfyui_loovie.compat")
 def _patch_ltxav_memory_estimation_for_empty_tokens() -> None:
     """Avoid `ValueError: min() arg is an empty sequence` in LTX-AV TEModel."""
     try:
-        from comfy.text_encoders import lt as _lt  # type: ignore[import-not-found]
+        from comfy.text_encoders import lt as _lt
     except ImportError:
         logger.debug("comfy.text_encoders.lt not importable; skipping LTX-AV shim")
         return
@@ -29,7 +29,7 @@ def _patch_ltxav_memory_estimation_for_empty_tokens() -> None:
         return
 
     original = cls.memory_estimation_function
-    import comfy.model_management  # type: ignore[import-not-found]
+    import comfy.model_management
 
     def patched(self, token_weight_pairs, device=None):  # type: ignore[no-untyped-def]
         constant = 6.0
@@ -57,7 +57,7 @@ def _patch_gemma3_text_config_legacy_rope_attrs() -> None:
     attribute is absent.
     """
     try:
-        from transformers.models.gemma3.configuration_gemma3 import (  # type: ignore[import-not-found]
+        from transformers.models.gemma3.configuration_gemma3 import (
             Gemma3TextConfig,
         )
     except ImportError:
@@ -92,7 +92,7 @@ def _patch_gemma3_text_config_legacy_rope_attrs() -> None:
         _rope_local_base_freq_get, _rope_local_base_freq_set
     )
     Gemma3TextConfig.rope_scaling = property(_rope_scaling_get, _rope_scaling_set)
-    Gemma3TextConfig._loovie_rope_patched = True  # type: ignore[attr-defined]
+    Gemma3TextConfig._loovie_rope_patched = True
     logger.info("Patched Gemma3TextConfig with legacy rope_local_base_freq / rope_scaling")
 
 
