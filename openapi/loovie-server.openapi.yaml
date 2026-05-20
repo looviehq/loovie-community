@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Loovie BYO Server Contract
-  version: 0.2.0-beta.1
+  version: 0.2.1-beta.1
   summary: >-
     The HTTP contract a third-party server implements to be drivable by the
     Loovie mobile app.
@@ -341,51 +341,116 @@ components:
         - failed
     FailCode:
       type: string
-      description: |
-        Machine-readable failure code, present only on `state: failed`. The Loovie
-        app maps a known set of these to localised user-facing copy (e.g. content
-        moderation refusals show a friendly "try a different prompt" sheet rather
+      description: >
+        Machine-readable failure code, present only on `state: failed`. The
+        Loovie
+
+        app maps a known set of these to localised user-facing copy (e.g.
+        content
+
+        moderation refusals show a friendly "try a different prompt" sheet
+        rather
+
         than a generic server error). Servers SHOULD emit the most specific code
+
         that applies; any unknown value is treated as a generic BYO failure.
+
 
         ### Workflow + execution failures
 
-        - `WORKFLOW_NOT_FOUND`: the requested workflow id is not configured on this server.
-        - `SUBMISSION_ERROR`: server failed to enqueue the job with its inference backend (e.g. ComfyUI returned 4xx/5xx on `/prompt`).
-        - `EXECUTION_ERROR`: a node in the workflow raised an exception during execution. `failMsg` SHOULD include the operator readable traceback summary (missing model, CUDA OOM, etc.).
-        - `OUTPUT_MISSING`: workflow ran to completion but produced no output file. Usually a broken workflow JSON, verify the final save node.
-        - `HISTORY_MISSING`: the task disappeared from the backend's history (e.g. ComfyUI restarted mid-run). Safe to retry.
-        - `TIMEOUT`: the server's own internal timeout fired before the job completed. Distinct from the Loovie 30-minute wrapper timeout (which the app surfaces as `BYO_TIMEOUT` and is computed client-side).
+
+        - `WORKFLOW_NOT_FOUND`: the requested workflow id is not configured on
+        this server.
+
+        - `SUBMISSION_ERROR`: server failed to enqueue the job with its
+        inference backend (e.g. ComfyUI returned 4xx/5xx on `/prompt`).
+
+        - `EXECUTION_ERROR`: a node in the workflow raised an exception during
+        execution. `failMsg` SHOULD include the operator readable traceback
+        summary (missing model, CUDA OOM, etc.).
+
+        - `OUTPUT_MISSING`: workflow ran to completion but produced no output
+        file. Usually a broken workflow JSON, verify the final save node.
+
+        - `HISTORY_MISSING`: the task disappeared from the backend's history
+        (e.g. ComfyUI restarted mid-run). Safe to retry.
+
+        - `TIMEOUT`: the server's own internal timeout fired before the job
+        completed. Distinct from the Loovie 30-minute wrapper timeout (which the
+        app surfaces as `BYO_TIMEOUT` and is computed client-side).
+
 
         ### Content moderation
 
-        Emit one of these when a safety check in the workflow (or the model itself) refuses to produce output. The app shows a non-credit-charging "we couldn't generate this" sheet instead of a server-error toast, and offers to revise the prompt.
 
-        - `CONTENT_POLICY_VIOLATION`: generic refusal when the cause isn't classified.
+        Emit one of these when a safety check in the workflow (or the model
+        itself) refuses to produce output. The app shows a non-credit-charging
+        "we couldn't generate this" sheet instead of a server-error toast, and
+        offers to revise the prompt.
+
+
+        - `CONTENT_POLICY_VIOLATION`: generic refusal when the cause isn't
+        classified.
+
         - `CONTENT_POLICY_VIOLATION_NSFW_DETECTED`: adult / sexual content.
-        - `CONTENT_POLICY_VIOLATION_MINOR_DETECTED`: depiction of minors detected. Always preferred when the safety check can distinguish this, because Loovie has zero tolerance and may take additional action on the account.
+
+        - `CONTENT_POLICY_VIOLATION_MINOR_DETECTED`: depiction of minors
+        detected. Always preferred when the safety check can distinguish this,
+        because Loovie has zero tolerance and may take additional action on the
+        account.
+
         - `CONTENT_POLICY_VIOLATION_VIOLENCE_DETECTED`: graphic violence / gore.
-        - `CONTENT_POLICY_VIOLATION_COPYRIGHT_DETECTED`: protected IP / likeness.
-        - `CONTENT_POLICY_VIOLATION_OTHER`: refused, but the safety check doesn't classify it. Prefer the specific codes above when possible.
-        - `CONTENT_MODERATION_ERROR`: the safety check itself errored (e.g. the moderation model didn't load). Distinct from a confirmed refusal.
-        - `NSFW_CONTENT`: alias of `CONTENT_POLICY_VIOLATION_NSFW_DETECTED` for compatibility with older client builds.
+
+        - `CONTENT_POLICY_VIOLATION_COPYRIGHT_DETECTED`: protected IP /
+        likeness.
+
+        - `CONTENT_POLICY_VIOLATION_OTHER`: refused, but the safety check
+        doesn't classify it. Prefer the specific codes above when possible.
+
+        - `CONTENT_MODERATION_ERROR`: the safety check itself errored (e.g. the
+        moderation model didn't load). Distinct from a confirmed refusal.
+
+        - `NSFW_CONTENT`: alias of `CONTENT_POLICY_VIOLATION_NSFW_DETECTED` for
+        compatibility with older client builds.
+
 
         ### Workflow-specific signals
 
-        These let specialised workflows (character swap, motion control) surface domain-specific failures the app can act on. Avoid for workflows that don't match the semantic.
 
-        - `BODY_NOT_DETECTED`: character / face / pose swap workflow couldn't locate a person in the input. App offers to pick a different reference frame.
-        - `INSUFFICIENT_MOTION`: image-to-video workflow detected the input has no animatable subject (e.g. flat landscape, abstract pattern). App offers to pick a different first frame.
+        These let specialised workflows (character swap, motion control) surface
+        domain-specific failures the app can act on. Avoid for workflows that
+        don't match the semantic.
+
+
+        - `BODY_NOT_DETECTED`: character / face / pose swap workflow couldn't
+        locate a person in the input. App offers to pick a different reference
+        frame.
+
+        - `INSUFFICIENT_MOTION`: image-to-video workflow detected the input has
+        no animatable subject (e.g. flat landscape, abstract pattern). App
+        offers to pick a different first frame.
+
 
         ### Catch-all
 
-        - `GENERATION_FAILED`: generic terminal failure when none of the above fit.
+
+        - `GENERATION_FAILED`: generic terminal failure when none of the above
+        fit.
+
 
         ### Notes for server authors
 
-        - Any code outside this set is preserved but treated by the app as a generic BYO failure (toast + retry, no special UI).
-        - The Loovie app namespaces non-prefixed codes as `BYO_<CODE>` at its boundary when surfacing them in telemetry, but the wire value on this endpoint is the bare code.
-        - Reserved prefix: `BYO_*` codes are emitted by the Loovie app / API itself (e.g. `BYO_TIMEOUT`, `BYO_UNAUTHORIZED`, `BYO_CLIENT_OFFLINE`). BYO servers MUST NOT emit codes starting with `BYO_`.
+
+        - Any code outside this set is preserved but treated by the app as a
+        generic BYO failure (toast + retry, no special UI).
+
+        - The Loovie app namespaces non-prefixed codes as `BYO_<CODE>` at its
+        boundary when surfacing them in telemetry, but the wire value on this
+        endpoint is the bare code.
+
+        - Reserved prefix: `BYO_*` codes are emitted by the Loovie app / API
+        itself (e.g. `BYO_TIMEOUT`, `BYO_UNAUTHORIZED`, `BYO_CLIENT_OFFLINE`).
+        BYO servers MUST NOT emit codes starting with `BYO_`.
       enum:
         - WORKFLOW_NOT_FOUND
         - SUBMISSION_ERROR

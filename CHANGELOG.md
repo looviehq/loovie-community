@@ -4,6 +4,19 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 > **Beta API stability.** While we are on the `0.x` line, the BYO HTTP contract (`openapi/loovie-server.openapi.yaml`) may introduce breaking changes between minor versions. Every breaking change is logged below and reflected in a bump of `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). Pin to a specific tag or commit SHA if you depend on the contract; strict semver kicks in at `1.0.0`.
 
+## [0.2.1-beta.1](https://github.com/looviehq/loovie-community/compare/v0.2.0-beta.1...v0.2.1-beta.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* **comfyui-loovie:** mypy --strict clean (28 → 0 errors) ([#8](https://github.com/looviehq/loovie-community/issues/8)) ([1441614](https://github.com/looviehq/loovie-community/commit/144161445f7e1bf7f506b54baf3c9a2544be9a44))
+
+
+### Documentation
+
+* **openapi:** document the full failCode taxonomy ([#3](https://github.com/looviehq/loovie-community/issues/3)) ([0567fc7](https://github.com/looviehq/loovie-community/commit/0567fc7fc984840496f903181365a0736bff0fbd))
+* remove internal backend implementation details ([#5](https://github.com/looviehq/loovie-community/issues/5)) ([75e2658](https://github.com/looviehq/loovie-community/commit/75e26585c343e906ef13c965afda02362e0c591f))
+
 ## [0.2.0-beta.1](https://github.com/looviehq/loovie-community/compare/v0.1.0-beta.1...v0.2.0-beta.1) (2026-05-20)
 
 
