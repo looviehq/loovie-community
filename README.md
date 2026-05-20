@@ -64,7 +64,7 @@ sequenceDiagram
     loop until terminal
       App->>Srv: GET /images/status?taskId=...
     end
-    App->>API: complete callback with R2 storage key
+    App->>API: completion callback
 ```
 
 The Loovie backend **never** calls your server. The mobile app does. Direct device‑to‑server traffic is the only path. See *Privacy* below.

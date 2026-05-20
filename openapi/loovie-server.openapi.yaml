@@ -383,7 +383,7 @@ components:
         ### Notes for server authors
 
         - Any code outside this set is preserved but treated by the app as a generic BYO failure (toast + retry, no special UI).
-        - The Loovie API namespaces non-prefixed codes as `BYO_<CODE>` at its boundary when telemetering them to Sentry, but the wire value on this endpoint is the bare code.
+        - The Loovie app namespaces non-prefixed codes as `BYO_<CODE>` at its boundary when surfacing them in telemetry, but the wire value on this endpoint is the bare code.
         - Reserved prefix: `BYO_*` codes are emitted by the Loovie app / API itself (e.g. `BYO_TIMEOUT`, `BYO_UNAUTHORIZED`, `BYO_CLIENT_OFFLINE`). BYO servers MUST NOT emit codes starting with `BYO_`.
       enum:
         - WORKFLOW_NOT_FOUND

@@ -26,7 +26,7 @@ The same things we store for any Loovie generation, no more:
 |---|---|
 | **Prompt text** (and negative prompt, if any) | So you can see, edit and reuse it in your library. |
 | **Generation parameters** | `mode`, `variant`, `aspect_ratio`, `resolution`, `duration`, `seed`, `withAudio`, IDs of reference images you used. Required to reproduce and to display correctly. |
-| **The final image or video file** | Stored in Cloudflare R2, linked to your account. This is what shows up in your Loovie library. |
+| **The final image or video file** | Stored on Loovie's servers, linked to your account. This is what shows up in your Loovie library. |
 | **Status, timing, error codes** | Operational. Lets us show progress and surface failures cleanly. |
 | **Analytics events** (PostHog) | App usage, BYO outcomes. **No prompts, no media.** Used to improve the app. |
 

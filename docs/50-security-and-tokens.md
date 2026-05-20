@@ -52,25 +52,20 @@ The reason is simple: HTTP is unencrypted, so anyone on the same network with `t
 
 ## What Loovie does on its side
 
-When a BYO generation completes, the device uploads the result to a Cloudflare R2 temp key under your user prefix and POSTs a complete-callback to Loovie's API. Those callbacks are authenticated by:
+When a BYO generation completes, the device uploads the result to Loovie and posts a completion callback to the Loovie API. Those callbacks are authenticated, bound to the originating user account, and validated against the job they reference. Anonymous requests are refused; callbacks from one user against another user's job are refused; late or out-of-phase callbacks are dropped.
 
-1. **Supabase JWT** on every `/v1/byo/*` route. Anonymous requests are refused.
-2. **Job ownership** — the row's `userId` must match the JWT user, or 403.
-3. **Storage-key ownership** — the R2 key in the callback must live under your user prefix, or 403.
-4. **Durable Object phase gating** — the DO that watches the job re-validates the JWT, the user ID, and the current job phase before applying the callback. Mismatch or late callback is dropped.
-
-There is **no HMAC or request signing** in beta. The worst a holder of your own JWT could do is post a crafted complete-callback for one of their own jobs — which would still be rejected if the file doesn't pass the magic-byte / decode / size / MIME validation (`BYO_INVALID_RESULT`).
+There is **no HMAC or request signing** in beta. The worst a holder of your own account credentials could do is post a crafted complete-callback for one of their own jobs, which would still be rejected if the file doesn't pass the magic-byte / decode / size / MIME validation (`BYO_INVALID_RESULT`).
 
 ## Result-file validation
 
-Before the device uploads a generation result to R2, it checks:
+Before the device uploads a generation result, it checks:
 
 - **Magic bytes** match the declared MIME (PNG / JPEG / WebP for images, MP4 / WebM for video).
-- **Decode probe** — the image can be thumbnailed; the video has a parseable container.
-- **Size cap** — images ≤ 50 MB, video ≤ 500 MB.
-- **MIME allowlist** — only the formats above.
+- **Decode probe**: the image can be thumbnailed; the video has a parseable container.
+- **Size cap**: images <= 50 MB, video <= 500 MB.
+- **MIME allowlist**: only the formats above.
 
-The Loovie API re-checks the magic bytes + size + MIME on the R2 object at the complete-callback boundary (cheap, no decode). Anything failing is rejected with `BYO_INVALID_RESULT`, the job ends in `Failed`, and the user sees *"Your server returned a file that isn't a valid image / video. Check your workflow output."*
+The Loovie API re-checks the magic bytes + size + MIME on the uploaded object at the completion-callback boundary (cheap, no decode). Anything failing is rejected with `BYO_INVALID_RESULT`, the job ends in `Failed`, and the user sees *"Your server returned a file that isn't a valid image / video. Check your workflow output."*
 
 **We do not run anti-malware scanning on result files during beta.** The beta threat model is "the operator pwns themselves and their own user, not the Loovie cloud." We will graduate to server-side AV scanning as part of the paid BYO Pass tier. Document this as a known limit, not a surprise.
 

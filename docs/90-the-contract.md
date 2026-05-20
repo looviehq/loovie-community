@@ -24,8 +24,8 @@ sequenceDiagram
     App->>Srv: GET /images/status?taskId=...
     Srv-->>App: progress + state
   end
-  App->>API: complete callback with R2 storage key
-  API-->>App: job finalized
+  App->>API: completion callback
+  API-->>App: job finalised
 ```
 
 The Loovie backend **never** calls your server. The mobile app does. Direct device-to-server traffic is the only path. Your server URL and bearer token live in the app on the user's device only; they are not accessible to Loovie staff or sent to Loovie's backend.
@@ -194,13 +194,13 @@ Custom servers may emit additional codes; the Loovie app prefixes any non-`BYO_*
 
 ## Result media size and type
 
-The Loovie app validates the result file before uploading to its own R2:
+The Loovie app validates the result file before uploading it to Loovie:
 
 - **Magic bytes** must match the declared MIME (PNG / JPEG / WebP for images, MP4 / WebM for video).
 - **Decode probe** must succeed.
-- **Size cap**: ≤ 50 MB images, ≤ 500 MB videos.
+- **Size cap**: <= 50 MB images, <= 500 MB videos.
 
-Anything failing is rejected with `BYO_INVALID_RESULT` on the device side and never reaches Loovie's R2. Make sure your workflow's save node emits a real, decodable file in one of these formats.
+Anything failing is rejected with `BYO_INVALID_RESULT` on the device side and never reaches Loovie. Make sure your workflow's save node emits a real, decodable file in one of these formats.
 
 ## A worked curl example
 

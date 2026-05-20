@@ -64,7 +64,7 @@ Your server failed the generation. This is on your server, not Loovie. The most 
 
 ### Timed out after 10 minutes
 
-Same as `BYO_TIMEOUT` above. The Loovie Durable Object that watches the job times out after 10 minutes of no terminal state.
+Same as `BYO_TIMEOUT` above. The Loovie API times out after 10 minutes of no terminal state.
 
 - For LTX-2.3 pro on a 24 GB GPU you may genuinely run out of time on first cold start. Switch to `fast` variant, or use a 48 GB GPU, or pre-warm.
 

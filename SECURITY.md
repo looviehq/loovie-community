@@ -47,7 +47,7 @@ If you run a BYO server:
 
 ## Threat model (Loovie side)
 
-Your BYO server URL and bearer token are held by the Loovie app on your device — they have to be, because the app is what calls your server. They are **never sent to Loovie's backend servers and are not accessible to Loovie staff**. Callbacks from the device to Loovie's API are authenticated by Supabase JWT, job ownership, storage-key ownership, and Durable Object phase gating; they carry no information about your server URL or token. Result files uploaded to Loovie's R2 bucket are validated by magic bytes, MIME, and size before they are finalized; anything failing is rejected with `BYO_INVALID_RESULT`.
+Your BYO server URL and bearer token are held by the Loovie app on your device, because the app is what calls your server. They are **never sent to Loovie's backend servers and are not accessible to Loovie staff**. Callbacks from the device to Loovie's API are authenticated and bound to the originating user, and they carry no information about your server URL or token. Result files uploaded to Loovie are validated (magic bytes, MIME, size) before they are finalised; anything failing is rejected with `BYO_INVALID_RESULT`.
 
 ## Result-file scanning
 
