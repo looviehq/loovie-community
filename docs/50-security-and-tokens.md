@@ -19,7 +19,11 @@ The same things Loovie stores for any generation: prompt, parameters, the final 
 - **Rotate it** when you change machines, share access, or suspect compromise. Change the env in your server and update the app.
 - **Don't reuse it** across servers. Each server gets its own token.
 
-The server is configured to **fail closed** when `LOOVIE_API_TOKEN` is unset and the bind host is not loopback. Concretely: if you launch the container with `--network host` or bind `0.0.0.0` and forget the token, the entrypoint refuses to start. There is no fallback to "no auth needed."
+### What "fail closed" means
+
+A "fail closed" (also written "fail-closed") system **refuses access by default** when the security check can't be applied. The opposite, "fail open", would let the request through and hope for the best. Loovie's BYO contract requires fail-closed behaviour for auth: if you didn't set a token, the server doesn't run with auth disabled, it refuses to start. If a request arrives without a token, the server doesn't pass it through, it returns `401`. This is the safer default because a misconfiguration becomes loud (the server won't boot) rather than silent (the server is wide open).
+
+Concretely, the reference server is configured to fail closed when `LOOVIE_API_TOKEN` is unset and the bind host is not loopback: if you launch the container with `--network host` or bind `0.0.0.0` and forget the token, the entrypoint refuses to start. There is no fallback to "no auth needed."
 
 ## Transport: HTTPS or HTTP
 

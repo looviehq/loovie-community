@@ -173,7 +173,7 @@ You don't need to implement this if your operator workflow doesn't push files in
 
 ## Auth
 
-Static bearer token of your choosing. Required for remote callers. Localhost (`127.0.0.1` / `::1`) **may** bypass auth, the contract allows it but doesn't require it. **The server MUST fail closed when no token is configured and the caller is non-loopback.** Returning anything other than `401` for an unauthenticated remote request is a protocol violation.
+Static bearer token of your choosing. Required for remote callers. Localhost (`127.0.0.1` / `::1`) **may** bypass auth, the contract allows it but doesn't require it. **The server MUST [fail closed](50-security-and-tokens.md#what-fail-closed-means) when no token is configured and the caller is non-loopback** (in plain English: refuse the request rather than letting it through unauthenticated). Returning anything other than `401` for an unauthenticated remote request is a protocol violation.
 
 `/loovie/health` and `/loovie/capabilities` are always unauthenticated, even when a token is configured.
 

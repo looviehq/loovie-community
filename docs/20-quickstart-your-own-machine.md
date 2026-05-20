@@ -5,7 +5,7 @@ This guide walks through the **ComfyUI reference implementation** ([`comfyui-loo
 ## Prerequisites
 
 - **GPU.** NVIDIA, 24 GB VRAM or more (see [GPU compatibility in `30-runpod.md`](30-runpod.md#gpu-compatibility-tested-at-launch); image works on 4090/5090, video tested only on 5090).
-- **Disk.** ~70 GB for the full model set (`all`), ~24 GB for images only, ~70 GB for videos only.
+- **Disk.** Plan on **at least 100 GB free** for the full reference model set: image models are ~24 GB, video models are ~70 GB (~99 GB downloaded for `LOOVIE_KIND=all`), plus headroom for intermediate decoded outputs, swap files, and ComfyUI's own cache. If you only run `LOOVIE_KIND=images` plan on ~30 GB free, `LOOVIE_KIND=videos` plan on ~80 GB free. See [`MODELS.md`](MODELS.md) for the per-model breakdown.
 - **Python.** 3.10, 3.11, or 3.12.
 - **git.**
 - **A HuggingFace account and read token**: [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md). You will need to accept a gated licence for at least one model. Do this first; the download will fail loudly if you skip it.
@@ -50,12 +50,20 @@ cd ..
 
 ### 3. Download the models
 
-Set your HuggingFace token, then run the downloader from the cloned repo. `LOOVIE_KIND` controls which model set to fetch.
+Set your HuggingFace token, then run the downloader from the cloned repo.
+
+`LOOVIE_KIND` is an environment variable read by `docker/download_models.sh` and the container entrypoint. It selects which model sets to pull from HuggingFace:
+
+- `images`: image-generation models only (FLUX.2 Klein + text encoder + VAE). ~24 GB.
+- `videos`: video-generation models only (LTX-2.3 + Gemma text encoder + upscaler + LoRA). ~70 GB.
+- `all`: both. ~99 GB.
+
+Pick the smallest set you need. The capabilities your server advertises through `/loovie/capabilities` will automatically reflect what you actually have on disk: if you only download images, the video tier won't appear in the Loovie app.
 
 ```sh
 export HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 export LOOVIE_MODELS_ROOT="$PWD/../models"   # whatever path ComfyUI knows as `models/`
-export LOOVIE_KIND=all                       # or `images` or `videos`
+export LOOVIE_KIND=all                       # or `images` or `videos`, see above
 
 bash loovie-community/docker/download_models.sh
 ```

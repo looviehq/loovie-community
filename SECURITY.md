@@ -41,7 +41,7 @@ We will be transparent if we cannot meet these targets. Critical vulnerabilities
 
 If you run a BYO server:
 
-- **Always set `LOOVIE_API_TOKEN`** for any deployment reachable off the loopback. The server is configured to refuse remote requests when no token is set (fail closed).
+- **Always set `LOOVIE_API_TOKEN`** for any deployment reachable off the loopback. The server is configured to refuse remote requests when no token is set ([fail closed](docs/50-security-and-tokens.md#what-fail-closed-means)).
 - The server's attack surface, given a valid token, is: prompts and parameters in, media files out. The `i2i` / `i2v` modes ask the server to fetch URLs you provide; the Loovie app authors those URLs, but operators should not run the server as root, and should not expose port 8188 on shared corporate networks without an authentication layer in front (e.g. Cloudflare Access scoped to `/images/*` and `/videos/*`).
 - Use HTTPS for anything not on loopback or a network you fully control. The Loovie app requires explicit user consent on plain HTTP or untrusted certificates.
 

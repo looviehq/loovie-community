@@ -24,7 +24,8 @@ info:
     A static bearer token chosen by the operator (`LOOVIE_API_TOKEN`).
     Required for all remote callers; localhost (`127.0.0.1`, `::1`) may
     bypass. If no token is configured the server MUST refuse remote
-    requests (fail closed). The endpoints `/loovie/health` and
+    requests (fail closed: deny by default rather than letting requests
+    through unauthenticated). The endpoints `/loovie/health` and
     `/loovie/capabilities` are intentionally unauthenticated so the app
     can probe them.
 
