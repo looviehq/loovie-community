@@ -33,6 +33,10 @@ When `v0.1.0-beta` ships, this README will be replaced with the proper hero, qui
 
 Loovie is model-agnostic. BYO is the logical end of that: if you have the hardware, your generations should be yours, private, and free at the Loovie layer. The contract is published so anyone can implement a compatible server in any stack; ComfyUI is the reference we ship.
 
+## Privacy in one paragraph
+
+Your BYO server URL and bearer token live in the **Loovie app on your device** only — they have to, because the app is what calls your server. They are **never sent to Loovie's backend servers and are not accessible to Loovie staff**. The Loovie backend is not the thing calling your server; the app is. Uninstall the app or tap *Clear saved server* in Preferences and they are gone — there is no copy in our cloud to be deleted. The metadata we *do* store about a generation (prompt, parameters, the final media file) is the same as for any Loovie generation; details in [LEGAL.md](LEGAL.md) and on [`loovie.app/privacy`](https://loovie.app/privacy).
+
 ## Contributing
 
 We use **DCO sign-off** (`git commit -s`), not a CLA. See [CONTRIBUTING.md](CONTRIBUTING.md).

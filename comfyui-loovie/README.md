@@ -66,8 +66,10 @@ weights the shipped workflows require.
   loopback callers. `/loovie/health` and `/loovie/capabilities` are
   intentionally public so the app can probe before authenticating.
 - Run ComfyUI behind your own tunnel (Cloudflare Tunnel, Tailscale, RunPod
-  proxy, etc.). The app and the server share a bearer token chosen by you;
-  neither the token nor the URL is ever sent to Loovie infrastructure.
+  proxy, etc.). The app and the server share a bearer token chosen by you.
+  The Loovie app on the user's device stores the URL and token so it can
+  call your server; **they are never sent to Loovie's backend servers and
+  are not accessible to Loovie staff.**
 - Reference images are downloaded over HTTPS. Private/loopback IPs and
   non-HTTP(S) schemes are refused; downloaded payloads are sniffed for
   PNG/JPEG/WebP magic bytes before being handed to the graph.

@@ -6,7 +6,9 @@ This is a plain-language summary, not a contract. The binding documents live at
 
 ## What Loovie does in BYO
 
-Loovie provides the user interface (the iOS app) that lets you send prompts to **your own server** and view the results. The Loovie API only mediates job metadata and stores the final media you generate, exactly as it does for any other Loovie generation. **Loovie never receives your server URL or your bearer token.**
+Loovie provides the user interface (the iOS app) that lets you send prompts to **your own server** and view the results. The Loovie API only mediates job metadata and stores the final media you generate, exactly as it does for any other Loovie generation.
+
+**Your server URL and bearer token live in the Loovie app on your device only — that is how the app is able to talk to your server.** They are **never sent to Loovie's backend servers and are not accessible to Loovie staff.** If you uninstall the app or tap *Clear saved server* in Preferences, they are gone — there is no copy in our cloud to be deleted.
 
 ## What you are responsible for
 

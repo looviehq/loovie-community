@@ -6,9 +6,11 @@ info:
   description: |
     The HTTP API a "Bring Your Own" server must expose so the Loovie app
     can drive image and single-shot video generation on it. The Loovie
-    API NEVER calls this server; only the Loovie mobile app (on the
+    backend NEVER calls this server; only the Loovie mobile app (on the
     user's device) does. The app stores the server URL and bearer token
-    on-device only and never transmits them to Loovie infrastructure.
+    on the user's device only - they are needed there so the app can
+    reach the server - and they are never sent to Loovie's backend
+    servers or accessible to Loovie staff.
 
     Any HTTP server implementing this contract is valid - language and
     framework are your choice. We ship a ComfyUI reference implementation
