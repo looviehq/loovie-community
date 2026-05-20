@@ -506,6 +506,11 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Envelope' }
+        "422":
+          description: Request body failed schema validation (e.g. wrong field types).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
         "401":
           description: Missing or invalid bearer token.
           content:
@@ -562,6 +567,11 @@ paths:
               schema: { $ref: '#/components/schemas/TaskCreated' }
         "400":
           description: Malformed request.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        "422":
+          description: Request body failed schema validation (e.g. wrong field types).
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Envelope' }
@@ -628,6 +638,16 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/UploadResponse' }
+        "400":
+          description: Malformed input (invalid base64, non-ASCII filename, missing required fields).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        "422":
+          description: Request body failed schema validation (e.g. wrong field types).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
         "401":
           description: Missing or invalid bearer token.
           content:
