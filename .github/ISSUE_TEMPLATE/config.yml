@@ -8,4 +8,4 @@ contact_links:
     about: Report a vulnerability privately. Please do not open a public issue for security problems.
   - name: Loovie app (iOS) support
     url: https://loovie.app/support
-    about: For issues with the mainline Loovie iOS or Android app, this repo only covers the BYO server contract and reference implementations.
+    about: For issues with the Loovie iOS app, this repo only covers the BYO server contract and reference implementations.
