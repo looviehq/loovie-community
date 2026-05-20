@@ -66,7 +66,9 @@ def test_remote_request_without_token_is_refused() -> None:
                 status_code=401,
                 detail={
                     "code": 401,
-                    "msg": "Server has no LOOVIE_API_TOKEN configured; remote requests are refused.",
+                    "msg": (
+                        "Server has no LOOVIE_API_TOKEN configured; remote requests are refused."
+                    ),
                 },
             )
 

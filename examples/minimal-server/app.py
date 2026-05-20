@@ -36,7 +36,7 @@ import time
 import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
@@ -76,10 +76,7 @@ async def require_bearer(request: Request) -> None:
             status_code=401,
             detail={
                 "code": 401,
-                "msg": (
-                    "Server has no LOOVIE_API_TOKEN configured; "
-                    "remote requests are refused."
-                ),
+                "msg": ("Server has no LOOVIE_API_TOKEN configured; remote requests are refused."),
             },
         )
     header = request.headers.get("Authorization", "")
@@ -153,11 +150,9 @@ def _advance(task: _Task) -> None:
         task.state = "success"
         task.progress = 100
         task.result_url = (
-            "data:image/png;base64,"
-            + base64.b64encode(_PNG_1X1_TRANSPARENT).decode("ascii")
+            "data:image/png;base64," + base64.b64encode(_PNG_1X1_TRANSPARENT).decode("ascii")
             if task.kind == "image"
-            else "data:video/mp4;base64,"
-            + base64.b64encode(_MP4_MINIMAL).decode("ascii")
+            else "data:video/mp4;base64," + base64.b64encode(_MP4_MINIMAL).decode("ascii")
         )
 
 
@@ -181,6 +176,19 @@ app = FastAPI(
     ),
     lifespan=_lifespan,
 )
+
+
+# Treat unhandled ValueError (incl. binascii.Error) as a 400. Real
+# generation servers would map their specific upload/encoding errors to
+# named failCodes; this reference keeps it simple. Demonstrates the
+# pattern of returning a structured JSON envelope on bad input rather
+# than letting FastAPI/Starlette emit a generic 500.
+@app.exception_handler(ValueError)
+async def _value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
+    return JSONResponse(
+        status_code=400,
+        content={"code": 400, "msg": f"bad request: {exc}"},
+    )
 
 
 # --- Public probes ----------------------------------------------------
@@ -222,7 +230,7 @@ async def create_image(body: ImageCreateRequest) -> JSONResponse:
 
 
 @app.get("/images/status", tags=["Image"], dependencies=[Depends(require_bearer)])
-async def get_image_status(taskId: str) -> JSONResponse:  # noqa: N803
+async def get_image_status(taskId: str) -> JSONResponse:
     task = TASKS.get(taskId)
     if not task or task.kind != "image":
         return JSONResponse({"code": 404, "msg": "Task not found"}, status_code=404)
@@ -258,7 +266,7 @@ async def create_video(body: VideoCreateRequest) -> JSONResponse:
 
 
 @app.get("/videos/status", tags=["Video"], dependencies=[Depends(require_bearer)])
-async def get_video_status(taskId: str) -> JSONResponse:  # noqa: N803
+async def get_video_status(taskId: str) -> JSONResponse:
     task = TASKS.get(taskId)
     if not task or task.kind != "video":
         return JSONResponse({"code": 404, "msg": "Task not found"}, status_code=404)
@@ -272,9 +280,9 @@ async def get_video_status(taskId: str) -> JSONResponse:  # noqa: N803
 @app.post("/loovie/upload", tags=["Upload"], dependencies=[Depends(require_bearer)])
 async def upload(
     request: Request,
-    file: UploadFile | None = File(None),
-    filename: str | None = Form(None),
-    data_base64: str | None = Form(None),
+    file: Annotated[UploadFile | None, File()] = None,
+    filename: Annotated[str | None, Form()] = None,
+    data_base64: Annotated[str | None, Form()] = None,
 ) -> JSONResponse:
     if file is not None:
         contents = await file.read()
@@ -296,7 +304,10 @@ async def upload(
         except (KeyError, TypeError, json.JSONDecodeError) as exc:
             raise HTTPException(
                 status_code=400,
-                detail={"code": 400, "msg": "expected multipart 'file' or JSON {filename,data_base64}"},
+                detail={
+                    "code": 400,
+                    "msg": "expected multipart 'file' or JSON {filename,data_base64}",
+                },
             ) from exc
 
     size = len(contents)
@@ -305,9 +316,7 @@ async def upload(
     # safely opaque to the caller.
     handle = f"loovie_upload_{secrets.token_hex(6)}_{stored_name}"
     url = f"/view?filename={handle}&type=input"
-    return JSONResponse(
-        {"code": 200, "data": {"filename": handle, "url": url, "sizeBytes": size}}
-    )
+    return JSONResponse({"code": 200, "data": {"filename": handle, "url": url, "sizeBytes": size}})
 
 
 # --- Helpers ----------------------------------------------------------
