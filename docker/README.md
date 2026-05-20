@@ -3,9 +3,9 @@
 This directory builds and ships the reference Docker image you can either run yourself or import as a RunPod template. It implements the [Loovie BYO HTTP contract](../openapi/loovie-server.openapi.yaml) using the [`comfyui-loovie/`](../comfyui-loovie/) reference implementation.
 
 > **RunPod bills you for GPU time. Loovie itself charges nothing for BYO generations.** RunPod pricing is per-minute, so if you forget to stop your pod, you keep paying RunPod. Always stop the pod when you are done.
-
+>
 > **GPU compatibility (tested at launch).** Image models verified on RTX 4090 and 5090. Video models verified **only** on RTX 5090 at launch. Other GPUs may work but are unverified.
-
+>
 > **Beta API stability.** This contract may introduce breaking changes between minor versions of the `0.x` line. See the [CHANGELOG](../CHANGELOG.md) and pin to a specific tag or commit SHA if you depend on it.
 
 ## Two ways to run
@@ -16,9 +16,11 @@ You will need a [HuggingFace account and read token](../docs/25-huggingface-and-
 
 1. **Create a RunPod account** — [https://runpod.io?ref=vg16q1rz](https://runpod.io?ref=vg16q1rz). *(Links in this section use the Loovie RunPod referral. It supports Loovie at no extra cost to you.)*
 2. **Generate a server token locally**:
+
    ```sh
    bash scripts/new-token.sh
    ```
+
    Copy the output.
 3. **Deploy the template.** Import `docker/runpod-template.json` in the RunPod console (Settings → Templates → New). A one-click "Deploy to RunPod" button will appear in the docs once the template is published to RunPod's public catalogue.
 4. **Pick a GPU.** Per the compat note above: 4090 or 5090 for images; 5090 for video.

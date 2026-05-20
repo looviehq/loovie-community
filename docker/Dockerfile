@@ -55,10 +55,11 @@ RUN pip install -r requirements.txt
 
 # Install the ComfyUI-LTXVideo custom-node pack (LTX-2.3 support).
 RUN git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git \
-        /opt/comfyui/custom_nodes/ComfyUI-LTXVideo \
-    && cd /opt/comfyui/custom_nodes/ComfyUI-LTXVideo \
-    && git checkout "${COMFYUI_LTX_REF}" \
+        /opt/comfyui/custom_nodes/ComfyUI-LTXVideo
+WORKDIR /opt/comfyui/custom_nodes/ComfyUI-LTXVideo
+RUN git checkout "${COMFYUI_LTX_REF}" \
     && pip install -r requirements.txt
+WORKDIR /opt/comfyui
 
 # Copy and install the Loovie reference implementation.
 # Build context root is the repo root; we copy comfyui-loovie/ into the
