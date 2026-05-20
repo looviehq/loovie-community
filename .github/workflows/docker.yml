@@ -13,6 +13,7 @@ on:
       - 'docker/**'
       - 'comfyui-loovie/**'
       - 'scripts/new-token.sh'
+    tags: ['v*']
 
   workflow_dispatch:
 
@@ -21,10 +22,9 @@ permissions:
 
 jobs:
   # ------------------------------------------------------------------------
-  # Cheap static checks first. The actual buildx build + cosign signing +
-  # syft SBOM are released in Phase A.8 via a separate release workflow on
-  # `v*` tags; we deliberately do NOT build the CUDA image on every PR
-  # (5 GB+, several minutes).
+  # Cheap static checks first. The build + cosign signing + syft SBOM + Trivy
+  # scan run only on `v*` tag pushes (or workflow_dispatch). We deliberately
+  # do NOT build the CUDA image on every PR (5 GB+, several minutes).
   # ------------------------------------------------------------------------
 
   hadolint:
@@ -32,14 +32,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Hadolint
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
         with:
           dockerfile: docker/Dockerfile
           ignore: DL3008,DL3013,DL3059
-          # DL3008: apt-get without explicit versions — defensible for a CUDA base
+          # DL3008: apt-get without explicit versions, defensible for a CUDA base
           # that pins indirectly via the digest. DL3013: same for pip.
 
   shellcheck:
@@ -47,10 +47,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run shellcheck
-        uses: ludeeus/action-shellcheck@2.0.0
+        uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
         env:
           SHELLCHECK_OPTS: -e SC1091
         with:
@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Install jq + Python YAML
         run: |
@@ -73,7 +73,6 @@ jobs:
       - name: Validate runpod-template.json
         run: |
           jq empty docker/runpod-template.json
-          # Required top-level fields.
           for key in name containerImage ports env; do
             jq -e --arg k "$key" 'has($k)' docker/runpod-template.json >/dev/null \
               || { echo "missing required key: $key"; exit 1; }
@@ -85,8 +84,6 @@ jobs:
           python3 -c "import yaml,sys; d=yaml.safe_load(open('docker/extra_model_paths.yaml')); assert 'loovie' in d and 'base_path' in d['loovie']; print('extra_model_paths.yaml OK')"
 
       - name: Validate models.manifest
-        # Each non-comment, non-blank line must have exactly 4 tab-separated
-        # fields. Field 1 ("kind") must be image or video.
         run: |
           bad=0
           while IFS=$'\t' read -r kind repo file target; do
@@ -103,3 +100,123 @@ jobs:
           done < docker/models.manifest
           if [ "$bad" = "1" ]; then exit 1; fi
           echo "models.manifest OK"
+
+  build-and-push:
+    name: Build, sign, scan, SBOM
+    runs-on: ubuntu-latest
+    needs: [hadolint, shellcheck, validate-configs]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      security-events: write
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository_owner }}/loovie-server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image metadata + tags
+        id: meta
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=beta,enable=${{ contains(github.ref_name, '-beta') }}
+            type=sha,format=short
+          # Deliberately no `latest` tag during beta. For ML inference
+          # images, :latest causes silent breakage. [D24]
+
+      - name: Build + push (amd64-only)
+        id: build
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            GIT_SHA=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
+
+      - name: Sign image (keyless OIDC)
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          TAGS:   ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r tag; do
+            [ -n "$tag" ] || continue
+            cosign sign --yes "${tag}@${DIGEST}"
+          done <<< "$TAGS"
+
+      - name: Generate SBOM (syft)
+        uses: anchore/sbom-action@fc46e51fd3cb168ffb36c6d1915723c47db58abb # v0.17.7
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: true
+          upload-release-assets: true
+
+      - name: Attach SBOM as cosign attestation
+        env:
+          IMG: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          cosign attest --yes --predicate sbom.spdx.json --type spdxjson "$IMG"
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
+          format: sarif
+          output: trivy.sarif
+
+      - name: Upload Trivy SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3.29.0
+        with:
+          sarif_file: trivy.sarif
+          category: trivy-container
+
+      - name: Step summary
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          TAGS:   ${{ steps.meta.outputs.tags }}
+        run: |
+          {
+            echo "## Container build"
+            echo "- digest: \`${DIGEST}\`"
+            echo ""
+            echo "### Tags"
+            while IFS= read -r tag; do
+              [ -n "$tag" ] || continue
+              echo "- ${tag}"
+            done <<< "${TAGS}"
+            echo ""
+            echo "Signed via cosign (keyless OIDC). SBOM (spdx-json) attached as a cosign attestation."
+          } >> "$GITHUB_STEP_SUMMARY"
