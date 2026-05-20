@@ -83,9 +83,7 @@ def _image_section(workflow_names: list[str]) -> dict[str, Any] | None:
     }
 
 
-def build_capabilities_manifest(
-    workflow_names: list[str], version: str
-) -> dict[str, Any]:
+def build_capabilities_manifest(workflow_names: list[str], version: str) -> dict[str, Any]:
     """Return the capabilities manifest for the given workflow set.
 
     Args:

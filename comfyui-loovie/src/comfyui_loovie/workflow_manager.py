@@ -193,16 +193,17 @@ class WorkflowManager:
         payload = {"prompt": cleaned}
         url = f"{self.comfy_api_url}/prompt"
 
-        async with aiohttp.ClientSession() as session, session.post(
-            url,
-            json=payload,
-            timeout=aiohttp.ClientTimeout(total=30),
-        ) as resp:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.post(
+                url,
+                json=payload,
+                timeout=aiohttp.ClientTimeout(total=30),
+            ) as resp,
+        ):
             result = await resp.json()
             prompt_id = result.get("prompt_id")
             if not prompt_id:
-                raise RuntimeError(
-                    f"ComfyUI /prompt returned no prompt_id: {result}"
-                )
+                raise RuntimeError(f"ComfyUI /prompt returned no prompt_id: {result}")
             logger.info("Submitted workflow, prompt_id=%s", prompt_id)
             return str(prompt_id)

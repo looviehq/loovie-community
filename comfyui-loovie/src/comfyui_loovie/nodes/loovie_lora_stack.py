@@ -33,9 +33,7 @@ class LoovieLoraStack:
     FUNCTION = "process"
     CATEGORY = "loovie"
 
-    def process(
-        self, model: Any, clip: Any, **kwargs: object
-    ) -> tuple[Any, Any]:
+    def process(self, model: Any, clip: Any, **kwargs: object) -> tuple[Any, Any]:
         import comfy.sd  # type: ignore[import-not-found]
         import comfy.utils  # type: ignore[import-not-found]
         import folder_paths  # type: ignore[import-not-found]

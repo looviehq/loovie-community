@@ -90,9 +90,21 @@ def _decode_frames(path: Path, max_frames: int) -> tuple[np.ndarray, float]:
 
 def _extract_audio(path: Path) -> dict[str, object] | None:
     cmd = [
-        "ffmpeg", "-v", "error", "-i", str(path),
-        "-vn", "-f", "f32le", "-acodec", "pcm_f32le",
-        "-ar", str(_DEFAULT_SAMPLE_RATE), "-ac", "2", "-",
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        str(path),
+        "-vn",
+        "-f",
+        "f32le",
+        "-acodec",
+        "pcm_f32le",
+        "-ar",
+        str(_DEFAULT_SAMPLE_RATE),
+        "-ac",
+        "2",
+        "-",
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, timeout=120, check=False)
@@ -137,7 +149,15 @@ class LoovieVideoInput:
         }
 
     RETURN_TYPES = (
-        "IMAGE", "AUDIO", "INT", "INT", "INT", "INT", "FLOAT", "IMAGE", "IMAGE",
+        "IMAGE",
+        "AUDIO",
+        "INT",
+        "INT",
+        "INT",
+        "INT",
+        "FLOAT",
+        "IMAGE",
+        "IMAGE",
     )
     RETURN_NAMES = (
         "FRAMES",

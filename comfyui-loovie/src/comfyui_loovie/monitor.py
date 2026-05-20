@@ -34,12 +34,7 @@ def _extract_output_url(outputs: dict, base_url: str, key: str) -> str | None:
             continue
         subfolder = item.get("subfolder", "")
         item_type = item.get("type", "output")
-        return (
-            f"{base_url}/view"
-            f"?filename={filename}"
-            f"&subfolder={subfolder}"
-            f"&type={item_type}"
-        )
+        return f"{base_url}/view?filename={filename}&subfolder={subfolder}&type={item_type}"
     return None
 
 
@@ -177,9 +172,7 @@ def _monitor_via_websocket(
                     store.update_task(task_id, current_node=node)
                 else:
                     store.update_task(task_id, progress=100, current_node=None)
-                    _finalize_from_history(
-                        task_id, comfy_prompt_id, comfy_api_url, output_base_url
-                    )
+                    _finalize_from_history(task_id, comfy_prompt_id, comfy_api_url, output_base_url)
                     return True
             elif msg_type == "execution_error":
                 node_type = data.get("node_type", "unknown")
@@ -208,9 +201,7 @@ def _mark_failed(task_id: str, fail_code: str, message: str) -> None:
     )
     logger.error("Task %s failed: code=%s msg=%s", task_id, fail_code, message)
     if task is not None:
-        send_callback(
-            None, task_id, "failed", fail_code=fail_code, fail_msg=message
-        )
+        send_callback(None, task_id, "failed", fail_code=fail_code, fail_msg=message)
 
 
 def _finalize_from_history(
@@ -296,9 +287,7 @@ def _monitor_loop(
         )
         entry = _poll_history(comfy_api_url, comfy_prompt_id)
         if entry is not None:
-            _finalize_from_history(
-                task_id, comfy_prompt_id, comfy_api_url, output_base_url
-            )
+            _finalize_from_history(task_id, comfy_prompt_id, comfy_api_url, output_base_url)
             return
         time.sleep(poll_interval_seconds)
 

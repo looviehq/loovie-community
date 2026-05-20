@@ -102,8 +102,7 @@ class _InMemoryTaskStore:
         expired = [
             tid
             for tid, t in self._tasks.items()
-            if t.state in (TaskState.SUCCESS, TaskState.FAILED)
-            and t.created_at < cutoff
+            if t.state in (TaskState.SUCCESS, TaskState.FAILED) and t.created_at < cutoff
         ]
         for tid in expired:
             del self._tasks[tid]

@@ -63,14 +63,10 @@ _DEFAULT_VIDEO_DIMENSIONS: Final[tuple[int, int]] = (960, 544)
 
 def video_dimensions(aspect_ratio: str, resolution: str = "720p") -> tuple[int, int]:
     """Return the generation dimensions for `(aspect_ratio, resolution)`."""
-    return VIDEO_GEN_DIMENSIONS.get(
-        (aspect_ratio, resolution), _DEFAULT_VIDEO_DIMENSIONS
-    )
+    return VIDEO_GEN_DIMENSIONS.get((aspect_ratio, resolution), _DEFAULT_VIDEO_DIMENSIONS)
 
 
-def target_video_dimensions(
-    aspect_ratio: str, resolution: str = "720p"
-) -> tuple[int, int]:
+def target_video_dimensions(aspect_ratio: str, resolution: str = "720p") -> tuple[int, int]:
     """Return the post-crop target dimensions; falls back to the gen dims."""
     return TARGET_VIDEO_DIMENSIONS.get(
         (aspect_ratio, resolution),

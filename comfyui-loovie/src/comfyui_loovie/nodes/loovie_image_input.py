@@ -95,21 +95,39 @@ class LoovieImageInput:
         return inputs
 
     RETURN_TYPES = (
-        "IMAGE", "LATENT", "INT", "MASK", "BOOLEAN",
-        "IMAGE", "LATENT", "IMAGE", "LATENT",
-        "IMAGE", "LATENT", "IMAGE", "LATENT",
+        "IMAGE",
+        "LATENT",
+        "INT",
+        "MASK",
+        "BOOLEAN",
+        "IMAGE",
+        "LATENT",
+        "IMAGE",
+        "LATENT",
+        "IMAGE",
+        "LATENT",
+        "IMAGE",
+        "LATENT",
     )
     RETURN_NAMES = (
-        "IMAGES", "LATENT", "IMAGE_COUNT", "MASK", "HAS_MASK",
-        "IMAGE_1", "LATENT_1", "IMAGE_2", "LATENT_2",
-        "IMAGE_3", "LATENT_3", "IMAGE_4", "LATENT_4",
+        "IMAGES",
+        "LATENT",
+        "IMAGE_COUNT",
+        "MASK",
+        "HAS_MASK",
+        "IMAGE_1",
+        "LATENT_1",
+        "IMAGE_2",
+        "LATENT_2",
+        "IMAGE_3",
+        "LATENT_3",
+        "IMAGE_4",
+        "LATENT_4",
     )
     FUNCTION = "process"
     CATEGORY = "loovie"
 
-    def _empty_latent(
-        self, latent_type: str, height: int, width: int
-    ) -> dict[str, torch.Tensor]:
+    def _empty_latent(self, latent_type: str, height: int, width: int) -> dict[str, torch.Tensor]:
         try:
             import comfy.model_management  # type: ignore[import-not-found]
 
@@ -117,9 +135,7 @@ class LoovieImageInput:
         except ImportError:
             device = torch.device("cpu")
         if latent_type == "flux2":
-            samples = torch.zeros(
-                [1, 128, height // 16, width // 16], device=device
-            )
+            samples = torch.zeros([1, 128, height // 16, width // 16], device=device)
             return {"samples": samples}
         samples = torch.zeros([1, 16, height // 8, width // 8], device=device)
         return {"samples": samples, "downscale_ratio_spacial": 8}
@@ -149,11 +165,7 @@ class LoovieImageInput:
         if has_mask:
             cached = cache_image(mask_url)
             _, mask_loaded = _load_image(cached)
-            mask_tensor = (
-                mask_loaded.unsqueeze(0)
-                if mask_loaded.ndim == 2
-                else mask_loaded
-            )
+            mask_tensor = mask_loaded.unsqueeze(0) if mask_loaded.ndim == 2 else mask_loaded
         else:
             mask_tensor = torch.zeros((1, height, width), dtype=torch.float32)
 
@@ -166,11 +178,19 @@ class LoovieImageInput:
             empty_image = self._empty_image(height, width)
             latent = self._empty_latent(latent_type, height, width)
             return (
-                empty_image, latent, 0, mask_tensor, has_mask,
-                ref_images[0], ref_latents[0],
-                ref_images[1], ref_latents[1],
-                ref_images[2], ref_latents[2],
-                ref_images[3], ref_latents[3],
+                empty_image,
+                latent,
+                0,
+                mask_tensor,
+                has_mask,
+                ref_images[0],
+                ref_latents[0],
+                ref_images[1],
+                ref_latents[1],
+                ref_images[2],
+                ref_latents[2],
+                ref_images[3],
+                ref_latents[3],
             )
 
         logger.info("Loading %d reference image(s)", len(urls))
@@ -191,9 +211,7 @@ class LoovieImageInput:
         if len(shapes) == 1:
             stacked = torch.cat(loaded, dim=0)
         else:
-            logger.warning(
-                "Reference images have mismatched shapes; using the first only"
-            )
+            logger.warning("Reference images have mismatched shapes; using the first only")
             stacked = loaded[0]
 
         if vae is not None:
@@ -203,11 +221,15 @@ class LoovieImageInput:
                 img_h, img_w = first.shape[1], first.shape[2]
                 mask2d = mask_tensor[0] if mask_tensor.ndim == 3 else mask_tensor
                 if mask2d.shape[0] != img_h or mask2d.shape[1] != img_w:
-                    mask2d = torch.nn.functional.interpolate(
-                        mask2d.unsqueeze(0).unsqueeze(0),
-                        size=(img_h, img_w),
-                        mode="nearest",
-                    ).squeeze(0).squeeze(0)
+                    mask2d = (
+                        torch.nn.functional.interpolate(
+                            mask2d.unsqueeze(0).unsqueeze(0),
+                            size=(img_h, img_w),
+                            mode="nearest",
+                        )
+                        .squeeze(0)
+                        .squeeze(0)
+                    )
                 latent = {"samples": encoded, "noise_mask": mask2d.unsqueeze(0)}
             else:
                 latent = {"samples": encoded}
@@ -215,9 +237,17 @@ class LoovieImageInput:
             latent = {"samples": torch.zeros((1, 4, height // 8, width // 8))}
 
         return (
-            stacked, latent, len(urls), mask_tensor, has_mask,
-            ref_images[0], ref_latents[0],
-            ref_images[1], ref_latents[1],
-            ref_images[2], ref_latents[2],
-            ref_images[3], ref_latents[3],
+            stacked,
+            latent,
+            len(urls),
+            mask_tensor,
+            has_mask,
+            ref_images[0],
+            ref_latents[0],
+            ref_images[1],
+            ref_latents[1],
+            ref_images[2],
+            ref_latents[2],
+            ref_images[3],
+            ref_latents[3],
         )

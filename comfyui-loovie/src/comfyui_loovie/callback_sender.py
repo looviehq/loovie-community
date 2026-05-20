@@ -58,9 +58,7 @@ def send_callback(
             }
         }
     else:
-        logger.warning(
-            "send_callback: unexpected state=%s for task=%s", state, task_id
-        )
+        logger.warning("send_callback: unexpected state=%s for task=%s", state, task_id)
         return
 
     thread = threading.Thread(
@@ -80,9 +78,7 @@ def _deliver_with_retries(
 ) -> None:
     body = json.dumps(payload).encode("utf-8")
     target = callback_url.split("?", 1)[0]
-    logger.info(
-        "Sending callback: task=%s state=%s url=%s", task_id, state, target
-    )
+    logger.info("Sending callback: task=%s state=%s url=%s", task_id, state, target)
 
     max_attempts = 1 + len(_BACKOFF_SECONDS)
     for attempt in range(1, max_attempts + 1):
@@ -92,13 +88,20 @@ def _deliver_with_retries(
         if not retryable or attempt == max_attempts:
             logger.error(
                 "Callback gave up: task=%s attempt=%d/%d %s",
-                task_id, attempt, max_attempts, summary,
+                task_id,
+                attempt,
+                max_attempts,
+                summary,
             )
             return
         delay = _BACKOFF_SECONDS[attempt - 1]
         logger.warning(
             "Callback attempt %d/%d failed (task=%s): %s; retrying in %ds",
-            attempt, max_attempts, task_id, summary, delay,
+            attempt,
+            max_attempts,
+            task_id,
+            summary,
+            delay,
         )
         time.sleep(delay)
 
@@ -120,7 +123,9 @@ def _attempt(
         with urllib.request.urlopen(req, timeout=15) as resp:
             logger.info(
                 "Callback delivered: task=%s status=%d attempt=%d",
-                task_id, resp.status, attempt,
+                task_id,
+                resp.status,
+                attempt,
             )
             return True, None
     except urllib.error.HTTPError as e:

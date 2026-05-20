@@ -36,9 +36,7 @@ def _patch_ltxav_memory_estimation_for_empty_tokens() -> None:
         if comfy.model_management.should_use_bf16(device):
             constant /= 2.0
         pairs = (
-            token_weight_pairs.get("gemma3_12b", [])
-            if isinstance(token_weight_pairs, dict)
-            else []
+            token_weight_pairs.get("gemma3_12b", []) if isinstance(token_weight_pairs, dict) else []
         )
         if not pairs:
             return 642 * constant * 1024 * 1024
@@ -93,13 +91,9 @@ def _patch_gemma3_text_config_legacy_rope_attrs() -> None:
     Gemma3TextConfig.rope_local_base_freq = property(
         _rope_local_base_freq_get, _rope_local_base_freq_set
     )
-    Gemma3TextConfig.rope_scaling = property(
-        _rope_scaling_get, _rope_scaling_set
-    )
+    Gemma3TextConfig.rope_scaling = property(_rope_scaling_get, _rope_scaling_set)
     Gemma3TextConfig._loovie_rope_patched = True  # type: ignore[attr-defined]
-    logger.info(
-        "Patched Gemma3TextConfig with legacy rope_local_base_freq / rope_scaling"
-    )
+    logger.info("Patched Gemma3TextConfig with legacy rope_local_base_freq / rope_scaling")
 
 
 logger.info("Applying comfyui-loovie compat shims at extension load")

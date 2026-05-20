@@ -29,7 +29,10 @@ dependencies = [
 dev = [
   "pytest>=8",
   "httpx>=0.27",
-  "schemathesis>=3.30",
+  # Schemathesis 4.x renamed several CLI flags (notably --base-url -> --url)
+  # and made non-trivial behavioural changes; we pin to 3.x for now and
+  # plan a standalone migration once the 3.x train stops getting fixes.
+  "schemathesis>=3.30,<4",
   "openapi-spec-validator>=0.7",
   "ruff",
 ]

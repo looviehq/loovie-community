@@ -36,9 +36,7 @@ def validate_url(url: str) -> None:
     """Reject URLs that would let a caller reach private networks."""
     parsed = urllib.parse.urlparse(url)
     if parsed.scheme not in ("http", "https"):
-        raise ValueError(
-            f"URL scheme '{parsed.scheme}' not allowed; must be http or https"
-        )
+        raise ValueError(f"URL scheme '{parsed.scheme}' not allowed; must be http or https")
     hostname = parsed.hostname
     if not hostname:
         raise ValueError("URL has no hostname")

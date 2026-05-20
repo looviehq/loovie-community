@@ -65,15 +65,13 @@ def _check_auth(request: web.Request) -> web.Response | None:
     if not token:
         # Fail closed: no token configured but the caller is remote.
         logger.warning(
-            "Refusing remote request: LOOVIE_API_TOKEN is not configured "
-            "(path=%s)",
+            "Refusing remote request: LOOVIE_API_TOKEN is not configured (path=%s)",
             request.path,
         )
         return web.json_response(
             {
                 "code": 401,
-                "msg": "Server has no LOOVIE_API_TOKEN configured; "
-                "remote requests are refused.",
+                "msg": "Server has no LOOVIE_API_TOKEN configured; remote requests are refused.",
             },
             status=401,
         )
@@ -104,15 +102,9 @@ def _resolve_output_base_url(request: web.Request) -> str:
         return public_url
 
     proto = (
-        request.headers.get("X-Forwarded-Proto")
-        or request.scheme
-        or "http"
-    ).split(",")[0].strip()
-    host = (
-        request.headers.get("X-Forwarded-Host")
-        or request.host
-        or ""
-    ).split(",")[0].strip()
+        (request.headers.get("X-Forwarded-Proto") or request.scheme or "http").split(",")[0].strip()
+    )
+    host = (request.headers.get("X-Forwarded-Host") or request.host or "").split(",")[0].strip()
     host_only = host.split(":")[0].lower()
     if host and host_only not in ("127.0.0.1", "localhost", "::1", "[::1]"):
         return f"{proto}://{host}".rstrip("/")
@@ -203,13 +195,9 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
             if duration is not None:
                 duration_f = float(duration)
                 inputs["num_frames"] = max(1, int(duration_f * fps) + 1)
-                inputs["audio_frames"] = (
-                    max(1, int(duration_f * audio_fps)) if with_audio else 0
-                )
+                inputs["audio_frames"] = max(1, int(duration_f * audio_fps)) if with_audio else 0
             else:
-                inputs["num_frames"] = int(
-                    body.get("num_frames", inputs.get("num_frames", 121))
-                )
+                inputs["num_frames"] = int(body.get("num_frames", inputs.get("num_frames", 121)))
                 inputs["audio_frames"] = (
                     int(body.get("audio_frames", inputs.get("audio_frames", 97)))
                     if with_audio
@@ -258,9 +246,7 @@ async def _setup_and_submit(
     """Validate the body, create the task, submit to ComfyUI, start monitor."""
     prompt = (body.get("prompt") or "").strip()
     if not prompt:
-        return None, web.json_response(
-            {"code": 400, "msg": "prompt is required"}, status=400
-        )
+        return None, web.json_response({"code": 400, "msg": "prompt is required"}, status=400)
     if len(prompt) > 3000:
         return None, web.json_response(
             {"code": 400, "msg": "prompt exceeds 3000 characters"},
@@ -269,9 +255,7 @@ async def _setup_and_submit(
 
     workflow_name = _resolve_workflow_name(body, default_workflow)
     if not workflow_name:
-        return None, web.json_response(
-            {"code": 400, "msg": "workflow is required"}, status=400
-        )
+        return None, web.json_response({"code": 400, "msg": "workflow is required"}, status=400)
 
     wf_manager = WorkflowManager.get_instance()
     if workflow_name not in wf_manager.get_workflow_names():
@@ -302,9 +286,7 @@ async def _setup_and_submit(
             fail_code="WORKFLOW_NOT_FOUND",
             error_message=str(exc),
         )
-        return None, web.json_response(
-            {"code": 400, "msg": str(exc)}, status=400
-        )
+        return None, web.json_response({"code": 400, "msg": str(exc)}, status=400)
     except Exception as exc:
         err_msg = str(exc) or exc.__class__.__name__
         store.update_task(
@@ -359,9 +341,7 @@ async def _create_task_handler(
         try:
             body = await request.json()
         except (json.JSONDecodeError, ValueError):
-            return web.json_response(
-                {"code": 400, "msg": "Invalid JSON body"}, status=400
-            )
+            return web.json_response({"code": 400, "msg": "Invalid JSON body"}, status=400)
 
     logger.info(
         "Create task: path=%s body=%s",
@@ -390,9 +370,7 @@ async def _task_status_handler(request: web.Request) -> web.Response:
 
     task = TaskStore.get_instance().get_task(task_id)
     if task is None:
-        return web.json_response(
-            {"code": 404, "msg": "Task not found"}, status=404
-        )
+        return web.json_response({"code": 404, "msg": "Task not found"}, status=404)
 
     elapsed = round(time.time() - task.created_at, 1)
     data: dict[str, Any] = {
@@ -440,9 +418,7 @@ async def create_video(request: web.Request) -> web.Response:
     try:
         body = await request.json()
     except (json.JSONDecodeError, ValueError):
-        return web.json_response(
-            {"code": 400, "msg": "Invalid JSON body"}, status=400
-        )
+        return web.json_response({"code": 400, "msg": "Invalid JSON body"}, status=400)
 
     start_frame = (body.get("start_frame_url") or "").strip()
     end_frame = (body.get("end_frame_url") or "").strip()
@@ -460,9 +436,7 @@ async def create_video(request: web.Request) -> web.Response:
         else:
             body["workflow"] = "ltx23-t2v-fast"
 
-    return await _create_task_handler(
-        request, default_workflow="ltx23-t2v-fast", body=body
-    )
+    return await _create_task_handler(request, default_workflow="ltx23-t2v-fast", body=body)
 
 
 @PromptServer.instance.routes.get("/videos/status")
@@ -509,14 +483,10 @@ async def upload_reference(request: web.Request) -> web.Response:
                 )
             data = base64.b64decode(b64)
     except Exception as exc:
-        return web.json_response(
-            {"code": 400, "msg": f"Invalid upload: {exc}"}, status=400
-        )
+        return web.json_response({"code": 400, "msg": f"Invalid upload: {exc}"}, status=400)
 
     if not data or not filename:
-        return web.json_response(
-            {"code": 400, "msg": "No file data received"}, status=400
-        )
+        return web.json_response({"code": 400, "msg": "No file data received"}, status=400)
 
     _, ext = os.path.splitext(filename)
     safe_ext = ext.lower() if ext.lower() in (".png", ".jpg", ".jpeg", ".webp") else ".png"
@@ -560,9 +530,7 @@ async def health(_request: web.Request) -> web.Response:
 async def capabilities(_request: web.Request) -> web.Response:
     """Capability manifest probe. ALWAYS public; never auth-checked."""
     wf_manager = WorkflowManager.get_instance()
-    manifest = build_capabilities_manifest(
-        wf_manager.get_workflow_names(), VERSION
-    )
+    manifest = build_capabilities_manifest(wf_manager.get_workflow_names(), VERSION)
     return web.json_response(manifest)
 
 

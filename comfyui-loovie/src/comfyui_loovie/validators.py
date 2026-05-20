@@ -59,9 +59,7 @@ def validate_image_bytes(data: bytes) -> str:
     if not data:
         raise ValueError("empty payload")
     if len(data) > MAX_IMAGE_BYTES:
-        raise ValueError(
-            f"image too large: {len(data)} bytes (max {MAX_IMAGE_BYTES})"
-        )
+        raise ValueError(f"image too large: {len(data)} bytes (max {MAX_IMAGE_BYTES})")
     mime = sniff_image_mime(data)
     if mime is None:
         raise ValueError("payload does not match a supported image format")
@@ -73,9 +71,7 @@ def validate_video_bytes(data: bytes) -> str:
     if not data:
         raise ValueError("empty payload")
     if len(data) > MAX_VIDEO_BYTES:
-        raise ValueError(
-            f"video too large: {len(data)} bytes (max {MAX_VIDEO_BYTES})"
-        )
+        raise ValueError(f"video too large: {len(data)} bytes (max {MAX_VIDEO_BYTES})")
     mime = sniff_video_mime(data)
     if mime is None:
         raise ValueError("payload does not match a supported video format")
