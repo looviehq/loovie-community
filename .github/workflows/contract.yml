@@ -1,0 +1,75 @@
+name: contract
+on:
+  pull_request:
+    paths:
+      - 'openapi/**'
+      - 'examples/minimal-server/**'
+      - '.github/workflows/contract.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'openapi/**'
+      - 'examples/minimal-server/**'
+
+permissions:
+  contents: read
+
+jobs:
+  schemathesis:
+    name: Schemathesis vs examples/minimal-server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Install Python
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Install minimal-server + schemathesis
+        working-directory: examples/minimal-server
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]'
+
+      - name: Start the minimal-server
+        working-directory: examples/minimal-server
+        env:
+          LOOVIE_API_TOKEN: contract-test-token
+        run: |
+          nohup python -m uvicorn app:app --host 127.0.0.1 --port 8188 > server.log 2>&1 &
+          echo $! > server.pid
+          # Wait for /loovie/health to come up.
+          for i in $(seq 1 20); do
+            if curl -sf http://127.0.0.1:8188/loovie/health > /dev/null; then
+              echo "Server is up after ${i} attempts."
+              exit 0
+            fi
+            sleep 0.5
+          done
+          echo "Server failed to start."
+          cat server.log
+          exit 1
+
+      - name: Run schemathesis
+        env:
+          LOOVIE_API_TOKEN: contract-test-token
+        run: |
+          schemathesis run \
+            --checks all \
+            --base-url http://127.0.0.1:8188 \
+            --header "Authorization: Bearer ${LOOVIE_API_TOKEN}" \
+            --validate-schema true \
+            --hypothesis-max-examples 50 \
+            openapi/loovie-server.openapi.yaml
+
+      - name: Stop the minimal-server
+        if: always()
+        working-directory: examples/minimal-server
+        run: |
+          if [ -f server.pid ]; then
+            kill "$(cat server.pid)" 2>/dev/null || true
+          fi
+          echo "--- server log ---"
+          tail -200 server.log || true

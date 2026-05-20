@@ -24,9 +24,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Python is added in Phase A.4 when the Python sources land.
-          # - language: python
-          #   build-mode: none
+          - language: python
+            build-mode: none
           - language: actions
             build-mode: none
 
