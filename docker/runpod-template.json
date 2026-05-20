@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/runpod/runpodctl/main/schemas/template.schema.json",
+  "name": "Loovie BYO Server (FLUX.2 Klein + LTX-2.3)",
+  "summary": "Reference Loovie BYO ComfyUI server. Generates images and single-shot video with FLUX.2 Klein and LTX-2.3 directly into the Loovie iOS app. Free at the Loovie layer (RunPod still bills for GPU time).",
+
+  "containerImage": "ghcr.io/looviehq/loovie-server:beta",
+  "containerDiskInGb": 30,
+  "volumeInGb": 80,
+  "volumeMountPath": "/runpod-volume",
+
+  "ports": "8188/http",
+
+  "isPublic": true,
+  "category": "AI / ML inference",
+
+  "env": [
+    {
+      "key": "LOOVIE_API_TOKEN",
+      "type": "secret",
+      "required": true,
+      "description": "Strong random token. Generate locally with `bash scripts/new-token.sh` and paste here. The server refuses remote requests when this is unset."
+    },
+    {
+      "key": "HF_TOKEN",
+      "type": "secret",
+      "required": true,
+      "description": "HuggingFace read token. Required to download gated models (Gemma text encoder, FLUX.2 weights). See docs/25-huggingface-and-gated-models.md."
+    },
+    {
+      "key": "DOWNLOAD_MODELS",
+      "value": "1",
+      "description": "Set to 1 to auto-download models on first boot. Set to 0 once your volume is populated to skip the check."
+    },
+    {
+      "key": "LOOVIE_KIND",
+      "value": "all",
+      "description": "Which model sets to download: `images`, `videos`, or `all`. Disk budget: images ~24 GB, videos ~70 GB, all ~99 GB."
+    }
+  ],
+
+  "gpuRecommendations": {
+    "image_generation": [
+      "NVIDIA GeForce RTX 4090 (24 GB)",
+      "NVIDIA GeForce RTX 5090 (32 GB)"
+    ],
+    "video_generation": [
+      "NVIDIA GeForce RTX 5090 (32 GB)"
+    ],
+    "tested_at_launch": "Image models verified on 4090 and 5090. Video models verified ONLY on 5090. Other GPUs may work but are unverified."
+  },
+
+  "readme": "https://github.com/looviehq/loovie-community/blob/main/docker/README.md",
+  "docs": "https://loovie.app/byo",
+  "supportLink": "https://github.com/looviehq/loovie-community/issues",
+
+  "_loovie_meta": {
+    "referral_disclosure": "The 'Deploy to RunPod' button in our docs uses Loovie's RunPod referral link (?ref=vg16q1rz). It supports Loovie at no extra cost to you. See docs/30-runpod.md.",
+    "cost_note": "RunPod bills you per-minute for GPU time and per-GB for volume storage. Loovie itself charges nothing for BYO generations. Stop the pod when you are done."
+  }
+}

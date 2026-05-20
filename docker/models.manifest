@@ -1,0 +1,33 @@
+# Loovie Community reference server — model manifest.
+#
+# Tab-separated.  Lines starting with '#' are comments. Fields:
+#   kind         : "image" or "video" — selected via LOOVIE_KIND.
+#   hf_repo      : HuggingFace repo.
+#   hf_filename  : path-in-repo.
+#   target_subdir: ComfyUI folder name (diffusion_models, checkpoints,
+#                  text_encoders, vae, loras, upscale_models, latent_upscale_models).
+#
+# Some entries are GATED on HuggingFace — accept the licence on the HF web
+# UI while logged in before the download will succeed. See
+# docs/25-huggingface-and-gated-models.md.
+#
+# These entries are best-effort against publicly-known repackaged repos
+# (Comfy-Org/* primarily). If a download fails, verify the repo + filename
+# on huggingface.co and update this manifest. Tracked in Part I as a
+# launch checklist item.
+#
+# kind	hf_repo	hf_filename	target_subdir
+
+# --- Image: FLUX.2 Klein (~7.75 GB) ----------------------------------------
+image	Comfy-Org/flux2	flux-2-klein-4b.safetensors	diffusion_models
+image	Comfy-Org/flux2	flux2-vae.safetensors	vae
+image	Comfy-Org/flux2	qwen_3_4b_flux2.safetensors	text_encoders
+
+# --- Video: LTX-2.3 fast (~36 GB) ------------------------------------------
+video	Comfy-Org/ltx-2	ltx-2.3-22b-dev-fp8.safetensors	checkpoints
+video	Comfy-Org/ltx-2	ltx-2.3-22b-distilled-lora-384.safetensors	loras
+video	Comfy-Org/ltx-2	gemma_3_12B_it_fp8_scaled.safetensors	text_encoders
+
+# --- Video pro tier: spatial upscaler + ESRGAN refiner (~2 GB) -------------
+video	Comfy-Org/ltx-2	ltx-2.3-spatial-upscaler-x2-1.1.safetensors	latent_upscale_models
+video	xinntao/Real-ESRGAN	RealESRGAN_x2plus.pth	upscale_models

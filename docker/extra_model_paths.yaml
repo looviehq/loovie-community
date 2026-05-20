@@ -1,0 +1,23 @@
+# Extra-model-paths configuration for ComfyUI. Tells ComfyUI to look under
+# the mounted network volume for all weight kinds the Loovie reference
+# implementation uses.
+#
+# RunPod templates mount this volume at /runpod-volume. Override via
+# LOOVIE_MODELS_ROOT in the entrypoint if you mount somewhere else.
+
+loovie:
+  base_path: /runpod-volume/models
+
+  diffusion_models: diffusion_models/
+  checkpoints: checkpoints/
+  text_encoders: text_encoders/
+  vae: vae/
+  loras: loras/
+  upscale_models: upscale_models/
+  latent_upscale_models: latent_upscale_models/
+  clip_vision: clip_vision/
+  controlnet: controlnet/
+  embeddings: embeddings/
+  hypernetworks: hypernetworks/
+  style_models: style_models/
+  vae_approx: vae_approx/

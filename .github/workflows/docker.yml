@@ -1,0 +1,105 @@
+name: docker
+
+on:
+  pull_request:
+    paths:
+      - 'docker/**'
+      - 'comfyui-loovie/**'
+      - 'scripts/new-token.sh'
+      - '.github/workflows/docker.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'docker/**'
+      - 'comfyui-loovie/**'
+      - 'scripts/new-token.sh'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ------------------------------------------------------------------------
+  # Cheap static checks first. The actual buildx build + cosign signing +
+  # syft SBOM are released in Phase A.8 via a separate release workflow on
+  # `v*` tags; we deliberately do NOT build the CUDA image on every PR
+  # (5 GB+, several minutes).
+  # ------------------------------------------------------------------------
+
+  hadolint:
+    name: Hadolint (Dockerfile lint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: docker/Dockerfile
+          ignore: DL3008,DL3013
+          # DL3008: apt-get without explicit versions — defensible for a CUDA base
+          # that pins indirectly via the digest. DL3013: same for pip.
+
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        env:
+          SHELLCHECK_OPTS: -e SC1091
+        with:
+          scandir: '.'
+          additional_files: 'docker/entrypoint.sh docker/download_models.sh scripts/new-token.sh'
+          severity: warning
+
+  validate-configs:
+    name: Validate template / config / manifest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Install jq + Python YAML
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --no-install-recommends -y -qq jq python3-yaml
+
+      - name: Validate runpod-template.json
+        run: |
+          jq empty docker/runpod-template.json
+          # Required top-level fields.
+          for key in name containerImage ports env; do
+            jq -e --arg k "$key" 'has($k)' docker/runpod-template.json >/dev/null \
+              || { echo "missing required key: $key"; exit 1; }
+          done
+          echo "runpod-template.json OK"
+
+      - name: Validate extra_model_paths.yaml
+        run: |
+          python3 -c "import yaml,sys; d=yaml.safe_load(open('docker/extra_model_paths.yaml')); assert 'loovie' in d and 'base_path' in d['loovie']; print('extra_model_paths.yaml OK')"
+
+      - name: Validate models.manifest
+        # Each non-comment, non-blank line must have exactly 4 tab-separated
+        # fields. Field 1 ("kind") must be image or video.
+        run: |
+          bad=0
+          while IFS=$'\t' read -r kind repo file target; do
+            case "$kind" in ''|\#*) continue ;; esac
+            if [ -z "$repo" ] || [ -z "$file" ] || [ -z "$target" ]; then
+              echo "Bad row (need 4 fields): kind=$kind repo=$repo file=$file target=$target"
+              bad=1
+              continue
+            fi
+            if [ "$kind" != "image" ] && [ "$kind" != "video" ]; then
+              echo "Bad kind: $kind (must be image or video)"
+              bad=1
+            fi
+          done < docker/models.manifest
+          if [ "$bad" = "1" ]; then exit 1; fi
+          echo "models.manifest OK"
