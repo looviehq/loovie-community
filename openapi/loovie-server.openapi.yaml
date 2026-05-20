@@ -1,12 +1,10 @@
 openapi: 3.1.0
 info:
   title: Loovie BYO Server Contract
-  # Pre-1.0 while we are in public beta. The README and SECURITY.md
-  # promise strict semver only at 1.0.0; the previous `1.0.0-beta.1`
-  # value confused that promise. Bumps live in CHANGELOG.md and (post-
-  # A.8) release-please will own this number.
-  version: "0.1.0-beta.1"
-  summary: The HTTP contract a third-party server implements to be drivable by the Loovie mobile app.
+  version: 0.2.0-beta.1
+  summary: >-
+    The HTTP contract a third-party server implements to be drivable by the
+    Loovie mobile app.
   description: |
     The HTTP API a "Bring Your Own" server must expose so the Loovie app
     can drive image and single-shot video generation on it. The Loovie
@@ -65,32 +63,33 @@ info:
 externalDocs:
   description: Step-by-step setup, security, and troubleshooting guides.
   url: https://github.com/looviehq/loovie-community/tree/main/docs
-
 x-loovie-conditional-endpoints:
-  images: "Required only when /loovie/capabilities advertises an `images` section."
-  ss_videos: "Required only when /loovie/capabilities advertises an `ss_videos` section."
-
+  images: Required only when /loovie/capabilities advertises an `images` section.
+  ss_videos: Required only when /loovie/capabilities advertises an `ss_videos` section.
 servers:
-  - url: "{base}"
+  - url: '{base}'
     description: The base URL of your BYO server.
     variables:
       base:
-        default: "http://127.0.0.1:8188"
-        description: "For local development. Production is your tunnel or RunPod proxy URL."
-
+        default: http://127.0.0.1:8188
+        description: For local development. Production is your tunnel or RunPod proxy URL.
 security:
   - bearerAuth: []
-
 tags:
   - name: System
-    description: Unauthenticated endpoints the Loovie app probes to discover the server's state and capabilities.
+    description: >-
+      Unauthenticated endpoints the Loovie app probes to discover the server's
+      state and capabilities.
   - name: Image
-    description: Image generation. Required only if your /loovie/capabilities advertises an `images` section.
+    description: >-
+      Image generation. Required only if your /loovie/capabilities advertises an
+      `images` section.
   - name: Video
-    description: Single-shot video generation. Required only if your /loovie/capabilities advertises an `ss_videos` section.
+    description: >-
+      Single-shot video generation. Required only if your /loovie/capabilities
+      advertises an `ss_videos` section.
   - name: Upload
     description: Operator-side helper for staging input references.
-
 components:
   securitySchemes:
     bearerAuth:
@@ -100,62 +99,81 @@ components:
         `Authorization: Bearer <LOOVIE_API_TOKEN>`. REQUIRED for remote
         callers. If no token is configured the server MUST refuse remote
         requests (fail closed). Localhost (127.0.0.1, ::1) bypasses.
-
   schemas:
     Envelope:
       type: object
       description: Standard response envelope used by every endpoint.
-      required: [code]
+      required:
+        - code
       properties:
         code:
           type: integer
-          description: HTTP-style status code mirrored into the body for clients that only read the body.
-          examples: [200]
+          description: >-
+            HTTP-style status code mirrored into the body for clients that only
+            read the body.
+          examples:
+            - 200
         msg:
           type: string
           description: Human-readable status or error message.
         data:
           type: object
           description: Endpoint-specific payload, present on success.
-
     ImageMode:
       type: string
-      enum: [t2i, i2i]
-      description: "`t2i` = text-to-image; `i2i` = image(+refs)-to-image."
-
+      enum:
+        - t2i
+        - i2i
+      description: '`t2i` = text-to-image; `i2i` = image(+refs)-to-image.'
     VideoMode:
       type: string
-      enum: [t2v, i2v, fl2v]
-      description: "`t2v` = text-to-video; `i2v` = image-to-video; `fl2v` = first+last-frame-to-video."
-
+      enum:
+        - t2v
+        - i2v
+        - fl2v
+      description: >-
+        `t2v` = text-to-video; `i2v` = image-to-video; `fl2v` =
+        first+last-frame-to-video.
     Variant:
       type: string
-      enum: [fast, pro]
+      enum:
+        - fast
+        - pro
       description: Quality/speed trade-off; `fast` for previews, `pro` for finals.
-
     ImageResolution:
       type: string
-      enum: ["720p", "1K", "2K"]
-
+      enum:
+        - 720p
+        - 1K
+        - 2K
     VideoResolution:
       type: string
-      enum: ["720p", "1080p"]
-
+      enum:
+        - 720p
+        - 1080p
     ImageAspectRatio:
       type: string
-      enum: [auto, "1:1", "16:9", "9:16", "4:3"]
-
+      enum:
+        - auto
+        - '1:1'
+        - '16:9'
+        - '9:16'
+        - '4:3'
     VideoAspectRatio:
       type: string
-      enum: [auto, "16:9", "9:16", "1:1"]
-
+      enum:
+        - auto
+        - '16:9'
+        - '9:16'
+        - '1:1'
     Capabilities:
       type: object
       description: |
         What this server can do. The app probes this at save and at startup,
         caches the manifest per server, and uses it to gate the BYO picker
         tiers and constrain the BYO generation UI.
-      required: [schemaVersion]
+      required:
+        - schemaVersion
       properties:
         schemaVersion:
           type: integer
@@ -168,16 +186,23 @@ components:
           $ref: '#/components/schemas/ImageCapabilities'
         ss_videos:
           $ref: '#/components/schemas/VideoCapabilities'
-
     ImageCapabilities:
       type: object
-      description: Image-generation capabilities. Omit this object entirely if the server has no image workflows.
-      required: [capabilities, referenceCount, resolution, variants, aspectRatios]
+      description: >-
+        Image-generation capabilities. Omit this object entirely if the server
+        has no image workflows.
+      required:
+        - capabilities
+        - referenceCount
+        - resolution
+        - variants
+        - aspectRatios
       properties:
         capabilities:
           type: array
           minItems: 1
-          items: { $ref: '#/components/schemas/ImageMode' }
+          items:
+            $ref: '#/components/schemas/ImageMode'
         referenceCount:
           type: integer
           minimum: 0
@@ -185,30 +210,44 @@ components:
         resolution:
           type: array
           minItems: 1
-          items: { $ref: '#/components/schemas/ImageResolution' }
+          items:
+            $ref: '#/components/schemas/ImageResolution'
         variants:
           type: array
           minItems: 1
-          items: { $ref: '#/components/schemas/Variant' }
+          items:
+            $ref: '#/components/schemas/Variant'
         aspectRatios:
           type: array
           minItems: 1
-          items: { $ref: '#/components/schemas/ImageAspectRatio' }
+          items:
+            $ref: '#/components/schemas/ImageAspectRatio'
         promptCharLimit:
           type: integer
           minimum: 1
           default: 3000
-          description: Max prompt length the server accepts. Optional; defaults to 3000 if absent.
-
+          description: >-
+            Max prompt length the server accepts. Optional; defaults to 3000 if
+            absent.
     VideoCapabilities:
       type: object
-      description: Single-shot video-generation capabilities. Omit this object entirely if the server has no video workflows.
-      required: [capabilities, referenceCount, resolution, variants, aspectRatios, durations, supportsAudio]
+      description: >-
+        Single-shot video-generation capabilities. Omit this object entirely if
+        the server has no video workflows.
+      required:
+        - capabilities
+        - referenceCount
+        - resolution
+        - variants
+        - aspectRatios
+        - durations
+        - supportsAudio
       properties:
         capabilities:
           type: array
           minItems: 1
-          items: { $ref: '#/components/schemas/VideoMode' }
+          items:
+            $ref: '#/components/schemas/VideoMode'
         referenceCount:
           type: integer
           minimum: 0
@@ -216,49 +255,65 @@ components:
         resolution:
           type: array
           minItems: 1
-          items: { $ref: '#/components/schemas/VideoResolution' }
+          items:
+            $ref: '#/components/schemas/VideoResolution'
         variants:
           type: array
           minItems: 1
-          items: { $ref: '#/components/schemas/Variant' }
+          items:
+            $ref: '#/components/schemas/Variant'
         aspectRatios:
           type: array
           minItems: 1
-          items: { $ref: '#/components/schemas/VideoAspectRatio' }
+          items:
+            $ref: '#/components/schemas/VideoAspectRatio'
         durations:
           type: array
           minItems: 1
           items:
             type: integer
             minimum: 1
-          description: Allowed clip durations in whole seconds (explicit list, may be non-contiguous).
+          description: >-
+            Allowed clip durations in whole seconds (explicit list, may be
+            non-contiguous).
         supportsAudio:
           type: boolean
-          description: Whether the server can produce synced audio. When true, the app shows the "With Audio" toggle for the BYO video tier.
+          description: >-
+            Whether the server can produce synced audio. When true, the app
+            shows the "With Audio" toggle for the BYO video tier.
         promptCharLimit:
           type: integer
           minimum: 1
           default: 3000
-
     Health:
       type: object
-      required: [version, status, phase]
+      required:
+        - version
+        - status
+        - phase
       properties:
         version:
           type: string
           description: Your implementation's build version. Telemetry only.
         status:
           type: string
-          enum: [ok]
+          enum:
+            - ok
           description: Must be `ok` when the server is ready to take work.
         phase:
           type: string
-          enum: [ready, booting_up, downloading_models]
-          description: Coarse lifecycle phase. Use `booting_up` and `downloading_models` to signal first-boot progress so the app can show a meaningful state.
+          enum:
+            - ready
+            - booting_up
+            - downloading_models
+          description: >-
+            Coarse lifecycle phase. Use `booting_up` and `downloading_models` to
+            signal first-boot progress so the app can show a meaningful state.
         detail:
           type: string
-          description: Optional free-text detail (e.g. "downloading FLUX.2 Klein (3.2GB / 9.8GB)").
-
+          description: >-
+            Optional free-text detail (e.g. "downloading FLUX.2 Klein (3.2GB /
+            9.8GB)").
     TaskCreated:
       allOf:
         - $ref: '#/components/schemas/Envelope'
@@ -266,17 +321,23 @@ components:
           properties:
             data:
               type: object
-              required: [taskId]
+              required:
+                - taskId
               properties:
                 taskId:
                   type: string
-                  examples: ["task_loovie_0a1b2c3d4e5f"]
-                  description: Opaque task identifier. The app polls `/{kind}/status?taskId=...` with this.
-
+                  examples:
+                    - task_loovie_0a1b2c3d4e5f
+                  description: >-
+                    Opaque task identifier. The app polls
+                    `/{kind}/status?taskId=...` with this.
     TaskState:
       type: string
-      enum: [pending, processing, success, failed]
-
+      enum:
+        - pending
+        - processing
+        - success
+        - failed
     TaskStatus:
       allOf:
         - $ref: '#/components/schemas/Envelope'
@@ -284,49 +345,84 @@ components:
           properties:
             data:
               type: object
-              required: [taskId, state]
+              required:
+                - taskId
+                - state
               properties:
-                taskId: { type: string }
-                state: { $ref: '#/components/schemas/TaskState' }
+                taskId:
+                  type: string
+                state:
+                  $ref: '#/components/schemas/TaskState'
                 progress:
                   type: integer
                   minimum: 0
                   maximum: 100
-                  description: 0-100. Optional for `pending`/`processing`; omitted on `success`/`failed`.
-                elapsedSeconds: { type: number, description: "Seconds elapsed since task submission." }
-                step: { type: integer, description: "Current workflow node index, if known." }
-                totalSteps: { type: integer, description: "Total workflow node count, if known." }
-                currentNode: { type: string, description: "Name of the currently executing node, if known." }
+                  description: >-
+                    0-100. Optional for `pending`/`processing`; omitted on
+                    `success`/`failed`.
+                elapsedSeconds:
+                  type: number
+                  description: Seconds elapsed since task submission.
+                step:
+                  type: integer
+                  description: Current workflow node index, if known.
+                totalSteps:
+                  type: integer
+                  description: Total workflow node count, if known.
+                currentNode:
+                  type: string
+                  description: Name of the currently executing node, if known.
                 resultJson:
                   type: string
-                  description: |
-                    Present only on `state: success`. A JSON-encoded string with shape
-                    `{"resultUrls":["<url>"]}` where each URL is downloadable by the app
-                    (no auth needed; URLs are signed or otherwise scoped by the server).
-                totalSeconds: { type: number, description: "Total run time on `success`." }
+                  description: >
+                    Present only on `state: success`. A JSON-encoded string with
+                    shape
+
+                    `{"resultUrls":["<url>"]}` where each URL is downloadable by
+                    the app
+
+                    (no auth needed; URLs are signed or otherwise scoped by the
+                    server).
+                totalSeconds:
+                  type: number
+                  description: Total run time on `success`.
                 failCode:
                   type: string
-                  description: |
-                    Present only on `state: failed`. Short machine-readable code.
-                    Common values: `WORKFLOW_NOT_FOUND`, `SUBMISSION_ERROR`, `EXECUTION_ERROR`, `OUTPUT_MISSING`, `HISTORY_MISSING`, `TIMEOUT`.
-                    Servers MAY emit additional codes. The Loovie app namespaces non-prefixed codes as `BYO_<CODE>` at its boundary.
+                  description: >
+                    Present only on `state: failed`. Short machine-readable
+                    code.
+
+                    Common values: `WORKFLOW_NOT_FOUND`, `SUBMISSION_ERROR`,
+                    `EXECUTION_ERROR`, `OUTPUT_MISSING`, `HISTORY_MISSING`,
+                    `TIMEOUT`.
+
+                    Servers MAY emit additional codes. The Loovie app namespaces
+                    non-prefixed codes as `BYO_<CODE>` at its boundary.
                 failMsg:
                   type: string
-                  description: 'Present only on `state: failed`. Human-readable failure description (will be shown to the operator, not the end user).'
-
+                  description: >-
+                    Present only on `state: failed`. Human-readable failure
+                    description (will be shown to the operator, not the end
+                    user).
     ImageCreateRequest:
       type: object
-      required: [prompt]
+      required:
+        - prompt
       properties:
         prompt:
           type: string
           maxLength: 3000
-        mode: { $ref: '#/components/schemas/ImageMode' }
-        variant: { $ref: '#/components/schemas/Variant' }
-        aspect_ratio: { $ref: '#/components/schemas/ImageAspectRatio' }
+        mode:
+          $ref: '#/components/schemas/ImageMode'
+        variant:
+          $ref: '#/components/schemas/Variant'
+        aspect_ratio:
+          $ref: '#/components/schemas/ImageAspectRatio'
         image_urls:
           type: array
-          items: { type: string, format: uri }
+          items:
+            type: string
+            format: uri
           description: Reference images for i2i mode. Server downloads these.
         mask_url:
           type: string
@@ -336,30 +432,40 @@ components:
           type: integer
           default: -1
           description: Generation seed. `-1` means random.
-        negative_prompt: { type: string }
+        negative_prompt:
+          type: string
         workflow:
           type: string
-          description: Override workflow selection. Server resolves names like `flux-2-klein`.
+          description: >-
+            Override workflow selection. Server resolves names like
+            `flux-2-klein`.
         loras:
           type: array
-          items: { type: object }
+          items:
+            type: object
           description: Per-request LoRA stack (server-specific shape).
-
     VideoCreateRequest:
       type: object
-      required: [prompt]
+      required:
+        - prompt
       properties:
         prompt:
           type: string
           maxLength: 3000
-        mode: { $ref: '#/components/schemas/VideoMode' }
-        variant: { $ref: '#/components/schemas/Variant' }
-        aspect_ratio: { $ref: '#/components/schemas/VideoAspectRatio' }
-        resolution: { $ref: '#/components/schemas/VideoResolution' }
+        mode:
+          $ref: '#/components/schemas/VideoMode'
+        variant:
+          $ref: '#/components/schemas/Variant'
+        aspect_ratio:
+          $ref: '#/components/schemas/VideoAspectRatio'
+        resolution:
+          $ref: '#/components/schemas/VideoResolution'
         duration:
           type: integer
           minimum: 1
-          description: Clip duration in seconds. Must be one of the values in `ss_videos.durations`.
+          description: >-
+            Clip duration in seconds. Must be one of the values in
+            `ss_videos.durations`.
         start_frame_url:
           type: string
           format: uri
@@ -374,14 +480,17 @@ components:
         seed:
           type: integer
           default: -1
-
     UploadJsonRequest:
       type: object
-      required: [filename, data_base64]
+      required:
+        - filename
+        - data_base64
       properties:
-        filename: { type: string }
-        data_base64: { type: string, description: "Base64-encoded file bytes." }
-
+        filename:
+          type: string
+        data_base64:
+          type: string
+          description: Base64-encoded file bytes.
     UploadResponse:
       allOf:
         - $ref: '#/components/schemas/Envelope'
@@ -390,16 +499,20 @@ components:
             data:
               type: object
               properties:
-                filename: { type: string }
+                filename:
+                  type: string
                 url:
                   type: string
-                  description: A URL the server can use to resolve this upload in a subsequent generation request.
-                sizeBytes: { type: integer }
-
+                  description: >-
+                    A URL the server can use to resolve this upload in a
+                    subsequent generation request.
+                sizeBytes:
+                  type: integer
 paths:
   /loovie/health:
     get:
-      tags: [System]
+      tags:
+        - System
       summary: Liveness and readiness
       description: |
         UNAUTHENTICATED. The Loovie app probes this on save and on app start
@@ -407,8 +520,10 @@ paths:
       security: []
       operationId: getHealth
       responses:
-        "200":
-          description: Server reachable. `status` is `ok` when ready to accept generation requests.
+        '200':
+          description: >-
+            Server reachable. `status` is `ok` when ready to accept generation
+            requests.
           content:
             application/json:
               schema:
@@ -416,23 +531,39 @@ paths:
                   - $ref: '#/components/schemas/Envelope'
                   - type: object
                     properties:
-                      data: { $ref: '#/components/schemas/Health' }
+                      data:
+                        $ref: '#/components/schemas/Health'
               examples:
                 ready:
                   summary: Ready to take work
-                  value: { code: 200, data: { version: "0.1.0", status: "ok", phase: "ready", detail: "" } }
+                  value:
+                    code: 200
+                    data:
+                      version: 0.1.0
+                      status: ok
+                      phase: ready
+                      detail: ''
                 booting:
                   summary: First-boot in progress
-                  value: { code: 200, data: { version: "0.1.0", status: "ok", phase: "downloading_models", detail: "FLUX.2 Klein 4.1GB / 9.8GB" } }
-        "429":
-          description: Rate-limited. Operators may throttle anonymous probes; the app retries with backoff.
+                  value:
+                    code: 200
+                    data:
+                      version: 0.1.0
+                      status: ok
+                      phase: downloading_models
+                      detail: FLUX.2 Klein 4.1GB / 9.8GB
+        '429':
+          description: >-
+            Rate-limited. Operators may throttle anonymous probes; the app
+            retries with backoff.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-
+              schema:
+                $ref: '#/components/schemas/Envelope'
   /loovie/capabilities:
     get:
-      tags: [System]
+      tags:
+        - System
       summary: What this server can do
       description: |
         UNAUTHENTICATED. The Loovie app probes this at save and at app
@@ -443,53 +574,93 @@ paths:
       security: []
       operationId: getCapabilities
       responses:
-        "200":
+        '200':
           description: Capability manifest.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Capabilities' }
+              schema:
+                $ref: '#/components/schemas/Capabilities'
               examples:
                 imageAndVideo:
                   summary: Image + single-shot video
                   value:
                     schemaVersion: 1
-                    version: "0.1.0"
+                    version: 0.1.0
                     images:
-                      capabilities: ["t2i", "i2i"]
+                      capabilities:
+                        - t2i
+                        - i2i
                       referenceCount: 4
-                      resolution: ["720p", "1K", "2K"]
-                      variants: ["fast", "pro"]
-                      aspectRatios: ["auto", "1:1", "16:9", "9:16", "4:3"]
+                      resolution:
+                        - 720p
+                        - 1K
+                        - 2K
+                      variants:
+                        - fast
+                        - pro
+                      aspectRatios:
+                        - auto
+                        - '1:1'
+                        - '16:9'
+                        - '9:16'
+                        - '4:3'
                       promptCharLimit: 3000
                     ss_videos:
-                      capabilities: ["t2v", "i2v", "fl2v"]
+                      capabilities:
+                        - t2v
+                        - i2v
+                        - fl2v
                       referenceCount: 1
-                      resolution: ["720p", "1080p"]
-                      variants: ["fast", "pro"]
-                      aspectRatios: ["auto", "16:9", "9:16", "1:1"]
-                      durations: [1, 2, 3, 4, 5, 6, 7, 8]
+                      resolution:
+                        - 720p
+                        - 1080p
+                      variants:
+                        - fast
+                        - pro
+                      aspectRatios:
+                        - auto
+                        - '16:9'
+                        - '9:16'
+                        - '1:1'
+                      durations:
+                        - 1
+                        - 2
+                        - 3
+                        - 4
+                        - 5
+                        - 6
+                        - 7
+                        - 8
                       supportsAudio: true
                       promptCharLimit: 3000
                 imageOnly:
                   summary: Server with no video workflows installed
                   value:
                     schemaVersion: 1
-                    version: "0.1.0"
+                    version: 0.1.0
                     images:
-                      capabilities: ["t2i"]
+                      capabilities:
+                        - t2i
                       referenceCount: 0
-                      resolution: ["1K"]
-                      variants: ["fast"]
-                      aspectRatios: ["auto", "1:1"]
-        "429":
-          description: Rate-limited. Operators may throttle anonymous probes; the app retries with backoff.
+                      resolution:
+                        - 1K
+                      variants:
+                        - fast
+                      aspectRatios:
+                        - auto
+                        - '1:1'
+        '429':
+          description: >-
+            Rate-limited. Operators may throttle anonymous probes; the app
+            retries with backoff.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-
+              schema:
+                $ref: '#/components/schemas/Envelope'
   /images/create:
     post:
-      tags: [Image]
+      tags:
+        - Image
       summary: Start an image generation
       description: |
         Required only when `/loovie/capabilities` advertises an `images`
@@ -500,60 +671,73 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ImageCreateRequest' }
+            schema:
+              $ref: '#/components/schemas/ImageCreateRequest'
       responses:
-        "200":
+        '200':
           description: Task accepted.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/TaskCreated' }
-        "400":
-          description: Malformed request (missing prompt, invalid enum, prompt > 3000 chars, unknown workflow, etc.).
+              schema:
+                $ref: '#/components/schemas/TaskCreated'
+        '400':
+          description: >-
+            Malformed request (missing prompt, invalid enum, prompt > 3000
+            chars, unknown workflow, etc.).
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-        "422":
-          description: Request body failed schema validation (e.g. wrong field types).
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-        "401":
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '401':
           description: Missing or invalid bearer token.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '422':
+          description: Request body failed schema validation (e.g. wrong field types).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
   /images/status:
     get:
-      tags: [Image]
+      tags:
+        - Image
       summary: Poll an image task
-      description: Required only when `/loovie/capabilities` advertises an `images` section.
+      description: >-
+        Required only when `/loovie/capabilities` advertises an `images`
+        section.
       operationId: getImageStatus
       parameters:
         - name: taskId
           in: query
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Current task state.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/TaskStatus' }
-        "401":
+              schema:
+                $ref: '#/components/schemas/TaskStatus'
+        '401':
           description: Missing or invalid bearer token.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-        "404":
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '404':
           description: Task not found.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-
+              schema:
+                $ref: '#/components/schemas/Envelope'
   /videos/create:
     post:
-      tags: [Video]
+      tags:
+        - Video
       summary: Start a single-shot video generation
       description: |
         Required only when `/loovie/capabilities` advertises an `ss_videos`
@@ -564,60 +748,71 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/VideoCreateRequest' }
+            schema:
+              $ref: '#/components/schemas/VideoCreateRequest'
       responses:
-        "200":
+        '200':
           description: Task accepted.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/TaskCreated' }
-        "400":
+              schema:
+                $ref: '#/components/schemas/TaskCreated'
+        '400':
           description: Malformed request.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-        "422":
-          description: Request body failed schema validation (e.g. wrong field types).
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-        "401":
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '401':
           description: Missing or invalid bearer token.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '422':
+          description: Request body failed schema validation (e.g. wrong field types).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
   /videos/status:
     get:
-      tags: [Video]
+      tags:
+        - Video
       summary: Poll a video task
-      description: Required only when `/loovie/capabilities` advertises an `ss_videos` section.
+      description: >-
+        Required only when `/loovie/capabilities` advertises an `ss_videos`
+        section.
       operationId: getVideoStatus
       parameters:
         - name: taskId
           in: query
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Current task state.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/TaskStatus' }
-        "401":
+              schema:
+                $ref: '#/components/schemas/TaskStatus'
+        '401':
           description: Missing or invalid bearer token.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-        "404":
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '404':
           description: Task not found.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-
+              schema:
+                $ref: '#/components/schemas/Envelope'
   /loovie/upload:
     post:
-      tags: [Upload]
+      tags:
+        - Upload
       summary: Stage an input file
       description: |
         Optional operator-side helper. The Loovie app uploads reference
@@ -633,29 +828,39 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [file]
+              required:
+                - file
               properties:
-                file: { type: string, format: binary }
+                file:
+                  type: string
+                  format: binary
           application/json:
-            schema: { $ref: '#/components/schemas/UploadJsonRequest' }
+            schema:
+              $ref: '#/components/schemas/UploadJsonRequest'
       responses:
-        "200":
+        '200':
           description: Stored.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/UploadResponse' }
-        "400":
-          description: Malformed input (invalid base64, non-ASCII filename, missing required fields).
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          description: >-
+            Malformed input (invalid base64, non-ASCII filename, missing
+            required fields).
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-        "422":
-          description: Request body failed schema validation (e.g. wrong field types).
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
-        "401":
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '401':
           description: Missing or invalid bearer token.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Envelope' }
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '422':
+          description: Request body failed schema validation (e.g. wrong field types).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
