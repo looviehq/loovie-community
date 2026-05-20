@@ -31,16 +31,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v6.0.2
 
       - name: Initialise CodeQL
-        uses: github/codeql-action/init@v3.29.0
+        uses: github/codeql-action/init@v4.35.5
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
           queries: security-and-quality
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v3.29.0
+        uses: github/codeql-action/analyze@v4.35.5
         with:
           category: '/language:${{ matrix.language }}'
