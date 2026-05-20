@@ -9,7 +9,6 @@ from comfyui_loovie.helpers.image_cache import (
     validate_url,
 )
 
-
 # ---------------------------------------------------------------------
 # Scheme rejection.
 # ---------------------------------------------------------------------
@@ -53,7 +52,7 @@ def test_http_and_https_are_accepted() -> None:
     ],
 )
 def test_private_and_loopback_ips_are_rejected(url: str) -> None:
-    with pytest.raises(ValueError, match="private|loopback|link-local|internal"):
+    with pytest.raises(ValueError, match=r"private|loopback|link-local|internal"):
         validate_url(url)
 
 

@@ -8,7 +8,6 @@ import time
 
 from comfyui_loovie.task_store import TaskState, TaskStore
 
-
 # ---------------------------------------------------------------------
 # Task ID format.
 # ---------------------------------------------------------------------

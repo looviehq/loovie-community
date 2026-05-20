@@ -20,7 +20,6 @@ from comfyui_loovie.capabilities import (
     build_capabilities_manifest,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OPENAPI_PATH = REPO_ROOT / "openapi" / "loovie-server.openapi.yaml"
 
