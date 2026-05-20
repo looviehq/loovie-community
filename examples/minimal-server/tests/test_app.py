@@ -8,6 +8,7 @@ import os
 import time
 
 import pytest
+from fastapi import Request
 from fastapi.testclient import TestClient
 
 # Import the module under test.
@@ -55,9 +56,11 @@ def test_remote_request_without_token_is_refused() -> None:
     AND the caller is not on loopback. TestClient appears local by
     default, so we override the dependency to simulate a remote caller."""
 
-    def fake_require_bearer(request) -> None:  # type: ignore[no-untyped-def]
+    def fake_require_bearer(request: Request) -> None:
         # Force the remote path by inlining the production check with
-        # a pretend non-local client.
+        # a pretend non-local client. `request: Request` annotation is
+        # required so FastAPI does not try to validate it as a body field
+        # (which would produce a 422 long before our 401 fires).
         token = os.environ.get("LOOVIE_API_TOKEN", "").strip()
         if not token:
             from fastapi import HTTPException
