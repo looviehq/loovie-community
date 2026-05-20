@@ -5,11 +5,12 @@ This is the step-by-step for the *Preferences → BYO server* sheet. It assumes 
 ## Open the BYO sheet
 
 1. Open the Loovie iOS app.
-2. Tap your avatar or the menu → **Preferences**.
-3. Scroll to **Connected apps & MCP**.
-4. Tap **BYO server**.
+2. Tap the **burger menu icon** in the top-left corner to open the navigation drawer.
+3. Tap **Preferences**.
+4. Scroll to **Connected apps & MCP**.
+5. Tap **BYO server**.
 
-If you don't see the **Connected apps & MCP** section, you have not joined the beta yet. Scroll up in Preferences for the **Local Compute (BYO), join the beta** row and tap it once. Force-quit and reopen the app (the feature flag refreshes on app start).
+If you don't see the **Connected apps & MCP** section, you have not joined the beta yet. Scroll up in Preferences for the **Local Compute (BYO), join the beta** row and tap it once. Force-quit and reopen the app for the change to take effect.
 
 ## The header caption
 

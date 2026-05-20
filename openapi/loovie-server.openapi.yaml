@@ -355,7 +355,7 @@ components:
         - `EXECUTION_ERROR`: a node in the workflow raised an exception during execution. `failMsg` SHOULD include the operator readable traceback summary (missing model, CUDA OOM, etc.).
         - `OUTPUT_MISSING`: workflow ran to completion but produced no output file. Usually a broken workflow JSON, verify the final save node.
         - `HISTORY_MISSING`: the task disappeared from the backend's history (e.g. ComfyUI restarted mid-run). Safe to retry.
-        - `TIMEOUT`: the server's own internal timeout fired before the job completed. Distinct from the Loovie 10-minute wrapper timeout (which the app surfaces as `BYO_TIMEOUT` and is computed client-side).
+        - `TIMEOUT`: the server's own internal timeout fired before the job completed. Distinct from the Loovie 30-minute wrapper timeout (which the app surfaces as `BYO_TIMEOUT` and is computed client-side).
 
         ### Content moderation
 

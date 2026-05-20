@@ -60,11 +60,11 @@ Your server failed the generation. This is on your server, not Loovie. The most 
 | `OUTPUT_MISSING` | Workflow ran but produced no output. | Workflow JSON is broken. Re-export from ComfyUI editor. |
 | `HISTORY_MISSING` | The task disappeared from ComfyUI's history. | ComfyUI restarted mid-run; retry. |
 | `BYO_INVALID_RESULT` | Server returned a file that isn't a valid image/video. | Workflow output bytes don't match the declared MIME. Verify the final save node and the format. |
-| `BYO_TIMEOUT` | Generation exceeded 10 minutes. | Cold model load, undersized GPU, pro tier on 24 GB. Use a bigger GPU or the `fast` variant. Pre-warm by running once before the real generation. |
+| `BYO_TIMEOUT` | Generation exceeded 30 minutes. | Cold model load, undersized GPU, very long video, pro tier on a tight VRAM budget. Use a bigger GPU, a shorter duration, or the `fast` variant. Pre-warm by running once before the real generation. |
 
-### Timed out after 10 minutes
+### Timed out after 30 minutes
 
-Same as `BYO_TIMEOUT` above. The Loovie API times out after 10 minutes of no terminal state.
+Same as `BYO_TIMEOUT` above. The Loovie API times out after 30 minutes of no terminal state. Most generations finish in well under that; long videos (8 second pro variants, large resolutions) and cold model loads on undersized GPUs are the usual culprits when you hit the cap.
 
 - For LTX-2.3 pro on a 24 GB GPU you may genuinely run out of time on first cold start. Switch to `fast` variant, or use a 48 GB GPU, or pre-warm.
 
