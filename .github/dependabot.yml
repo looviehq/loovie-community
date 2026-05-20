@@ -38,7 +38,7 @@ updates:
       day: monday
     open-pull-requests-limit: 3
 
-  # GitHub Actions, pinned by SHA — Dependabot updates the SHAs.
+  # GitHub Actions, pinned by SHA, Dependabot updates the SHAs.
   - package-ecosystem: github-actions
     directory: /
     schedule:

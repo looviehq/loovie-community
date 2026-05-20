@@ -8,15 +8,15 @@ This is the fastest path if you don't have a beefy NVIDIA GPU at home, or want t
 >
 > **Referral disclosure.** Links in this doc use Loovie's RunPod referral (`?ref=vg16q1rz`). Using them supports Loovie at no extra cost to you.
 
-## Step 1 — Create a RunPod account
+## Step 1, Create a RunPod account
 
-[Create a RunPod account](https://runpod.io?ref=vg16q1rz). Verify your email. Add a credit card — RunPod is pay-as-you-go.
+[Create a RunPod account](https://runpod.io?ref=vg16q1rz). Verify your email. Add a credit card, RunPod is pay-as-you-go.
 
-## Step 2 — Get a HuggingFace token and accept the gated licences
+## Step 2, Get a HuggingFace token and accept the gated licences
 
 See [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md). You will paste the token into the pod's secrets in step 5. Skipping this step means the first-boot model download fails with `HTTP 401`.
 
-## Step 3 — Generate a server token locally
+## Step 3, Generate a server token locally
 
 ```sh
 git clone https://github.com/looviehq/loovie-community.git
@@ -26,7 +26,7 @@ bash scripts/new-token.sh
 
 Copy the output. You will paste it as `LOOVIE_API_TOKEN` in step 5.
 
-## Step 4 — Deploy the template
+## Step 4, Deploy the template
 
 Two options:
 
@@ -39,7 +39,7 @@ Either way, when launching a pod from this template:
 - **Exposed port:** `8188/http` (already set).
 - **Volume:** 80 GB at `/runpod-volume`.
 
-## Step 5 — Pick a GPU and set the secrets
+## Step 5, Pick a GPU and set the secrets
 
 Per the GPU compat note above, pick a GPU your workload supports:
 
@@ -51,29 +51,29 @@ Per the GPU compat note above, pick a GPU your workload supports:
 
 When launching, set the two required secrets:
 
-- `LOOVIE_API_TOKEN` — the token from step 3.
-- `HF_TOKEN` — your HuggingFace read token from step 2.
+- `LOOVIE_API_TOKEN`: the token from step 3.
+- `HF_TOKEN`: your HuggingFace read token from step 2.
 
 Leave the other variables at their defaults unless you want to download fewer models:
 
-- `DOWNLOAD_MODELS=1` — auto-download on first boot.
-- `LOOVIE_KIND=all` — pull both image and video model sets. Switch to `images` or `videos` for a smaller cache.
+- `DOWNLOAD_MODELS=1`: auto-download on first boot.
+- `LOOVIE_KIND=all`: pull both image and video model sets. Switch to `images` or `videos` for a smaller cache.
 
-## Step 6 — First boot
+## Step 6, First boot
 
-Click *Deploy* and wait. First boot downloads model weights into the attached volume; this typically takes 15 to 40 minutes depending on GPU class and HuggingFace bandwidth. Watch the pod logs — the entrypoint prints a status banner at the start and a model-availability summary after the downloader runs.
+Click *Deploy* and wait. First boot downloads model weights into the attached volume; this typically takes 15 to 40 minutes depending on GPU class and HuggingFace bandwidth. Watch the pod logs, the entrypoint prints a status banner at the start and a model-availability summary after the downloader runs.
 
 The health endpoint reports phases as the boot progresses:
 
-- `phase: booting_up` — container is starting, ComfyUI not yet up.
-- `phase: downloading_models` — downloader is running.
-- `phase: ready` — ComfyUI is serving on port 8188.
+- `phase: booting_up`: container is starting, ComfyUI not yet up.
+- `phase: downloading_models`: downloader is running.
+- `phase: ready`: ComfyUI is serving on port 8188.
 
 You can poll it with `curl -s https://<pod-id>-8188.proxy.runpod.net/loovie/health | jq .` from your laptop.
 
-Subsequent boots reuse the volume and start in under a minute. Keep `DOWNLOAD_MODELS=1` even on later boots — the downloader skips files that are already present, so it just verifies and exits.
+Subsequent boots reuse the volume and start in under a minute. Keep `DOWNLOAD_MODELS=1` even on later boots, the downloader skips files that are already present, so it just verifies and exits.
 
-## Step 7 — Copy the proxy URL into the app
+## Step 7, Copy the proxy URL into the app
 
 Once `phase: ready`, RunPod exposes the pod at:
 
@@ -92,7 +92,7 @@ Tap *Save*. The app probes `/loovie/capabilities`; you should see *Server reacha
 
 Now go to image or video generation and pick *Your server (BYO)*. The image picker shows a **Free** badge.
 
-## Step 8 — Stop the pod when you're done
+## Step 8, Stop the pod when you're done
 
 **RunPod keeps billing as long as the pod is running.** From the RunPod console, click *Stop* (preserves the volume, fast restart later) or *Terminate* (deletes the pod and optionally the volume).
 
@@ -108,7 +108,7 @@ If you only use the server intermittently, stopping and restarting is cheap; res
 
 - **HTTP 401 from the downloader** → revisit [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md). The downloader prints which repo needs acceptance.
 - **Pod refuses to start with "LOOVIE_API_TOKEN is not set"** → you forgot the secret. Edit the pod, add it, restart.
-- **`/loovie/capabilities` missing `ss_videos`** → the video model download didn't finish. Check pod logs for errors during the LTX-2.3 downloads. Often a transient HuggingFace timeout — restart the pod and the downloader will resume.
+- **`/loovie/capabilities` missing `ss_videos`** → the video model download didn't finish. Check pod logs for errors during the LTX-2.3 downloads. Often a transient HuggingFace timeout, restart the pod and the downloader will resume.
 - **`Your server (BYO)` not visible in the app** → you have not joined the beta yet (see [`10-create-a-loovie-account.md`](10-create-a-loovie-account.md)) or the server is unreachable.
 
 For a fuller table, see [`70-troubleshooting.md`](70-troubleshooting.md).

@@ -1,4 +1,4 @@
-"""image_cache.validate_url and friends — SSRF guards and filename derivation."""
+"""image_cache.validate_url and friends, SSRF guards and filename derivation."""
 
 from __future__ import annotations
 

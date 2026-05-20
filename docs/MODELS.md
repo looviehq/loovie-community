@@ -13,7 +13,7 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 - **Purpose:** primary text-to-image and image-to-image model for the `loovie-custom` image tier.
 - **HuggingFace repo:** [`Comfy-Org/flux2`](https://huggingface.co/Comfy-Org/flux2) (Comfy-Org's packaged-for-ComfyUI build).
 - **Upstream:** [Black Forest Labs / FLUX](https://github.com/black-forest-labs/flux).
-- **Licence:** Black Forest Labs FLUX.2 Klein licence. **Gated on HuggingFace** — accept on the repo page while logged in before downloading. Read the terms.
+- **Licence:** Black Forest Labs FLUX.2 Klein licence. **Gated on HuggingFace**, accept on the repo page while logged in before downloading. Read the terms.
 - **Files:** `flux-2-klein-4b.safetensors`, `flux2-vae.safetensors`, `qwen_3_4b_flux2.safetensors`.
 - **Approx size:** ~24 GB combined.
 
@@ -30,7 +30,7 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 
 - **Purpose:** primary text-to-video / image-to-video / first-and-last-frame-to-video model for the `loovie-custom` video tier.
 - **HuggingFace repo:** [`Comfy-Org/ltx-2`](https://huggingface.co/Comfy-Org/ltx-2) (Comfy-Org's packaged-for-ComfyUI build of [Lightricks/LTX-Video](https://github.com/Lightricks/LTX-Video)).
-- **Licence:** Lightricks LTX community licence. Read the terms — there are restrictions on commercial use depending on the variant. Loovie's `comfyui-loovie/` repo only ships workflows; **your generations are your responsibility** under the LTX licence.
+- **Licence:** Lightricks LTX community licence. Read the terms, there are restrictions on commercial use depending on the variant. Loovie's `comfyui-loovie/` repo only ships workflows; **your generations are your responsibility** under the LTX licence.
 - **Files:** `ltx-2.3-22b-dev-fp8.safetensors`, `ltx-2.3-22b-distilled-lora-384.safetensors`.
 - **Approx size:** ~37 GB combined.
 
@@ -39,7 +39,7 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 - **Purpose:** text encoder used by LTX-2.3. Without it, the video model cannot tokenise prompts.
 - **HuggingFace repo:** [`Comfy-Org/ltx-2`](https://huggingface.co/Comfy-Org/ltx-2) (the merged single-file variant Lightricks ships alongside LTX-2.3).
 - **Upstream:** [Google Gemma](https://huggingface.co/google/gemma-3-12b-it).
-- **Licence:** Google [Gemma Terms of Use](https://ai.google.dev/gemma/terms). **Gated on HuggingFace** — accept on the upstream repo page while logged in before downloading. Read the terms; Gemma has its own acceptable-use policy.
+- **Licence:** Google [Gemma Terms of Use](https://ai.google.dev/gemma/terms). **Gated on HuggingFace**, accept on the upstream repo page while logged in before downloading. Read the terms; Gemma has its own acceptable-use policy.
 - **Approx size:** ~13 GB.
 
 ### LTX-2.3 spatial upscaler (pro tier)

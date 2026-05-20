@@ -81,13 +81,13 @@ The Loovie backend **never** calls your server. The mobile app does. Direct devi
 
 ## Privacy in one paragraph
 
-Your BYO server URL and bearer token live in the **Loovie app on your device only** — they have to, because the app is what calls your server. They are **never sent to Loovie's backend servers and are not accessible to Loovie staff**. Uninstall the app or tap *Clear saved server* in Preferences and they are gone — there is no copy in our cloud to be deleted. The metadata we do store about a generation (prompt, parameters, the final media file) is the same as for any Loovie generation. Details: [LEGAL.md](LEGAL.md), [docs/15-terms-and-privacy.md](docs/15-terms-and-privacy.md), and [loovie.app/privacy](https://loovie.app/privacy).
+Your BYO server URL and bearer token live in the **Loovie app on your device only**, they have to, because the app is what calls your server. They are **never sent to Loovie's backend servers and are not accessible to Loovie staff**. Uninstall the app or tap *Clear saved server* in Preferences and they are gone, there is no copy in our cloud to be deleted. The metadata we do store about a generation (prompt, parameters, the final media file) is the same as for any Loovie generation. Details: [LEGAL.md](LEGAL.md), [docs/15-terms-and-privacy.md](docs/15-terms-and-privacy.md), and [loovie.app/privacy](https://loovie.app/privacy).
 
 ## Status
 
 **Public beta.** Free in the Loovie app while in beta (no subscription, no credits). After beta we expect to introduce a small flat‑fee *BYO Pass* subscription. **Generations stay 0 credits forever.** If you rent a GPU (e.g. RunPod), that provider charges you separately; Loovie itself charges nothing for BYO.
 
-### Beta API stability — read this before you depend on the contract
+### Beta API stability, read this before you depend on the contract
 
 While we are on the `0.x` line, **the BYO HTTP contract may introduce breaking changes between minor versions.** Every change is documented in [CHANGELOG.md](CHANGELOG.md) and reflected in `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). **Pin to a specific tag or commit SHA** if you depend on it. The contract becomes strict semver at `1.0.0`.
 
@@ -106,7 +106,7 @@ While we are on the `0.x` line, **the BYO HTTP contract may introduce breaking c
 
 ## Contributing
 
-We use **DCO sign‑off** (`git commit -s`), not a CLA, and **Conventional Commits** on the subject. See [CONTRIBUTING.md](CONTRIBUTING.md). New workflows are very welcome — see [`docs/80-adding-a-workflow.md`](docs/80-adding-a-workflow.md).
+We use **DCO sign‑off** (`git commit -s`), not a CLA, and **Conventional Commits** on the subject. See [CONTRIBUTING.md](CONTRIBUTING.md). New workflows are very welcome, see [`docs/80-adding-a-workflow.md`](docs/80-adding-a-workflow.md).
 
 ## Security
 
@@ -114,8 +114,8 @@ Vulnerabilities go through [GitHub Private Vulnerability Reporting](https://gith
 
 ## Community
 
-Community‑supported beta, best‑effort, no SLA. The Loovie Discord is the primary support venue once the server opens — invite link will appear here. Until then, [GitHub Discussions](https://github.com/looviehq/loovie-community/discussions) is the fallback.
+Community‑supported beta, best‑effort, no SLA. The Loovie Discord is the primary support venue once the server opens, invite link will appear here. Until then, [GitHub Discussions](https://github.com/looviehq/loovie-community/discussions) is the fallback.
 
 ## License
 
-Apache‑2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE). Bundled and referenced **models are not ours** — each has its own license, including some that are gated on HuggingFace. See [docs/MODELS.md](docs/MODELS.md). You are responsible for accepting model licenses before downloading them.
+Apache‑2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE). Bundled and referenced **models are not ours**, each has its own license, including some that are gated on HuggingFace. See [docs/MODELS.md](docs/MODELS.md). You are responsible for accepting model licenses before downloading them.

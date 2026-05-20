@@ -1,8 +1,8 @@
-# `examples/minimal-server` — FastAPI reference
+# `examples/minimal-server`, FastAPI reference
 
 A small (`~330 LoC`) FastAPI app that implements every endpoint of the [Loovie BYO HTTP contract](../../openapi/loovie-server.openapi.yaml) with placeholder outputs.
 
-**It is not a generation server.** `POST /images/create` and `POST /videos/create` simulate progress and resolve to a 1×1 transparent PNG / minimal MP4 `data:` URL. The point is to let you validate the contract — connectivity, auth, capabilities, polling, timing — before you provision a GPU or wire up a real model pipeline.
+**It is not a generation server.** `POST /images/create` and `POST /videos/create` simulate progress and resolve to a 1×1 transparent PNG / minimal MP4 `data:` URL. The point is to let you validate the contract, connectivity, auth, capabilities, polling, timing, before you provision a GPU or wire up a real model pipeline.
 
 ## Run it
 
@@ -28,7 +28,7 @@ The response gives you a `taskId`; poll `GET /images/status?taskId=...` for stat
 
 ## Point the Loovie app at it (smoke test)
 
-You can connect the Loovie iOS app to this server (over a Cloudflare quick tunnel) to confirm the BYO picker shows up, capabilities resolve, and generation completes — useful before committing GPU spend on a real implementation. The actual generated media will be the bundled placeholders, so this is purely a connectivity / UX smoke test.
+You can connect the Loovie iOS app to this server (over a Cloudflare quick tunnel) to confirm the BYO picker shows up, capabilities resolve, and generation completes, useful before committing GPU spend on a real implementation. The actual generated media will be the bundled placeholders, so this is purely a connectivity / UX smoke test.
 
 ## Tests
 
@@ -61,7 +61,7 @@ schemathesis run --checks all \
   ../../openapi/loovie-server.openapi.yaml
 ```
 
-The placeholder outputs aren't intended to satisfy semantic checks beyond shape conformance — for that you need a real implementation like [`comfyui-loovie/`](../../comfyui-loovie/).
+The placeholder outputs aren't intended to satisfy semantic checks beyond shape conformance, for that you need a real implementation like [`comfyui-loovie/`](../../comfyui-loovie/).
 
 ## Implementation notes for new server authors
 
@@ -73,7 +73,7 @@ The whole server is ~330 lines in `app.py`. Worth reading top to bottom; it show
 - A `resultJson` field on success containing a JSON-encoded string of `{resultUrls: [...]}` (yes, encoded as a string, per the contract).
 - A bearer-token-protected upload endpoint accepting both `multipart/form-data` and `application/json` with `data_base64`.
 
-Roll your own in any stack — Go, Rust, TypeScript, Node, anything that speaks HTTP — and as long as your responses match the OpenAPI, the Loovie app will drive it. The reference ComfyUI implementation in [`comfyui-loovie/`](../../comfyui-loovie/) follows the same contract but is wired to real models.
+Roll your own in any stack, Go, Rust, TypeScript, Node, anything that speaks HTTP, and as long as your responses match the OpenAPI, the Loovie app will drive it. The reference ComfyUI implementation in [`comfyui-loovie/`](../../comfyui-loovie/) follows the same contract but is wired to real models.
 
 ## Not published
 

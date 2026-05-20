@@ -25,19 +25,19 @@ We expect the 4090 to handle the `fast` video variant once we have more time on 
 
 ## What's in the rest of these docs
 
-1. [`10-create-a-loovie-account.md`](10-create-a-loovie-account.md) — make an account in the Loovie iOS app (no web signup).
-2. [`15-terms-and-privacy.md`](15-terms-and-privacy.md) — what we store about a BYO generation and what we explicitly do not.
-3. [`20-quickstart-your-own-machine.md`](20-quickstart-your-own-machine.md) — install ComfyUI, plug in `comfyui-loovie`, generate locally.
-4. [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md) — HuggingFace token + accepting gated model licenses.
-5. [`30-runpod.md`](30-runpod.md) — the rented-GPU path, with the Loovie referral link.
-6. [`40-cloudflare-tunnel.md`](40-cloudflare-tunnel.md) — make a home server reachable from your phone.
-7. [`50-security-and-tokens.md`](50-security-and-tokens.md) — required reading before opening any port.
-8. [`60-configure-the-app.md`](60-configure-the-app.md) — paste URL + token into Loovie, pick *Your server (BYO)*.
-9. [`70-troubleshooting.md`](70-troubleshooting.md) — symptom-to-fix table.
-10. [`80-adding-a-workflow.md`](80-adding-a-workflow.md) — contribute a new workflow.
-11. [`85-editing-api-workflows.md`](85-editing-api-workflows.md) — how to author or edit a workflow JSON.
-12. [`90-the-contract.md`](90-the-contract.md) — human-readable mirror of the OpenAPI spec.
-13. [`MODELS.md`](MODELS.md) — every model the reference implementation pulls, its license, gated status.
+1. [`10-create-a-loovie-account.md`](10-create-a-loovie-account.md), make an account in the Loovie iOS app (no web signup).
+2. [`15-terms-and-privacy.md`](15-terms-and-privacy.md), what we store about a BYO generation and what we explicitly do not.
+3. [`20-quickstart-your-own-machine.md`](20-quickstart-your-own-machine.md), install ComfyUI, plug in `comfyui-loovie`, generate locally.
+4. [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md), HuggingFace token + accepting gated model licenses.
+5. [`30-runpod.md`](30-runpod.md), the rented-GPU path, with the Loovie referral link.
+6. [`40-cloudflare-tunnel.md`](40-cloudflare-tunnel.md), make a home server reachable from your phone.
+7. [`50-security-and-tokens.md`](50-security-and-tokens.md), required reading before opening any port.
+8. [`60-configure-the-app.md`](60-configure-the-app.md), paste URL + token into Loovie, pick *Your server (BYO)*.
+9. [`70-troubleshooting.md`](70-troubleshooting.md), symptom-to-fix table.
+10. [`80-adding-a-workflow.md`](80-adding-a-workflow.md), contribute a new workflow.
+11. [`85-editing-api-workflows.md`](85-editing-api-workflows.md), how to author or edit a workflow JSON.
+12. [`90-the-contract.md`](90-the-contract.md), human-readable mirror of the OpenAPI spec.
+13. [`MODELS.md`](MODELS.md), every model the reference implementation pulls, its license, gated status.
 
 ## Honest expectations
 

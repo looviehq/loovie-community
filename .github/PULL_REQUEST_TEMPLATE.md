@@ -12,14 +12,14 @@ Thanks for the contribution! A few things to confirm before we merge:
 
 ## Type of change
 
-- [ ] `feat` — new user-facing feature
-- [ ] `fix` — bug fix
-- [ ] `docs` — documentation only
-- [ ] `refactor` — code change without behavioural change
-- [ ] `test` — tests only
-- [ ] `build`/`ci` — build system or CI
-- [ ] `perf` — performance improvement
-- [ ] `chore` — other (no version bump)
+- [ ] `feat`, new user-facing feature
+- [ ] `fix`, bug fix
+- [ ] `docs`, documentation only
+- [ ] `refactor`, code change without behavioural change
+- [ ] `test`, tests only
+- [ ] `build`/`ci`, build system or CI
+- [ ] `perf`, performance improvement
+- [ ] `chore`, other (no version bump)
 - [ ] **Breaking change** (suffix the commit type with `!` and explain in body)
 
 ## Checklist
@@ -31,7 +31,7 @@ Thanks for the contribution! A few things to confirm before we merge:
 - [ ] If this changes the contract: I updated `openapi/loovie-server.openapi.yaml` and bumped `info.version`.
 - [ ] If this adds a workflow or model: I documented the model license in `docs/MODELS.md`.
 - [ ] If this adds dependencies: I added them via the appropriate manifest, not hand-edited.
-- [ ] CHANGELOG: nothing to do here — `release-please` will write it from my commit message.
+- [ ] CHANGELOG: nothing to do here, `release-please` will write it from my commit message.
 
 ## Test plan
 

@@ -37,7 +37,7 @@ Documentation = "https://github.com/looviehq/loovie-community/tree/main/docs"
 # `referencing` is pulled by jsonschema 4.18+ but listed explicitly so
 # tests that build a Registry don't depend on a transitive.
 #
-# `schemathesis` deliberately does NOT live here — it's a contract
+# `schemathesis` deliberately does NOT live here, it's a contract
 # test tool that runs against examples/minimal-server in CI, not
 # against this package. Putting it here would balloon CI install
 # time with hypothesis + numpy.random surface area.
@@ -84,7 +84,7 @@ addopts      = "--cov=comfyui_loovie --cov-report=term-missing --cov-fail-under=
 branch = true
 source = ["comfyui_loovie"]
 omit = [
-  # ComfyUI runtime node implementations — only exercised when ComfyUI
+  # ComfyUI runtime node implementations, only exercised when ComfyUI
   # instantiates them. The interface (registration, INPUT_TYPES,
   # RETURN_TYPES) is exercised at import time and counts elsewhere.
   "src/comfyui_loovie/nodes/loovie_image_input.py",

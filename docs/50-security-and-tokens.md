@@ -6,7 +6,7 @@ This is the page to read before you point any port at the internet. It is short 
 
 Your BYO server URL and bearer token live in the **Loovie app on your device only**. The app needs them to call your server, which is why they exist there. They are **never sent to Loovie's backend servers and are not accessible to Loovie staff.** Loovie's backend does not call your server; only the Loovie mobile app does.
 
-If you want to verify, run any HTTP proxy on your phone (Charles, Proxyman, etc.) on the Loovie traffic. Every request to `api.loovie.app` carries job metadata only — no URL, no token, no media bytes. The calls to your BYO server URL go directly from the device to your server.
+If you want to verify, run any HTTP proxy on your phone (Charles, Proxyman, etc.) on the Loovie traffic. Every request to `api.loovie.app` carries job metadata only, no URL, no token, no media bytes. The calls to your BYO server URL go directly from the device to your server.
 
 ## What we store about a BYO generation
 
@@ -48,7 +48,7 @@ If you save an `http://` URL in the app, you have to tick a **yellow checkbox**:
 - A corporate network you don't own.
 - Public Wi-Fi of any kind.
 
-The reason is simple: HTTP is unencrypted, so anyone on the same network with `tcpdump` and a few minutes can see your bearer token. Tunnel it (see option A in [`40-cloudflare-tunnel.md`](40-cloudflare-tunnel.md) — a 30-second `cloudflared tunnel --url http://localhost:8188` gives you HTTPS) instead.
+The reason is simple: HTTP is unencrypted, so anyone on the same network with `tcpdump` and a few minutes can see your bearer token. Tunnel it (see option A in [`40-cloudflare-tunnel.md`](40-cloudflare-tunnel.md), a 30-second `cloudflared tunnel --url http://localhost:8188` gives you HTTPS) instead.
 
 ## What Loovie does on its side
 
@@ -72,7 +72,7 @@ The Loovie API re-checks the magic bytes + size + MIME on the uploaded object at
 ## Honest residual risks
 
 - **No request signing in beta.** Plan to revisit once the paid tier raises stakes.
-- **`i2i` / `i2v` modes fetch URLs your app provides.** The Loovie app authors those URLs, but the server still does the fetch — so don't run your server as root, and don't expose port 8188 on a corporate network without an auth layer in front (Cloudflare Access scoped to `/images/*` + `/videos/*`, see [`40-cloudflare-tunnel.md`](40-cloudflare-tunnel.md)).
+- **`i2i` / `i2v` modes fetch URLs your app provides.** The Loovie app authors those URLs, but the server still does the fetch, so don't run your server as root, and don't expose port 8188 on a corporate network without an auth layer in front (Cloudflare Access scoped to `/images/*` + `/videos/*`, see [`40-cloudflare-tunnel.md`](40-cloudflare-tunnel.md)).
 - **Plain HTTP on an untrusted network exposes the bearer token.** The yellow checkbox is a real risk, not a formality. Don't tick it on café Wi-Fi.
 
 ## Reporting issues

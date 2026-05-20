@@ -7,7 +7,7 @@ The technical details of editing the workflow JSON live in [`85-editing-api-work
 ## Before you start
 
 - Read [`90-the-contract.md`](90-the-contract.md) so you know what the server must advertise + accept.
-- Read [`85-editing-api-workflows.md`](85-editing-api-workflows.md) — short, covers exporting API-format JSON and the required Loovie node `class_type`s.
+- Read [`85-editing-api-workflows.md`](85-editing-api-workflows.md), short, covers exporting API-format JSON and the required Loovie node `class_type`s.
 - Read [`MODELS.md`](MODELS.md) for the model-licence rules. If your workflow introduces a new model, you are also adding a licence row.
 
 ## Recipe
@@ -35,7 +35,7 @@ The full input/output reference is in [`comfyui-loovie/README.md`](../comfyui-lo
 
 ### 3. Export in API format
 
-Settings → enable *Dev mode options* → ⋯ menu → **Save (API Format)**. The exported JSON has numeric node IDs at the top level and per-node `class_type` + `inputs` keys. We do **not** ship UI format (`workflows/ui/`) — see [`85-editing-api-workflows.md`](85-editing-api-workflows.md).
+Settings → enable *Dev mode options* → ⋯ menu → **Save (API Format)**. The exported JSON has numeric node IDs at the top level and per-node `class_type` + `inputs` keys. We do **not** ship UI format (`workflows/ui/`), see [`85-editing-api-workflows.md`](85-editing-api-workflows.md).
 
 Place the JSON at `comfyui-loovie/workflows/<your-workflow-name>.json`.
 
@@ -53,7 +53,7 @@ workflows:
 
 ### 5. Update capabilities if you advertise new modes/variants/resolutions
 
-`src/comfyui_loovie/capabilities.py` is what generates the `/loovie/capabilities` response. If your workflow introduces a new mode (e.g. a new variant string), make sure it's already in the OpenAPI's closed enums in [`openapi/loovie-server.openapi.yaml`](../openapi/loovie-server.openapi.yaml). If it isn't, you're proposing a spec change — open a separate issue using the **[Spec change](https://github.com/looviehq/loovie-community/issues/new?template=spec_change.yml)** template, and bump `info.version` and `schemaVersion`. See [the beta API stability section of the README](../README.md#beta-api-stability--read-this-before-you-depend-on-the-contract).
+`src/comfyui_loovie/capabilities.py` is what generates the `/loovie/capabilities` response. If your workflow introduces a new mode (e.g. a new variant string), make sure it's already in the OpenAPI's closed enums in [`openapi/loovie-server.openapi.yaml`](../openapi/loovie-server.openapi.yaml). If it isn't, you're proposing a spec change, open a separate issue using the **[Spec change](https://github.com/looviehq/loovie-community/issues/new?template=spec_change.yml)** template, and bump `info.version` and `schemaVersion`. See [the beta API stability section of the README](../README.md#beta-api-stability--read-this-before-you-depend-on-the-contract).
 
 ### 6. Test locally
 
@@ -76,7 +76,7 @@ In your PR description include:
 
 ## Support boundary
 
-- **Workflows that ship in `comfyui-loovie/workflows/`** are reviewed and supported by the project (community-supported, best effort, no SLA — see [`CONTRIBUTING.md`](../CONTRIBUTING.md#status-community-supported-beta-no-sla)).
+- **Workflows that ship in `comfyui-loovie/workflows/`** are reviewed and supported by the project (community-supported, best effort, no SLA, see [`CONTRIBUTING.md`](../CONTRIBUTING.md#status-community-supported-beta-no-sla)).
 - **Custom workflows you keep locally** are entirely yours. The Discord can help; project maintainers cannot. This is the same boundary as any other ComfyUI custom node.
 
 ## Model licence obligations
@@ -84,6 +84,6 @@ In your PR description include:
 Every model you add ships with a licence. **You are responsible for confirming the licence permits the use case** before opening the PR. Common landmines:
 
 - "Research only" or "non-commercial" terms on some weights. We do not accept these in `comfyui-loovie/` because BYO users may be commercial.
-- Gated HuggingFace repos that require account-level acceptance — those are fine, but document the gating in `MODELS.md` and the downloader manifest.
+- Gated HuggingFace repos that require account-level acceptance, those are fine, but document the gating in `MODELS.md` and the downloader manifest.
 
 When in doubt, ask in `#byo-workflows` on Discord before doing the engineering work.

@@ -6,18 +6,18 @@ You need a Loovie account to use BYO, because the iOS app is the thing that call
 
 ## Steps
 
-1. **Install Loovie from the App Store.** [Open in the App Store](https://apps.apple.com/app/loovie) — or search for *Loovie* in the App Store on your iPhone or iPad.
+1. **Install Loovie from the App Store.** [Open in the App Store](https://apps.apple.com/app/loovie), or search for *Loovie* in the App Store on your iPhone or iPad.
 2. **Open the app.** On the sign-up screen you have three choices:
-   - **Continue with Apple** — fastest, no email required, recommended.
-   - **Continue with Google** — uses your Google account.
-   - **Continue with email** — Loovie emails you a one-time code; tap the magic link or enter the code.
+   - **Continue with Apple**: fastest, no email required, recommended.
+   - **Continue with Google**: uses your Google account.
+   - **Continue with email**: Loovie emails you a one-time code; tap the magic link or enter the code.
 3. **Free credits arrive automatically.** You do not need them for BYO (BYO is free in the app), but you need an account either way so your generations and your library are tied to a user.
-4. **Join the BYO beta.** Open *Preferences* and tap *Local Compute (BYO) — join the beta*. This enrolls you in the PostHog Early Access feature and unlocks the BYO server settings + the *Your server (BYO)* tier in the image and video quality pickers. The flag refresh happens on the next app start; if you do not see the BYO entries, force-quit and reopen Loovie.
+4. **Join the BYO beta.** Open *Preferences* and tap *Local Compute (BYO), join the beta*. This enrolls you in the PostHog Early Access feature and unlocks the BYO server settings + the *Your server (BYO)* tier in the image and video quality pickers. The flag refresh happens on the next app start; if you do not see the BYO entries, force-quit and reopen Loovie.
 
 ## After signup
 
 - The **BYO server** entry appears under *Preferences → Connected apps & MCP* once you are enrolled in the beta. [Configure it](60-configure-the-app.md) with your server URL and bearer token.
-- Your account has nothing to do with your BYO server — your server URL and bearer token never leave the device. See [`50-security-and-tokens.md`](50-security-and-tokens.md).
+- Your account has nothing to do with your BYO server, your server URL and bearer token never leave the device. See [`50-security-and-tokens.md`](50-security-and-tokens.md).
 
 ## What if I cannot install the iOS app?
 

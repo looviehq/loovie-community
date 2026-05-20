@@ -74,7 +74,7 @@ Thumbs.db
 *.swo
 *~
 
-# Models — never commit weights to git, they're huge and licensed separately
+# Models, never commit weights to git, they're huge and licensed separately
 models/
 *.safetensors
 *.bin

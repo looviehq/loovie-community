@@ -8,7 +8,7 @@ This guide walks through the **ComfyUI reference implementation** ([`comfyui-loo
 - **Disk.** ~70 GB for the full model set (`all`), ~24 GB for images only, ~70 GB for videos only.
 - **Python.** 3.10, 3.11, or 3.12.
 - **git.**
-- **A HuggingFace account and read token** — [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md). You will need to accept a gated licence for at least one model. Do this first; the download will fail loudly if you skip it.
+- **A HuggingFace account and read token**: [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md). You will need to accept a gated licence for at least one model. Do this first; the download will fail loudly if you skip it.
 
 ## Steps
 
@@ -80,7 +80,7 @@ From the ComfyUI directory:
 python main.py --listen 0.0.0.0 --port 8188
 ```
 
-`--listen 0.0.0.0` makes it reachable from your phone on the same network. **The server is configured to fail closed when `LOOVIE_API_TOKEN` is unset and the bind host is non-loopback**, so this is safe — but make sure the token is exported in the same shell.
+`--listen 0.0.0.0` makes it reachable from your phone on the same network. **The server is configured to fail closed when `LOOVIE_API_TOKEN` is unset and the bind host is non-loopback**, so this is safe, but make sure the token is exported in the same shell.
 
 ### 6. Verify it works
 
@@ -97,8 +97,8 @@ You should see the health endpoint return `{"code": 200, "data": {"status": "ok"
 
 You have two reasonable options:
 
-- **Same Wi-Fi** — find the machine's LAN IP (`ifconfig` on macOS/Linux, `ipconfig` on Windows) and use `http://192.168.x.y:8188` in the Loovie app. The app will ask you to tick a checkbox accepting that *plain HTTP is OK only on networks you trust*. Use this on your own home Wi-Fi only.
-- **From anywhere (cellular, café, hotel)** — set up [Cloudflare Tunnel](40-cloudflare-tunnel.md). You get HTTPS automatically.
+- **Same Wi-Fi**: find the machine's LAN IP (`ifconfig` on macOS/Linux, `ipconfig` on Windows) and use `http://192.168.x.y:8188` in the Loovie app. The app will ask you to tick a checkbox accepting that *plain HTTP is OK only on networks you trust*. Use this on your own home Wi-Fi only.
+- **From anywhere (cellular, café, hotel)**: set up [Cloudflare Tunnel](40-cloudflare-tunnel.md). You get HTTPS automatically.
 
 Then follow [`60-configure-the-app.md`](60-configure-the-app.md) to paste URL and token into the Loovie app.
 

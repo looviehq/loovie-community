@@ -1,4 +1,4 @@
-"""Auth-helper tests — the most security-critical code in the package.
+"""Auth-helper tests, the most security-critical code in the package.
 
 The full route layer needs a running aiohttp app to test end-to-end;
 these tests cover the two pure helpers (`_is_local_request`,

@@ -13,7 +13,7 @@ Cloudflare returned a 5xx-class error because the tunnel or the origin is down.
 
 ### "Server responded 401 at /loovie/capabilities"
 
-You put authentication in front of the probe path. Don't do that — `/loovie/health` and `/loovie/capabilities` are intentionally public so the app can find the server before the token is configured.
+You put authentication in front of the probe path. Don't do that, `/loovie/health` and `/loovie/capabilities` are intentionally public so the app can find the server before the token is configured.
 
 - If you're using Cloudflare Access, scope it to `/images/*` and `/videos/*` only. See [`40-cloudflare-tunnel.md`](40-cloudflare-tunnel.md).
 
@@ -78,7 +78,7 @@ Expected. LTX-2.3 and FLUX.2 are heavy and the Metal backend isn't competitive w
 
 In order of likelihood:
 
-1. **Not in the beta.** *Preferences → Local Compute (BYO) — join the beta* → tap → force-quit → reopen.
+1. **Not in the beta.** *Preferences → Local Compute (BYO), join the beta* → tap → force-quit → reopen.
 2. **The server didn't advertise that section.** If `images` is absent from `/loovie/capabilities`, the image BYO tier is hidden. Same for `ss_videos`. Check the capabilities response.
 3. **Server unreachable.** Reopen the BYO sheet; check the green / red status.
 
@@ -88,7 +88,7 @@ Loovie set a server-side kill switch (`BYO_KILL_SWITCH=true`). We do this only i
 
 ### The generate screen shows a banner: "Your BYO server isn't being used right now. We've switched to <tier>, which will charge credits."
 
-The app couldn't route the request to your BYO server (flag off, no WS session, server unreachable, or the kill switch is on) and fell back to your previous non-BYO quality tier — **which costs credits**.
+The app couldn't route the request to your BYO server (flag off, no WS session, server unreachable, or the kill switch is on) and fell back to your previous non-BYO quality tier, **which costs credits**.
 
 - Tap the banner to open the BYO sheet and fix the server.
 - The banner stays until you dismiss it or the next successful BYO save.

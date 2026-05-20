@@ -2,7 +2,7 @@
 
 This directory contains **one normative specification**:
 
-- [`loovie-server.openapi.yaml`](./loovie-server.openapi.yaml) — the HTTP API a BYO server must expose to be drivable by the Loovie mobile app.
+- [`loovie-server.openapi.yaml`](./loovie-server.openapi.yaml), the HTTP API a BYO server must expose to be drivable by the Loovie mobile app.
 
 It is the single source of truth. The reference implementations in [`comfyui-loovie/`](../comfyui-loovie/) and [`examples/minimal-server/`](../examples/minimal-server/) conform to it; anything you write that conforms is equally valid.
 
@@ -46,9 +46,9 @@ CI runs the lint on every PR that touches `openapi/**` (see [`.github/workflows/
 
 ## Versioning
 
-> ⚠️ **Beta API stability — pin your version.** While we are on the `0.x` line, **breaking changes may land in minor bumps.** That includes renaming or removing endpoints, narrowing or replacing enum values, changing field requiredness, and reshaping responses. We document every break in [CHANGELOG.md](../CHANGELOG.md) and reflect it in `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). **If you depend on the contract, pin to a specific tag or commit SHA** rather than tracking `main`. Strict semver kicks in at `1.0.0`.
+> ⚠️ **Beta API stability, pin your version.** While we are on the `0.x` line, **breaking changes may land in minor bumps.** That includes renaming or removing endpoints, narrowing or replacing enum values, changing field requiredness, and reshaping responses. We document every break in [CHANGELOG.md](../CHANGELOG.md) and reflect it in `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). **If you depend on the contract, pin to a specific tag or commit SHA** rather than tracking `main`. Strict semver kicks in at `1.0.0`.
 
-`info.version` follows semver and is independent of any individual implementation's version. The capabilities manifest carries its own `schemaVersion` (currently `1`); it bumps only when the manifest SHAPE changes — adding a new mode to an enum, adding an optional field with a default, removing a field, or changing requiredness.
+`info.version` follows semver and is independent of any individual implementation's version. The capabilities manifest carries its own `schemaVersion` (currently `1`); it bumps only when the manifest SHAPE changes, adding a new mode to an enum, adding an optional field with a default, removing a field, or changing requiredness.
 
 ## Spec extensions
 
@@ -56,4 +56,4 @@ The spec uses two `x-loovie-*` extensions:
 
 - `x-loovie-conditional-endpoints` (top level): documents which path groups are required only when the corresponding `/loovie/capabilities` section is advertised.
 
-If you implement the contract for your own stack, you do not need to honour `x-*` extensions — they are informational.
+If you implement the contract for your own stack, you do not need to honour `x-*` extensions, they are informational.

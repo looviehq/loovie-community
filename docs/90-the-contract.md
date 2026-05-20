@@ -89,7 +89,7 @@ The single most important endpoint. Tells the app what your server can do.
 }
 ```
 
-**Hard rules.** Unknown enum values fail the entire parse — the app falls back to bundled defaults and fires `byo_caps_schema_unsupported` analytics. `schemaVersion` is currently `1`; bump only when the shape changes. Omit sections you can't serve. `promptCharLimit` `3000` is the server's real hard cap.
+**Hard rules.** Unknown enum values fail the entire parse, the app falls back to bundled defaults and fires `byo_caps_schema_unsupported` analytics. `schemaVersion` is currently `1`; bump only when the shape changes. Omit sections you can't serve. `promptCharLimit` `3000` is the server's real hard cap.
 
 ### `POST /images/create` (Bearer, conditional on `images`)
 
@@ -163,11 +163,11 @@ Same response envelope: `{ "code": 200, "data": { "taskId": "..." } }`.
 
 Multipart `file=…` OR JSON `{ "filename": "…", "data_base64": "…" }`. Returns `{ filename, url, sizeBytes }`.
 
-You don't need to implement this if your operator workflow doesn't push files into the server. The Loovie app does not use it — the app references images via URL.
+You don't need to implement this if your operator workflow doesn't push files into the server. The Loovie app does not use it, the app references images via URL.
 
 ## Auth
 
-Static bearer token of your choosing. Required for remote callers. Localhost (`127.0.0.1` / `::1`) **may** bypass auth — the contract allows it but doesn't require it. **The server MUST fail closed when no token is configured and the caller is non-loopback.** Returning anything other than `401` for an unauthenticated remote request is a protocol violation.
+Static bearer token of your choosing. Required for remote callers. Localhost (`127.0.0.1` / `::1`) **may** bypass auth, the contract allows it but doesn't require it. **The server MUST fail closed when no token is configured and the caller is non-loopback.** Returning anything other than `401` for an unauthenticated remote request is a protocol violation.
 
 `/loovie/health` and `/loovie/capabilities` are always unauthenticated, even when a token is configured.
 
@@ -183,12 +183,12 @@ The contract advertises a `promptCharLimit` (default 3000) per section. The serv
 
 The server-side failCodes the reference implementation emits:
 
-- `WORKFLOW_NOT_FOUND` — the requested workflow / variant isn't installed.
-- `SUBMISSION_ERROR` — the workflow couldn't be submitted to ComfyUI.
-- `EXECUTION_ERROR` — a node blew up during execution.
-- `OUTPUT_MISSING` — workflow ran but produced no output file.
-- `HISTORY_MISSING` — task disappeared from history (server restart mid-run).
-- `TIMEOUT` — generation exceeded `max_wait_seconds` for the workflow.
+- `WORKFLOW_NOT_FOUND`: the requested workflow / variant isn't installed.
+- `SUBMISSION_ERROR`: the workflow couldn't be submitted to ComfyUI.
+- `EXECUTION_ERROR`: a node blew up during execution.
+- `OUTPUT_MISSING`: workflow ran but produced no output file.
+- `HISTORY_MISSING`: task disappeared from history (server restart mid-run).
+- `TIMEOUT`: generation exceeded `max_wait_seconds` for the workflow.
 
 Custom servers may emit additional codes; the Loovie app prefixes any non-`BYO_*` code with `BYO_` at the failure boundary, so e.g. `OUTPUT_MISSING` becomes `BYO_OUTPUT_MISSING` in the Loovie error-tracking funnel.
 

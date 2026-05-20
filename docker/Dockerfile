@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # ============================================================================
-# Loovie Community — reference Docker image for a BYO ComfyUI server that
+# Loovie Community, reference Docker image for a BYO ComfyUI server that
 # implements the Loovie BYO contract (openapi/loovie-server.openapi.yaml).
 #
 # Targets a CUDA 12.4 NVIDIA GPU. amd64-only (no real arm64 GPU compute path

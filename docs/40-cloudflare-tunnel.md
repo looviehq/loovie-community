@@ -5,12 +5,12 @@ If your server runs on a machine at home and you want to use it from your phone 
 You get:
 
 - **A real HTTPS URL** (no plain HTTP, no router config, no hole punched through your firewall).
-- **Zero open inbound ports** on your network — the tunnel is an outbound connection from `cloudflared` to Cloudflare.
+- **Zero open inbound ports** on your network, the tunnel is an outbound connection from `cloudflared` to Cloudflare.
 - **Free for personal use.**
 
 This page covers two flavours: a one-line **quick tunnel** (ephemeral URL, fastest to try) and a **named tunnel** (stable URL, recommended for daily use).
 
-> **Security tie-in.** A tunnel gives you HTTPS, so the bearer token is not sent in clear over the network you happen to be on. **Still set `LOOVIE_API_TOKEN`** — the tunnel URL is reachable from the public internet by definition, so the token is your only access control. See [`50-security-and-tokens.md`](50-security-and-tokens.md).
+> **Security tie-in.** A tunnel gives you HTTPS, so the bearer token is not sent in clear over the network you happen to be on. **Still set `LOOVIE_API_TOKEN`**, the tunnel URL is reachable from the public internet by definition, so the token is your only access control. See [`50-security-and-tokens.md`](50-security-and-tokens.md).
 
 ## Install `cloudflared`
 
@@ -27,7 +27,7 @@ Verify:
 cloudflared --version
 ```
 
-## Option A — Quick tunnel (ephemeral URL)
+## Option A, Quick tunnel (ephemeral URL)
 
 Use when you just want to try the setup, demo to a friend, or do a one-off.
 
@@ -46,15 +46,15 @@ https://flat-purple-mountain-9821.trycloudflare.com
 
 Copy that URL. In the Loovie app, *Preferences → BYO server*, paste it plus your `LOOVIE_API_TOKEN`. Save.
 
-> Quick-tunnel URLs are **ephemeral** — they change every time you restart `cloudflared`. Fine for trying things, awkward for daily use because you have to re-enter the URL in the app each time. For daily use, set up a named tunnel below.
+> Quick-tunnel URLs are **ephemeral**, they change every time you restart `cloudflared`. Fine for trying things, awkward for daily use because you have to re-enter the URL in the app each time. For daily use, set up a named tunnel below.
 
-## Option B — Named tunnel (stable URL on your own domain)
+## Option B, Named tunnel (stable URL on your own domain)
 
 Use when you want a stable URL you can leave configured in the app forever.
 
 You need a domain on Cloudflare (free DNS plan is fine). If you don't have one, register a cheap `.app` or `.dev` domain through any registrar and add it to Cloudflare.
 
-### B.1 — Authenticate `cloudflared`
+### B.1, Authenticate `cloudflared`
 
 ```sh
 cloudflared login
@@ -62,7 +62,7 @@ cloudflared login
 
 Opens a browser; pick the domain you want to use. This writes a cert to `~/.cloudflared/`.
 
-### B.2 — Create a tunnel
+### B.2, Create a tunnel
 
 ```sh
 cloudflared tunnel create loovie-byo
@@ -70,7 +70,7 @@ cloudflared tunnel create loovie-byo
 
 Note the tunnel UUID it prints (and the path to the credentials JSON it writes). You'll reference these next.
 
-### B.3 — Point a DNS record at it
+### B.3, Point a DNS record at it
 
 Pick a subdomain you'll use. For example, `byo.yourdomain.com`:
 
@@ -78,7 +78,7 @@ Pick a subdomain you'll use. For example, `byo.yourdomain.com`:
 cloudflared tunnel route dns loovie-byo byo.yourdomain.com
 ```
 
-### B.4 — Write the tunnel config
+### B.4, Write the tunnel config
 
 Save as `~/.cloudflared/config.yml`:
 
@@ -92,15 +92,15 @@ ingress:
   - service: http_status:404
 ```
 
-### B.5 — Run the tunnel
+### B.5, Run the tunnel
 
 ```sh
 cloudflared tunnel run loovie-byo
 ```
 
-In the Loovie app, paste `https://byo.yourdomain.com` plus your `LOOVIE_API_TOKEN`. This URL is permanent — leave it configured and it just works.
+In the Loovie app, paste `https://byo.yourdomain.com` plus your `LOOVIE_API_TOKEN`. This URL is permanent, leave it configured and it just works.
 
-### B.6 — Run as a service (so it survives reboots)
+### B.6, Run as a service (so it survives reboots)
 
 macOS / Linux:
 

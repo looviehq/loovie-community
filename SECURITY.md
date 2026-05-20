@@ -25,17 +25,17 @@ We will be transparent if we cannot meet these targets. Critical vulnerabilities
 
 **In scope:**
 
-- The OpenAPI contract (`openapi/loovie-server.openapi.yaml`) — design flaws that allow privilege escalation, auth bypass, or unintended data exposure.
-- The reference ComfyUI implementation (`comfyui-loovie/`) — auth bypass, RCE, SSRF, path traversal, denial of service, dependency vulnerabilities not yet flagged by Dependabot.
-- The minimal FastAPI example (`examples/minimal-server/`) — same as above.
-- The Docker image and RunPod template (`docker/`) — base-image vulnerabilities not flagged by Trivy, insecure defaults.
+- The OpenAPI contract (`openapi/loovie-server.openapi.yaml`), design flaws that allow privilege escalation, auth bypass, or unintended data exposure.
+- The reference ComfyUI implementation (`comfyui-loovie/`), auth bypass, RCE, SSRF, path traversal, denial of service, dependency vulnerabilities not yet flagged by Dependabot.
+- The minimal FastAPI example (`examples/minimal-server/`), same as above.
+- The Docker image and RunPod template (`docker/`), base-image vulnerabilities not flagged by Trivy, insecure defaults.
 
 **Out of scope:**
 
-- Issues that require the operator to misconfigure their own server (e.g. exposing port 8188 publicly with no `LOOVIE_API_TOKEN` set — the server fails closed by default, so disabling that is a configuration choice, not a vulnerability).
+- Issues that require the operator to misconfigure their own server (e.g. exposing port 8188 publicly with no `LOOVIE_API_TOKEN` set, the server fails closed by default, so disabling that is a configuration choice, not a vulnerability).
 - Denial of service achievable only by submitting unreasonable prompt sizes, abusing your own GPU, or running models you installed yourself.
-- Vulnerabilities in models you load (FLUX.2 Klein, LTX-2.3, etc.) — those are governed by their own upstream projects.
-- Loovie's mobile app or commercial backend — report those to `security@loovie.app` separately; that is a different codebase.
+- Vulnerabilities in models you load (FLUX.2 Klein, LTX-2.3, etc.), those are governed by their own upstream projects.
+- Loovie's mobile app or commercial backend, report those to `security@loovie.app` separately; that is a different codebase.
 
 ## Threat model (operators)
 
@@ -51,7 +51,7 @@ Your BYO server URL and bearer token are held by the Loovie app on your device, 
 
 ## Result-file scanning
 
-For the public beta, we validate result files via magic-byte sniff, MIME allowlist, size cap, and decode probe. We do **not** run anti-malware scanning on uploaded result files during beta — the threat model is that an operator's misbehaving server attacks itself or its own user, not the Loovie cloud. We will graduate to server-side AV scanning as part of the post-beta paid tier; this will be documented when it ships.
+For the public beta, we validate result files via magic-byte sniff, MIME allowlist, size cap, and decode probe. We do **not** run anti-malware scanning on uploaded result files during beta, the threat model is that an operator's misbehaving server attacks itself or its own user, not the Loovie cloud. We will graduate to server-side AV scanning as part of the post-beta paid tier; this will be documented when it ships.
 
 ## Coordinated disclosure
 
