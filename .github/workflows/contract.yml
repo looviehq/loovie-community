@@ -11,6 +11,8 @@ on:
       - 'openapi/**'
       - 'examples/minimal-server/**'
 
+  workflow_dispatch:
+
 permissions:
   contents: read
 
