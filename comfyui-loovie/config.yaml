@@ -1,0 +1,69 @@
+# Loovie BYO server configuration.
+#
+# This file is read by `WorkflowManager` at extension load. Values are safe
+# defaults for a standalone ComfyUI install; override via the listed env
+# vars when running behind nginx, in a container, or in a managed pod.
+#
+# api_token: Static bearer token that authorises remote callers. The Loovie
+#   mobile app stores this on-device and sends it as `Authorization: Bearer
+#   <token>` to every request. Localhost (127.0.0.1, ::1) always bypasses.
+#   If unset (env var also empty), the server FAILS CLOSED: remote requests
+#   are refused. This is the safe default; set LOOVIE_API_TOKEN explicitly
+#   to expose the server to a remote app.
+api_token: ""  # source from env LOOVIE_API_TOKEN
+
+# Internal URL the extension uses to talk to ComfyUI's own routes
+# (/prompt, /history, /view). MUST point at ComfyUI directly. Resolution
+# order: this key -> $LOOVIE_COMFY_INTERNAL_URL -> $COMFYUI_PORT
+# -> auto-detect from --port CLI arg -> default 8188.
+# comfy_api_url: "http://127.0.0.1:8188"
+
+# Public-facing base URL the server returns in result URLs. Overridden at
+# request time by the inbound Host header (or RUNPOD_POD_ID / LOOVIE_PUBLIC_URL
+# env vars when set).
+output_base_url: "http://127.0.0.1:8188"
+
+# Global cap on a single generation. Per-workflow overrides below.
+max_wait_seconds: 300
+
+# How often the monitor thread polls /history when the WebSocket fallback path
+# is in use.
+poll_interval_seconds: 2
+
+# Workflow registry. Adding a workflow here makes it available to the
+# `/images/create` or `/videos/create` endpoints; the capabilities manifest
+# is derived from this list.
+workflows:
+  flux-2-klein:
+    file: "workflows/flux_2_klein.json"
+    description: "FLUX.2 Klein, multi-reference image generation with optional LoRAs."
+
+  ltx23-t2v-fast:
+    file: "workflows/ltx23_t2v_fast.json"
+    description: "LTX 2.3 text-to-video, single-stage distilled (fast)."
+    max_wait_seconds: 840
+
+  ltx23-t2v-pro:
+    file: "workflows/ltx23_t2v_pro.json"
+    description: "LTX 2.3 text-to-video, two-stage with spatial upscaler (pro quality)."
+    max_wait_seconds: 840
+
+  ltx23-i2v-fast:
+    file: "workflows/ltx23_i2v_fast.json"
+    description: "LTX 2.3 image-to-video, single-stage distilled (fast)."
+    max_wait_seconds: 840
+
+  ltx23-i2v-pro:
+    file: "workflows/ltx23_i2v_pro.json"
+    description: "LTX 2.3 image-to-video, two-stage with spatial upscaler (pro quality)."
+    max_wait_seconds: 840
+
+  ltx23-fl2v-fast:
+    file: "workflows/ltx23_fl2v_fast.json"
+    description: "LTX 2.3 first+last frame to video, single-stage distilled (fast)."
+    max_wait_seconds: 840
+
+  ltx23-fl2v-pro:
+    file: "workflows/ltx23_fl2v_pro.json"
+    description: "LTX 2.3 first+last frame to video, two-stage with spatial upscaler (pro quality)."
+    max_wait_seconds: 840

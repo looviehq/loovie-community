@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "comfyui-loovie"
+version = "0.1.0"
+description = "Reference ComfyUI server implementing the Loovie BYO protocol (FLUX.2 Klein image + LTX-2.3 single-shot video)."
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Loovie HQ", email = "oss@loovie.app" }]
+keywords = ["comfyui", "loovie", "byo", "ai-image", "ai-video", "openapi"]
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia :: Graphics",
+  "Topic :: Multimedia :: Video",
+]
+dependencies = [
+  "aiohttp>=3.9",
+  "pydantic>=2.6",
+  "httpx>=0.27",
+  "imageio[ffmpeg]>=2.34.0",
+  "PyYAML>=6.0",
+]
+
+[project.urls]
+Repository    = "https://github.com/looviehq/loovie-community"
+Documentation = "https://github.com/looviehq/loovie-community/tree/main/docs"
+"Bug Tracker" = "https://github.com/looviehq/loovie-community/issues"
+
+[project.optional-dependencies]
+dev = ["ruff", "mypy", "pytest", "pytest-asyncio", "pytest-cov", "schemathesis", "openapi-spec-validator", "jsonschema"]
+
+[tool.comfy]
+PublisherId  = "looviehq"
+DisplayName  = "Loovie BYO Server"
+Icon         = ""
+
+[tool.ruff]
+line-length    = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.10"
+strict         = true
+files          = ["src/comfyui_loovie"]
+
+[tool.pytest.ini_options]
+testpaths    = ["tests"]
+asyncio_mode = "auto"
+addopts      = "--cov=comfyui_loovie --cov-report=term-missing --cov-fail-under=70"

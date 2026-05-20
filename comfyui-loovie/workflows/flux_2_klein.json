@@ -1,0 +1,213 @@
+{
+  "10": {
+    "inputs": {
+      "aspect_ratio": "1:1",
+      "seed": -1
+    },
+    "class_type": "LoovieSettings",
+    "_meta": { "title": "Loovie Settings" }
+  },
+  "11": {
+    "inputs": {
+      "prompt": "",
+      "negative_prompt": ""
+    },
+    "class_type": "LoovieTextInput",
+    "_meta": { "title": "Loovie Text Input" }
+  },
+  "12": {
+    "inputs": {
+      "width": ["10", 0],
+      "height": ["10", 1],
+      "latent_type": "flux2",
+      "vae": ["40", 0],
+      "mask_url": "",
+      "image_url_1": "",
+      "image_url_2": "",
+      "image_url_3": "",
+      "image_url_4": "",
+      "image_url_5": "",
+      "image_url_6": "",
+      "image_url_7": "",
+      "image_url_8": "",
+      "image_url_9": "",
+      "image_url_10": ""
+    },
+    "class_type": "LoovieImageInput",
+    "_meta": { "title": "Loovie Image Input" }
+  },
+  "13": {
+    "inputs": {
+      "model": ["46", 0],
+      "clip": ["39", 0],
+      "lora_name_1": "",
+      "strength_1": 0.8,
+      "lora_name_2": "",
+      "strength_2": 0.8,
+      "lora_name_3": "",
+      "strength_3": 0.8,
+      "lora_name_4": "",
+      "strength_4": 0.8,
+      "lora_name_5": "",
+      "strength_5": 0.8
+    },
+    "class_type": "LoovieLoraStack",
+    "_meta": { "title": "Loovie LoRA Stack" }
+  },
+  "39": {
+    "inputs": {
+      "clip_name": "qwen_3_4b_flux2.safetensors",
+      "type": "flux2",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": { "title": "Load CLIP (Qwen for FLUX2)" }
+  },
+  "40": {
+    "inputs": {
+      "vae_name": "flux2-vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": { "title": "Load VAE" }
+  },
+  "46": {
+    "inputs": {
+      "unet_name": "flux-2-klein-4b.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": { "title": "Load FLUX-2-klein 4B" }
+  },
+
+  "53": {
+    "inputs": {
+      "text": ["11", 0],
+      "clip": ["13", 1]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": { "title": "Positive Prompt" }
+  },
+  "57": {
+    "inputs": {
+      "text": ["11", 1],
+      "clip": ["13", 1]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": { "title": "Negative Prompt" }
+  },
+
+  "60": {
+    "inputs": {
+      "conditioning": ["53", 0],
+      "latent": ["12", 6]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": { "title": "ReferenceLatent 1 (positive)" }
+  },
+  "61": {
+    "inputs": {
+      "conditioning": ["60", 0],
+      "latent": ["12", 8]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": { "title": "ReferenceLatent 2 (positive)" }
+  },
+  "62": {
+    "inputs": {
+      "conditioning": ["61", 0],
+      "latent": ["12", 10]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": { "title": "ReferenceLatent 3 (positive)" }
+  },
+  "63": {
+    "inputs": {
+      "conditioning": ["62", 0],
+      "latent": ["12", 12]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": { "title": "ReferenceLatent 4 (positive)" }
+  },
+
+  "65": {
+    "inputs": {
+      "conditioning": ["57", 0]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": { "title": "Zero Out Negative" }
+  },
+
+  "70": {
+    "inputs": {
+      "noise_seed": ["10", 2]
+    },
+    "class_type": "RandomNoise",
+    "_meta": { "title": "Random Noise" }
+  },
+  "71": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": { "title": "Sampler Select (euler)" }
+  },
+  "72": {
+    "inputs": {
+      "steps": 4,
+      "width": ["10", 0],
+      "height": ["10", 1]
+    },
+    "class_type": "Flux2Scheduler",
+    "_meta": { "title": "Flux2 Scheduler (4 steps)" }
+  },
+
+  "75": {
+    "inputs": {
+      "model": ["13", 0],
+      "positive": ["63", 0],
+      "negative": ["65", 0],
+      "cfg": 1.0
+    },
+    "class_type": "CFGGuider",
+    "_meta": { "title": "CFG Guider" }
+  },
+
+  "80": {
+    "inputs": {
+      "width": ["10", 0],
+      "height": ["10", 1],
+      "batch_size": 1
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": { "title": "Empty Flux2 Latent" }
+  },
+
+  "85": {
+    "inputs": {
+      "noise": ["70", 0],
+      "guider": ["75", 0],
+      "sampler": ["71", 0],
+      "sigmas": ["72", 0],
+      "latent_image": ["80", 0]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": { "title": "Sampler (Advanced)" }
+  },
+
+  "54": {
+    "inputs": {
+      "samples": ["85", 0],
+      "vae": ["40", 0]
+    },
+    "class_type": "VAEDecode",
+    "_meta": { "title": "VAE Decode" }
+  },
+  "48": {
+    "inputs": {
+      "filename_prefix": "loovie",
+      "images": ["54", 0]
+    },
+    "class_type": "SaveImage",
+    "_meta": { "title": "Save Image" }
+  }
+}

@@ -1,0 +1,13 @@
+# AUTO-GENERATED placeholder. The authoritative dependency list lives in
+# pyproject.toml under [project.dependencies]. CI regenerates this file with
+# `uv pip compile pyproject.toml -o requirements.txt` for environments that
+# install via plain `pip install -r requirements.txt`.
+#
+# To update locally:
+#   uv pip compile pyproject.toml -o requirements.txt
+#
+aiohttp>=3.9
+pydantic>=2.6
+httpx>=0.27
+imageio[ffmpeg]>=2.34.0
+PyYAML>=6.0
