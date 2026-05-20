@@ -1,0 +1,112 @@
+name: Workflow contribution
+description: Propose a new ComfyUI workflow for `comfyui-loovie/workflows/` (or discuss before opening a PR).
+title: "[Workflow]: "
+labels: ["workflow", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for offering to contribute a workflow. Please skim
+        [`docs/80-adding-a-workflow.md`](../../tree/main/docs/80-adding-a-workflow.md) and
+        [`docs/85-editing-api-workflows.md`](../../tree/main/docs/85-editing-api-workflows.md) before filling
+        this in — the answers there usually save back‑and‑forth.
+
+        Open this issue ONLY if you want to discuss the workflow first. If you
+        already have a PR ready, just open the PR and link this template's
+        checklist in the description.
+
+  - type: input
+    id: workflow-name
+    attributes:
+      label: Proposed workflow name
+      description: Follow the existing convention (`ltx23-<mode>-<variant>`, `flux-2-<variant>`, etc.).
+      placeholder: "ltx23-i2v-pro-experimental"
+    validations:
+      required: true
+
+  - type: textarea
+    id: purpose
+    attributes:
+      label: What does it do? (one paragraph)
+      description: What user-visible capability does this add? What gap does it fill?
+    validations:
+      required: true
+
+  - type: textarea
+    id: models
+    attributes:
+      label: Models used
+      description: One per line. For each model — name, HuggingFace repo, licence name, and whether it's gated.
+      placeholder: |
+        - LTX-2.3 Pro upscaler — Comfy-Org/ltx-2 — Lightricks community licence — not gated
+        - Gemma-3 12B text encoder — Comfy-Org/ltx-2 — Google Gemma terms — gated
+    validations:
+      required: true
+
+  - type: dropdown
+    id: capabilities
+    attributes:
+      label: What capabilities does it add to `/loovie/capabilities`?
+      description: If any of these are new values not currently in the OpenAPI's closed enums, this becomes a Spec change first (use the [Spec change](?template=spec_change.yml) template).
+      multiple: true
+      options:
+        - new image mode (t2i / i2i)
+        - new video mode (t2v / i2v / fl2v)
+        - new variant (fast / pro)
+        - new resolution
+        - new aspect ratio
+        - new duration
+        - audio toggle support
+        - just a tuning change (no new advertised values)
+    validations:
+      required: true
+
+  - type: input
+    id: test-prompt
+    attributes:
+      label: Test prompt
+      description: A single prompt that's a fair test of what the workflow does.
+      placeholder: "a slow zoom into a sunflower at sunset"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected qualitative output
+      description: What does success look like? (We are not asking you to ship reference images. A descriptive sentence is fine.)
+      placeholder: "A 4-second 1280x720 mp4 with the camera dollying in smoothly, no obvious artefacts in the sky."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tested-gpu
+    attributes:
+      label: GPU you've tested on
+      options:
+        - RTX 4090 (24 GB)
+        - RTX 5090 (32 GB)
+        - A6000 / L40S (48 GB)
+        - A100 (80 GB)
+        - Other
+        - Not tested yet
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I have read [`docs/80-adding-a-workflow.md`](../../tree/main/docs/80-adding-a-workflow.md) and [`docs/85-editing-api-workflows.md`](../../tree/main/docs/85-editing-api-workflows.md).
+          required: true
+        - label: The workflow is exported in **API format** (not UI format). Confirmed by checking that top-level keys are numeric node IDs and each node has `class_type` + `inputs`.
+          required: true
+        - label: It includes the relevant Loovie node `class_type`s the route layer needs (`LoovieTextInput`, `LoovieSettings` / `LoovieVideoSettings`, etc.) — see the [class_type reference](../../tree/main/docs/85-editing-api-workflows.md#the-loovie-node-class_types).
+          required: true
+        - label: I have read each model's upstream licence and confirmed it permits commercial use. Models with "research only" or "non-commercial" clauses are not accepted in `comfyui-loovie/`.
+          required: true
+        - label: If this needs new values in the OpenAPI's closed enums, I have opened a [Spec change](?template=spec_change.yml) issue first.
+          required: false
+        - label: I am willing to keep my new entry in `docs/MODELS.md` updated if the upstream licence changes.
+          required: true

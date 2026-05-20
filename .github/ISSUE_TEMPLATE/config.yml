@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: BYO setup or usage help
-    url: https://discord.gg/loovie
-    about: For "how do I install ComfyUI" / configuration / hosting questions, the Discord #byo-help channel is the fastest path. GitHub Issues are for reproducible bugs.
+    url: https://github.com/looviehq/loovie-community/discussions
+    about: For "how do I install ComfyUI" / configuration / hosting questions, please use GitHub Discussions. A community Discord opens with v0.1.0-beta (invite in the README). GitHub Issues are for reproducible bugs.
   - name: Security vulnerability
     url: https://github.com/looviehq/loovie-community/security/advisories/new
     about: Report a vulnerability privately. Please do not open a public issue for security problems.

@@ -49,28 +49,22 @@ jobs:
           uv run ruff format --check .
 
       - name: Mypy (strict)
-        # Mypy may complain about ComfyUI internals that aren't installed in CI;
-        # we lint the package surface but don't fail the build on import errors
-        # for packages that only exist at ComfyUI runtime. CI runs with
-        # --ignore-missing-imports to focus on our own type correctness.
-        run: uv run mypy --ignore-missing-imports src/comfyui_loovie || true
+        # ComfyUI internals are not installed in CI (server, folder_paths,
+        # comfy.cli_args, torch) so we use --ignore-missing-imports to focus
+        # on our own type correctness. Strict mode is otherwise enforced.
+        run: uv run mypy --ignore-missing-imports src/comfyui_loovie
 
-      - name: Pytest (placeholder — tests land in Phase A.9)
-        run: |
-          if [ -d tests ]; then
-            uv run pytest
-          else
-            echo "No tests/ directory yet; Phase A.9 introduces the test surfaces."
-          fi
+      - name: Pytest
+        run: uv run pytest
 
-      - name: Regenerate requirements.txt and check it matches pyproject.toml
+      - name: Regenerate requirements.txt and assert it matches pyproject.toml
         run: |
-          uv pip compile pyproject.toml -o /tmp/generated.txt --no-emit-index-url --no-emit-find-links --quiet
-          # The committed requirements.txt is a placeholder; we just want to
-          # confirm the project still resolves cleanly. Strict diff comes
-          # online once the upstream pin set stabilises.
-          head -5 /tmp/generated.txt
-          echo "Resolution succeeded."
+          uv pip compile pyproject.toml -o requirements.txt --no-emit-index-url --no-emit-find-links --quiet
+          # Fail CI if the committed requirements.txt has drifted from
+          # pyproject.toml. ComfyUI-Manager reads requirements.txt, so
+          # silent drift means users get a different pin set than `uv sync`
+          # produced.
+          git diff --exit-code requirements.txt
 
   minimal-server:
     name: examples/minimal-server (py${{ matrix.python }})

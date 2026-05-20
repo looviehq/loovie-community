@@ -178,16 +178,45 @@ app = FastAPI(
 )
 
 
-# Treat unhandled ValueError (incl. binascii.Error) as a 400. Real
-# generation servers would map their specific upload/encoding errors to
-# named failCodes; this reference keeps it simple. Demonstrates the
-# pattern of returning a structured JSON envelope on bad input rather
-# than letting FastAPI/Starlette emit a generic 500.
+# Treat unhandled ValueError (incl. binascii.Error) as a 400.
+#
+# CAUTION: this catch-all is convenient for a reference server but it
+# is intentionally too broad to copy-paste into production. A real
+# generation server should:
+#   1. Raise a typed `BadInput` (or per-endpoint Pydantic validator)
+#      from its own code paths, and only handle THAT here.
+#   2. Catch only the unexpected `ValueError`/`binascii.Error` cases
+#      coming from the standard library at request-deserialisation
+#      boundaries.
+#   3. NEVER echo the raw exception string back to the client (the
+#      message field below is a sanitised string, not f"{exc}", because
+#      stdlib exceptions sometimes leak paths or internal field names).
+#
+# We also log the exception with full detail so an operator can debug
+# server-side without exposing internals to the caller.
 @app.exception_handler(ValueError)
-async def _value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
+async def _value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
+    # Log full detail server-side for the operator. Use logging, not print,
+    # so structured loggers can attach trace context.
+    import logging
+
+    logging.getLogger("loovie.minimal-server").warning(
+        "ValueError on %s %s: %s",
+        request.method,
+        request.url.path,
+        exc,
+    )
+    # Sanitised, generic message to the client. Do not interpolate `exc`.
     return JSONResponse(
         status_code=400,
-        content={"code": 400, "msg": f"bad request: {exc}"},
+        content={
+            "code": 400,
+            "msg": (
+                "Bad request: the server could not decode the input. "
+                "Check that body fields are correctly encoded "
+                "(e.g. base64, ASCII-only where required)."
+            ),
+        },
     )
 
 

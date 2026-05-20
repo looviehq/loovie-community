@@ -1,6 +1,6 @@
 # Troubleshooting
 
-When BYO fails, it is almost always your server, your network, or your hardware. The Loovie team cannot fix your box; the docs and the [Discord](https://discord.gg/loovie) `#byo-help` channel are your support. This page is the symptom-to-fix table.
+When BYO fails, it is almost always your server, your network, or your hardware. The Loovie team cannot fix your box; the docs are your primary support, plus a community Discord that opens with `v0.1.0-beta` (invite in [README → Community](../README.md#community) once live). This page is the symptom-to-fix table.
 
 ## Setting up
 

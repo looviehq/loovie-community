@@ -41,6 +41,6 @@ We expect the 4090 to handle the `fast` video variant once we have more time on 
 
 ## Honest expectations
 
-- **When BYO fails, it is your server, your network, or your hardware.** The Loovie team cannot fix your box. The repo docs and the [Discord](https://discord.gg/loovie) `#byo-help` channel are your support.
+- **When BYO fails, it is your server, your network, or your hardware.** The Loovie team cannot fix your box. The repo docs are your primary support; a community Discord opens with the `v0.1.0-beta` release (the invite goes in [README → Community](../README.md#community) once live).
 - **If the Loovie app misbehaves, that is on us.** Open a bug in the [issues](https://github.com/looviehq/loovie-community/issues) or ping `#bugs` on Discord.
 - **The contract may break in minor 0.x bumps.** Pin to a specific tag or commit SHA if you depend on it. See [README](../README.md#beta-api-stability--read-this-before-you-depend-on-the-contract).

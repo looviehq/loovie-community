@@ -1,7 +1,11 @@
 openapi: 3.1.0
 info:
   title: Loovie BYO Server Contract
-  version: "1.0.0-beta.1"
+  # Pre-1.0 while we are in public beta. The README and SECURITY.md
+  # promise strict semver only at 1.0.0; the previous `1.0.0-beta.1`
+  # value confused that promise. Bumps live in CHANGELOG.md and (post-
+  # A.8) release-please will own this number.
+  version: "0.1.0-beta.1"
   summary: The HTTP contract a third-party server implements to be drivable by the Loovie mobile app.
   description: |
     The HTTP API a "Bring Your Own" server must expose so the Loovie app
