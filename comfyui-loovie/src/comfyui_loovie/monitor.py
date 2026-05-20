@@ -15,6 +15,7 @@ import threading
 import time
 import urllib.request
 import uuid
+from typing import Any
 
 from .callback_sender import send_callback
 from .task_store import TaskState, TaskStore
@@ -22,7 +23,7 @@ from .task_store import TaskState, TaskStore
 logger = logging.getLogger("comfyui_loovie.monitor")
 
 
-def _extract_output_url(outputs: dict, base_url: str, key: str) -> str | None:
+def _extract_output_url(outputs: dict[str, Any], base_url: str, key: str) -> str | None:
     """Find the first `{key}` entry in a ComfyUI history `outputs` dict."""
     for node_output in outputs.values():
         items = node_output.get(key, [])
@@ -38,7 +39,7 @@ def _extract_output_url(outputs: dict, base_url: str, key: str) -> str | None:
     return None
 
 
-def _poll_history(comfy_url: str, prompt_id: str) -> dict | None:
+def _poll_history(comfy_url: str, prompt_id: str) -> dict[str, Any] | None:
     """Fetch `/history/<prompt_id>`; return the entry or `None`."""
     url = f"{comfy_url}/history/{prompt_id}"
     try:
@@ -53,7 +54,7 @@ def _poll_history(comfy_url: str, prompt_id: str) -> dict | None:
     return None
 
 
-def _extract_error(history_entry: dict) -> str | None:
+def _extract_error(history_entry: dict[str, Any]) -> str | None:
     """Return a human-readable error string from a history entry, or None."""
     status = history_entry.get("status", {})
     if status.get("status_str") != "error":
@@ -103,7 +104,7 @@ def _monitor_via_websocket(
 ) -> bool:
     """Watch the ComfyUI WebSocket. Returns True when handled, False on bail-out."""
     try:
-        import websocket  # type: ignore[import-not-found]
+        import websocket
     except ImportError:
         logger.debug("websocket-client not installed; falling back to polling")
         return False

@@ -37,7 +37,7 @@ def _detect_comfy_port() -> int | None:
     install (no env vars, no reverse proxy) work without configuration.
     """
     try:
-        from comfy.cli_args import args  # type: ignore[import-not-found]
+        from comfy.cli_args import args
 
         port = getattr(args, "port", None)
         if isinstance(port, int) and port > 0:
@@ -45,7 +45,7 @@ def _detect_comfy_port() -> int | None:
     except Exception:
         pass
     try:
-        import server  # type: ignore[import-not-found]
+        import server
 
         instance = getattr(server.PromptServer, "instance", None)
         port = getattr(instance, "port", None)

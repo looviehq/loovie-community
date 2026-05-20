@@ -27,10 +27,11 @@ _TARGET_PIXELS = 1_048_576  # 1 megapixel; matches ImageScaleToTotalPixels
 
 def _input_dir() -> str:
     try:
-        import folder_paths  # type: ignore[import-not-found]
+        import folder_paths
     except ImportError:
         return "input"
-    return folder_paths.get_input_directory()
+    result = folder_paths.get_input_directory()
+    return str(result)
 
 
 def _load_image(relative_path: str) -> tuple[torch.Tensor, torch.Tensor]:
@@ -41,8 +42,10 @@ def _load_image(relative_path: str) -> tuple[torch.Tensor, torch.Tensor]:
          mask_tensor  [H, W] float32 in [0, 1])
     """
     full_path = f"{_input_dir()}/{relative_path}"
-    img = Image.open(full_path)
-    img = ImageOps.exif_transpose(img)
+    img: Image.Image = Image.open(full_path)
+    transposed = ImageOps.exif_transpose(img)
+    if transposed is not None:
+        img = transposed
     if img.mode == "I":
         img = img.point(lambda p: p * (1 / 255))
     rgb = img.convert("RGB")
@@ -79,7 +82,7 @@ def _scale_to_total_pixels(
 class LoovieImageInput:
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, object]:
-        inputs: dict[str, dict[str, object]] = {
+        inputs: dict[str, Any] = {
             "required": {
                 "width": ("INT", {"default": 768, "min": 64, "max": 8192, "step": 8}),
                 "height": ("INT", {"default": 768, "min": 64, "max": 8192, "step": 8}),
@@ -129,7 +132,7 @@ class LoovieImageInput:
 
     def _empty_latent(self, latent_type: str, height: int, width: int) -> dict[str, torch.Tensor]:
         try:
-            import comfy.model_management  # type: ignore[import-not-found]
+            import comfy.model_management
 
             device = comfy.model_management.intermediate_device()
         except ImportError:

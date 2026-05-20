@@ -25,7 +25,8 @@ import uuid
 from typing import Any
 
 from aiohttp import web
-from server import PromptServer  # type: ignore[import-not-found]
+from aiohttp.multipart import BodyPartReader
+from server import PromptServer
 
 from ..capabilities import build_capabilities_manifest
 from ..helpers.aspect_ratio import target_video_dimensions, video_dimensions
@@ -456,7 +457,7 @@ async def upload_reference(request: web.Request) -> web.Response:
     if auth_error:
         return auth_error
 
-    import folder_paths  # type: ignore[import-not-found]
+    import folder_paths
 
     input_dir = folder_paths.get_input_directory()
     os.makedirs(input_dir, exist_ok=True)
@@ -468,7 +469,12 @@ async def upload_reference(request: web.Request) -> web.Response:
     try:
         if content_type.startswith("multipart/"):
             reader = await request.multipart()
-            async for part in reader:
+            while True:
+                part = await reader.next()
+                if part is None:
+                    break
+                if not isinstance(part, BodyPartReader):
+                    continue
                 if part.name == "file":
                     filename = part.filename or f"upload_{int(time.time())}.png"
                     data = await part.read(decode=False)
