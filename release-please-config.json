@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+
+  "release-type": "simple",
+  "include-component-in-tag": false,
+  "include-v-in-tag": true,
+
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": false,
+
+  "changelog-sections": [
+    { "type": "feat",     "section": "Features",                "hidden": false },
+    { "type": "fix",      "section": "Bug Fixes",               "hidden": false },
+    { "type": "perf",     "section": "Performance Improvements","hidden": false },
+    { "type": "docs",     "section": "Documentation",           "hidden": false },
+    { "type": "refactor", "section": "Refactor",                "hidden": false },
+    { "type": "test",     "section": "Tests",                   "hidden": false },
+    { "type": "build",    "section": "Build",                   "hidden": true  },
+    { "type": "ci",       "section": "CI",                      "hidden": true  },
+    { "type": "chore",    "section": "Chore",                   "hidden": true  }
+  ],
+
+  "packages": {
+    ".": {
+      "package-name": "loovie-community",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "comfyui-loovie/pyproject.toml",
+          "jsonpath": "$.project.version"
+        },
+        {
+          "type": "yaml",
+          "path": "openapi/loovie-server.openapi.yaml",
+          "jsonpath": "$.info.version"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,45 @@
+name: comfy-publish
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to publish (tag or sha)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish to ComfyUI Registry
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ inputs.ref || github.ref_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Install comfy-cli
+        run: pip install --quiet --upgrade comfy-cli
+
+      - name: Publish the comfyui-loovie node pack
+        env:
+          # Token is scoped per the ComfyUI Registry docs; rotation every 90 days.
+          COMFY_API_TOKEN: ${{ secrets.COMFY_REGISTRY_TOKEN }}
+        working-directory: comfyui-loovie
+        run: |
+          if [ -z "${COMFY_API_TOKEN:-}" ]; then
+            echo "::warning::COMFY_REGISTRY_TOKEN secret is not set; skipping publish."
+            echo "To enable: open Registry settings and store the token as COMFY_REGISTRY_TOKEN."
+            exit 0
+          fi
+          comfy node publish --token "$COMFY_API_TOKEN"

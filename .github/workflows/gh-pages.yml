@@ -1,0 +1,69 @@
+name: gh-pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'openapi/**'
+      - '.github/workflows/gh-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Cancel an in-flight Pages deploy if another push comes in.
+concurrency:
+  group: gh-pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  render-and-deploy:
+    name: Render OpenAPI -> gh-pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: '20'
+
+      - name: Render with Redocly
+        run: |
+          mkdir -p site/spec
+          npx -y @redocly/cli@latest build-docs \
+            openapi/loovie-server.openapi.yaml \
+            -o site/spec/index.html
+          # Drop a small landing index that links into the spec, so
+          # https://looviehq.github.io/loovie-community/ doesn't 404.
+          cat > site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <title>Loovie Community</title>
+            <meta http-equiv="refresh" content="0; url=./spec/">
+          </head>
+          <body><a href="./spec/">Loovie BYO server contract</a></body>
+          </html>
+          HTML
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5.0.0
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3.0.1
+        with:
+          path: site
+
+      - name: Deploy to Pages
+        id: deploy
+        uses: actions/deploy-pages@v4.0.5

@@ -1,0 +1,46 @@
+name: release-please
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: Release PR / tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # cut tags + commit CHANGELOG
+      pull-requests: write  # open / update the release PR
+      id-token: write       # for any keyless OIDC tools downstream
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name:        ${{ steps.release.outputs.tag_name }}
+      version:         ${{ steps.release.outputs.version }}
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4.1.3
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          # Token defaults to GITHUB_TOKEN; the permissions block above
+          # gives it write access to contents + pull-requests within this
+          # repo (no PAT needed).
+
+      - name: Summary
+        if: always()
+        env:
+          CREATED:    ${{ steps.release.outputs.release_created }}
+          TAG_NAME:   ${{ steps.release.outputs.tag_name }}
+          VERSION:    ${{ steps.release.outputs.version }}
+        run: |
+          {
+            echo "## release-please"
+            echo "- release_created: $CREATED"
+            echo "- tag_name:        $TAG_NAME"
+            echo "- version:         $VERSION"
+          } >> "$GITHUB_STEP_SUMMARY"
