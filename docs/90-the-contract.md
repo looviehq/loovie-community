@@ -30,9 +30,15 @@ sequenceDiagram
 
 The Loovie backend **never** calls your server. The mobile app does. Direct device-to-server traffic is the only path. Your server URL and bearer token live in the app on the user's device only; they are not accessible to Loovie staff or sent to Loovie's backend.
 
-## ANY server, not just ComfyUI
+## ANY server, ANY model, ANY backend
 
-Any HTTP server that conforms to this contract is valid. ComfyUI is the reference implementation we publish (`comfyui-loovie/`), and a small FastAPI proof lives in `examples/minimal-server/`. The contract is the line.
+Three things are **not** part of the contract and you can swap them independently:
+
+1. **The inference backend.** ComfyUI is the reference we publish (`comfyui-loovie/`), but anything serving HTTP works: Wan2GP, a hand-rolled FastAPI / Express / Go server, a different node-graph engine, a wrapper around `diffusers`, etc. A small FastAPI proof lives in `examples/minimal-server/`.
+2. **The model.** FLUX.2 Klein and LTX-2.3 are what our reference workflows use, but the contract knows nothing about which model is running. Image: SDXL, SD3.5, Stable Cascade, Lumina, HiDream, your own fine-tune, whatever. Video: WAN 2.x, HunyuanVideo, CogVideoX, Mochi, AnimateDiff variants, whatever. You're responsible for the licence on whichever model you pick.
+3. **The hardware.** NVIDIA, AMD (ROCm), Apple Silicon, multi-GPU, single-GPU: the contract has nothing to say. Your model and workflow set the VRAM floor, not us.
+
+The contract is the line. If your server speaks the request and response shapes below, the Loovie app will drive it the same way it drives ours.
 
 ## Endpoints are conditional on capabilities
 

@@ -1,6 +1,6 @@
 # Reach your home GPU with Cloudflare Tunnel
 
-If your server runs on a machine at home and you want to use it from your phone on cellular, café Wi-Fi, or anywhere else, you need a tunnel. The cleanest free option is [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) (`cloudflared`).
+If your server runs on a machine at home and you want to use it from your phone on cellular, café Wi-Fi, or anywhere else, you need a way to reach it from the public internet. This page documents [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) (`cloudflared`) because it's the cleanest free option for most people, but **other options work equally well**: [ngrok](https://ngrok.com/), [Tailscale Funnel](https://tailscale.com/kb/1223/funnel), a properly secured port forward on your router (with HTTPS via Let's Encrypt + Caddy or nginx), or a small VPS as a reverse proxy. The Loovie app doesn't care how the URL becomes reachable, only that it does, over HTTPS, with the bearer token still required.
 
 You get:
 

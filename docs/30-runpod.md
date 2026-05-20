@@ -2,6 +2,8 @@
 
 This is the fastest path if you don't have a beefy NVIDIA GPU at home, or want the server always reachable from anywhere. RunPod rents you a GPU by the minute and gives you an HTTPS URL out of the box.
 
+> **You are not required to use RunPod.** We document RunPod end-to-end because we have a referral and a tested Docker template, but **any cloud GPU provider works the same way**: QuickPod, Vast.ai, Lambda, Salad, Hyperstack, your own VPS, your own bare metal in a colo. The Docker image and the contract are identical regardless of who's hosting them. If you go with a different provider you'll skip the template-import step (Step 4 below) and run the image directly (`docker run`-style), the rest of this guide still applies.
+
 > **RunPod bills you for GPU time. Loovie itself charges nothing for BYO generations.** RunPod pricing is per-minute, so if you forget to stop your pod, you keep paying RunPod. Always stop the pod when you are done.
 >
 > **GPU compatibility (tested at launch).** Image models verified on RTX 4090 and 5090. Video models verified **only** on RTX 5090. Other GPUs may work but are unverified.

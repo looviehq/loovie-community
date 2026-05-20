@@ -70,7 +70,7 @@ Same as `BYO_TIMEOUT` above. The Loovie API times out after 10 minutes of no ter
 
 ### macOS / Apple Silicon is very slow or OOMs
 
-Expected. LTX-2.3 and FLUX.2 are heavy and the Metal backend isn't competitive with CUDA for these workloads. Use [RunPod](30-runpod.md).
+Expected for the reference workflows. LTX-2.3 and FLUX.2 are heavy and the Metal backend isn't competitive with CUDA for these workloads. Either swap in a lighter image / video model that runs comfortably on your hardware (the contract is model-agnostic; see [`80-adding-a-workflow.md`](80-adding-a-workflow.md)) or use a rented cloud GPU like [RunPod](30-runpod.md).
 
 ## In the app
 

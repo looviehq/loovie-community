@@ -1,6 +1,8 @@
 # Adding a workflow
 
-This is the contribution recipe for adding a new ComfyUI workflow to [`comfyui-loovie/`](../comfyui-loovie/). For example: a different sampler config, a new LoRA stack, a new model. For implementing the contract in a stack other than ComfyUI, see [`90-the-contract.md`](90-the-contract.md) instead.
+This is the contribution recipe for adding a new ComfyUI workflow to [`comfyui-loovie/`](../comfyui-loovie/). For example: a different sampler config, a new LoRA stack, or **a different model entirely** (WAN, HunyuanVideo, CogVideoX, SDXL, SD3.5, Stable Cascade, your own fine-tune, anything that runs in ComfyUI). The reference workflows we ship use FLUX.2 Klein and LTX-2.3 because that's what we've tested at launch, but the contract has no opinion on which model your workflow uses, only on the request/response shape.
+
+For implementing the contract in a stack other than ComfyUI (Wan2GP, a hand-rolled FastAPI / Express / Go server, etc.), see [`90-the-contract.md`](90-the-contract.md) instead.
 
 The technical details of editing the workflow JSON live in [`85-editing-api-workflows.md`](85-editing-api-workflows.md). This page is the contributor checklist.
 
