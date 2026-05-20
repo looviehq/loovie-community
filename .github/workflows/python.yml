@@ -92,13 +92,17 @@ jobs:
       - name: Set Python ${{ matrix.python }}
         run: uv python install ${{ matrix.python }}
 
-      - name: Sync dependencies
-        run: uv pip install --system -e '.[dev]'
+      - name: Create venv + sync dependencies
+        # Ubuntu 24.04 system Python is PEP-668 protected ("externally managed").
+        # A uv-managed venv sidesteps that and is what `uv run` expects anyway.
+        run: |
+          uv venv --python ${{ matrix.python }}
+          uv pip install -e '.[dev]'
 
       - name: Ruff (lint + format check)
         run: |
-          ruff check .
-          ruff format --check .
+          uv run ruff check .
+          uv run ruff format --check .
 
       - name: Pytest
-        run: pytest -v
+        run: uv run pytest -v

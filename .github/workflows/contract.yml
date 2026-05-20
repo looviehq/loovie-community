@@ -56,7 +56,12 @@ jobs:
         env:
           LOOVIE_API_TOKEN: contract-test-token
         run: |
+          # --experimental=openapi-3.1 is required on schemathesis 3.x to opt
+          # into OpenAPI 3.1 support. v4 turns it on by default; once we
+          # migrate the pin in examples/minimal-server/pyproject.toml this
+          # flag is dropped.
           schemathesis run \
+            --experimental=openapi-3.1 \
             --checks all \
             --base-url http://127.0.0.1:8188 \
             --header "Authorization: Bearer ${LOOVIE_API_TOKEN}" \
