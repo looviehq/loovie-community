@@ -58,8 +58,13 @@ jobs:
         run: uv run pytest
 
       - name: Regenerate requirements.txt and assert it matches pyproject.toml
+        # Pin --python-version to the lowest supported python (3.10) so the
+        # compile output is identical across all matrix slots. Without the
+        # pin, the 3.10 runner adds backport packages (async-timeout,
+        # exceptiongroup) that 3.11+ get from the stdlib, and the committed
+        # file can never match both.
         run: |
-          uv pip compile pyproject.toml -o requirements.txt --no-emit-index-url --no-emit-find-links --quiet
+          uv pip compile pyproject.toml -o requirements.txt --no-emit-index-url --no-emit-find-links --quiet --python-version 3.10
           # Fail CI if the committed requirements.txt has drifted from
           # pyproject.toml. ComfyUI-Manager reads requirements.txt, so
           # silent drift means users get a different pin set than `uv sync`
