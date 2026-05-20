@@ -1,0 +1,12 @@
+# release-please autogenerates CHANGELOG.md with a fixed format we don't
+# control (asterisk vs dash list style, multiple blank lines between
+# version sections). Excluding it from markdownlint so our style rules
+# don't keep losing fights with the generator.
+CHANGELOG.md
+
+# Common excludes.
+node_modules/
+.venv/
+venv/
+dist/
+build/

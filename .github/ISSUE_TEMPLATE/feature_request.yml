@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this for additions that don't change the OpenAPI contract. For spec changes, use the "Spec change" template — those need extra rigour.
+        Use this for additions that don't change the OpenAPI contract. For spec changes, use the "Spec change" template, those need extra rigour.
 
   - type: textarea
     id: problem

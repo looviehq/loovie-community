@@ -21,7 +21,7 @@ docs/                    # Long-form setup, security, troubleshooting guides.
 
 The single most important rule: **the OpenAPI spec at `openapi/loovie-server.openapi.yaml` is the source of truth.** Any change that affects what a server returns or accepts must update the spec, and any change to the spec must be reflected in the reference implementations and tests. CI enforces this via lint and contract tests.
 
-If you're implementing the protocol in a stack other than ComfyUI (Diffusers, SD-Next, your own server) — the contract is what you target. Open a PR in `examples/` if you want to ship a reference for your stack alongside ours.
+If you're implementing the protocol in a stack other than ComfyUI (Diffusers, SD-Next, your own server), the contract is what you target. Open a PR in `examples/` if you want to ship a reference for your stack alongside ours.
 
 ## Sign-off (DCO), not a CLA
 
@@ -99,7 +99,7 @@ feat(comfyui-loovie)!: rename ss_videos to videos in capabilities
 
 1. Fork the repo and create a topic branch off `main`.
 2. Make your changes; sign off every commit; follow the commit message convention above.
-3. Run the local checks (see "Dev setup" below) — CI runs them too.
+3. Run the local checks (see "Dev setup" below), CI runs them too.
 4. Open a PR. Fill in the template. If you change the contract, you must also update the OpenAPI spec and bump `info.version`.
 5. A maintainer reviews. Public discussion is preferred; for sensitive topics, see the security section below.
 6. Once approved and all status checks pass, a maintainer squashes-and-merges. The squash subject must follow Conventional Commits.
@@ -144,7 +144,7 @@ uv run uvicorn app:app --reload
 If you want to add a new ComfyUI workflow (different model, variant, or mode) to `comfyui-loovie/workflows/`:
 
 1. Author the workflow in ComfyUI; export in **API format** only (Settings → enable Dev mode options → ⋯ → Save (API Format)). We do not ship UI workflow JSON.
-2. Include the relevant Loovie node `class_type`s in the workflow (`LoovieTextInput`, `LoovieSettings`, `LoovieImageInput`, `LoovieLoraStack`, etc.). The route layer injects request values by `class_type` — no param maps.
+2. Include the relevant Loovie node `class_type`s in the workflow (`LoovieTextInput`, `LoovieSettings`, `LoovieImageInput`, `LoovieLoraStack`, etc.). The route layer injects request values by `class_type`, no param maps.
 3. Add the workflow filename to `comfyui-loovie/config.yaml` under `workflows:`.
 4. If your workflow advertises new modes, variants, resolutions, or aspect ratios, ensure they're in the OpenAPI's closed enums (or open a PR to extend them with a `schemaVersion` bump).
 5. Add a test prompt + expected qualitative output to your PR description.

@@ -1,12 +1,12 @@
 name: Spec change (OpenAPI contract)
-description: Propose a change to the BYO HTTP contract — adding, removing, or modifying behaviour of an endpoint, field, or enum.
+description: Propose a change to the BYO HTTP contract, adding, removing, or modifying behaviour of an endpoint, field, or enum.
 title: "[Spec]: "
 labels: ["spec-change", "needs-triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Spec changes affect every BYO server implementation and every client that consumes the contract. Please be thorough — this template intentionally has more fields than the feature template.
+        Spec changes affect every BYO server implementation and every client that consumes the contract. Please be thorough, this template intentionally has more fields than the feature template.
 
         Read [the contract](../../openapi/loovie-server.openapi.yaml) and `docs/90-the-contract.md` before filing.
 
@@ -15,7 +15,7 @@ body:
     attributes:
       label: Endpoint or schema affected
       description: Which path, schema, or field?
-      placeholder: "/videos/create — `duration` field; or `ByoVideoMode` enum"
+      placeholder: "/videos/create, `duration` field; or `ByoVideoMode` enum"
     validations:
       required: true
 

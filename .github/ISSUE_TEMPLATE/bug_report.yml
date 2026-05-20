@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for taking the time to file a bug. The more of these fields you fill in, the faster we can help.
 
-        **If this is a configuration or "how do I" question, please use the Discord `#byo-help` channel instead — it's much faster.** Issues left as bare questions are typically closed.
+        **If this is a configuration or "how do I" question, please use the Discord `#byo-help` channel instead, it's much faster.** Issues left as bare questions are typically closed.
 
   - type: dropdown
     id: component
@@ -102,7 +102,7 @@ body:
     id: logs
     attributes:
       label: Server logs
-      description: Relevant lines from your server log. Trim aggressively — first 50 and last 100 lines around the failure are usually enough.
+      description: Relevant lines from your server log. Trim aggressively, first 50 and last 100 lines around the failure are usually enough.
       render: shell
 
   - type: checkboxes

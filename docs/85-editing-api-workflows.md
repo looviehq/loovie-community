@@ -6,10 +6,10 @@
 
 ComfyUI workflows have two export formats:
 
-- **UI format** — what the editor saves by default. Includes node positions, group colours, link styles, and other editor state. About 3× the size, irrelevant at runtime, noisy in diffs.
-- **API format** — what the server actually executes. Top-level keys are numeric node IDs; each node has `class_type` and `inputs`.
+- **UI format**: what the editor saves by default. Includes node positions, group colours, link styles, and other editor state. About 3× the size, irrelevant at runtime, noisy in diffs.
+- **API format**: what the server actually executes. Top-level keys are numeric node IDs; each node has `class_type` and `inputs`.
 
-The repo's contract is "the API JSON is the workflow." UI JSON, if you want it for editing, is a local concern — author in the editor, export both formats locally, commit only the API one.
+The repo's contract is "the API JSON is the workflow." UI JSON, if you want it for editing, is a local concern, author in the editor, export both formats locally, commit only the API one.
 
 ## Exporting API format from ComfyUI
 
@@ -18,13 +18,15 @@ The repo's contract is "the API JSON is the workflow." UI JSON, if you want it f
 3. Pick **Save (API Format)**.
 4. Save the file with a clear name (e.g. `my-workflow.json`).
 
-You'll know you got it right if the top-level keys are numeric strings (`"1"`, `"2"`, `"3"` …) and each value has a `class_type` and `inputs` object. If you see `pos`, `size`, `color`, `bgcolor`, or `groups`, you exported UI format — go back and pick *Save (API Format)*.
+You'll know you got it right if the top-level keys are numeric strings (`"1"`, `"2"`, `"3"` …) and each value has a `class_type` and `inputs` object. If you see `pos`, `size`, `color`, `bgcolor`, or `groups`, you exported UI format, go back and pick *Save (API Format)*.
 
 ## The Loovie node `class_type`s
 
-The Loovie server scans the workflow JSON by `class_type` and injects request values directly into the matching nodes. **No param maps. No `LOOVIE:` title prefixes. No external config.** The presence of the node is what makes the workflow Loovie-compatible.
+> **Who does the scanning?** This is **your own BYO server**, specifically the `comfyui-loovie` Python extension running inside your ComfyUI process on your machine. When a request from the Loovie app hits `/images/create` or `/videos/create`, the extension loads the workflow JSON from `comfyui-loovie/workflows/<name>.json` on your disk, scans it for the `class_type`s below, injects the request values into the matching nodes, and submits the result to ComfyUI's `/prompt`. **The Loovie cloud backend never sees workflow JSON, never knows which workflows you have installed, and does not scan anything.** All workflow handling is local to your BYO server.
 
-| Node `class_type` | Inputs the server injects | Outputs |
+`comfyui-loovie` matches nodes by `class_type` and injects request values directly. **No param maps. No `LOOVIE:` title prefixes. No external config.** The presence of the node is what makes the workflow Loovie-compatible.
+
+| Node `class_type` | Inputs `comfyui-loovie` injects | Outputs |
 |---|---|---|
 | `LoovieTextInput` | `prompt`, `negative_prompt` | `PROMPT`, `NEGATIVE` |
 | `LoovieSettings` | `aspect_ratio`, `seed` | `WIDTH`, `HEIGHT`, `SEED` |
@@ -34,18 +36,20 @@ The Loovie server scans the workflow JSON by `class_type` and injects request va
 | `LoovieAudioGate` | (gated by `AUDIO_ENABLED` from `LoovieVideoSettings`) | passthrough `AUDIO` |
 | `LoovieVideoInput` | `video_url`, `max_frames` | `FRAMES`, `AUDIO`, `FRAME_COUNT`, `WIDTH`, `HEIGHT`, `FPS_INT`, `FPS`, `FIRST_FRAME`, `LAST_FRAME` |
 
+If you're implementing the contract in a non-Comfy stack (FastAPI, Express, Wan2GP, etc.) none of this applies. These nodes only exist because `comfyui-loovie` chose to drive ComfyUI by scanning node `class_type`s. Your own stack can wire the request values into your workflow however you like, as long as the response shape on `/images/status` and `/videos/status` matches the contract.
+
 For a complete reference of what each node does internally, see [`comfyui-loovie/README.md`](../comfyui-loovie/README.md).
 
 ## Safe edits vs. risky edits
 
 | Edit | Safety |
 |---|---|
-| Change a numeric input on an existing node (CFG, steps, sampler/scheduler name) | **Safe** — sub-second to diff, low risk of breaking shape. PR-able. |
-| Add or replace a LoRA entry | **Safe** — covered by the existing `LoovieLoraStack` slot mechanism. |
+| Change a numeric input on an existing node (CFG, steps, sampler/scheduler name) | **Safe**, sub-second to diff, low risk of breaking shape. PR-able. |
+| Add or replace a LoRA entry | **Safe**, covered by the existing `LoovieLoraStack` slot mechanism. |
 | Add a new model checkpoint | **Safe**, but also update [`MODELS.md`](MODELS.md) and the downloader manifest. |
-| Add or remove a Loovie node | **Risky** — changes what the server can inject. Test all relevant request shapes (t2i, i2i with refs, etc.). |
-| Rewire edges between nodes | **Risky** — easy to silently produce a workflow that runs but produces wrong output. Include a test prompt in the PR. |
-| Change the `class_type` of a Loovie node to something custom | **Don't.** The server matches by `class_type`. Custom names are invisible. |
+| Add or remove a Loovie node | **Risky**, changes what `comfyui-loovie` can inject. Test all relevant request shapes (t2i, i2i with refs, etc.). |
+| Rewire edges between nodes | **Risky**, easy to silently produce a workflow that runs but produces wrong output. Include a test prompt in the PR. |
+| Change the `class_type` of a Loovie node to something custom | **Don't.** `comfyui-loovie` matches by `class_type`. Custom names are invisible to the injector. |
 
 ## Re-exporting an existing workflow
 
@@ -75,7 +79,7 @@ Just check it parses:
 python -c "import json; json.load(open('comfyui-loovie/workflows/my-workflow.json'))" && echo OK
 ```
 
-CI runs this on every PR. Beyond JSON syntax, there is no schema validation for ComfyUI workflows themselves — ComfyUI's own loader is the validator at runtime. A workflow that parses as JSON but is structurally broken will fail at first generation; verify locally before opening the PR.
+CI runs this on every PR. Beyond JSON syntax, there is no schema validation for ComfyUI workflows themselves, ComfyUI's own loader is the validator at runtime. A workflow that parses as JSON but is structurally broken will fail at first generation; verify locally before opening the PR.
 
 ## Locating an existing node in the workflow
 

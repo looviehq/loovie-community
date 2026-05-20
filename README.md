@@ -15,7 +15,7 @@ In the Loovie iOS app this appears as **Your server (BYO)** under image and vide
 
 ## 30‑second quickstart
 
-Pick one. Both produce a server that the Loovie iOS app will pick up under *Preferences → BYO server*.
+Pick whichever path matches your hardware. Both produce a server that the Loovie iOS app will pick up under *Preferences → BYO server*. Many other paths work too (any cloud GPU provider like QuickPod / Vast.ai / Lambda, a port forward on your router, etc.), see [docs/00-overview.md](docs/00-overview.md).
 
 ```sh
 # A. Rent a GPU on RunPod (~10 minutes, easiest)
@@ -23,7 +23,9 @@ Pick one. Both produce a server that the Loovie iOS app will pick up under *Pref
 #    set LOOVIE_API_TOKEN + HF_TOKEN, deploy. Full walkthrough:
 open https://github.com/looviehq/loovie-community/blob/main/docs/30-runpod.md
 
-# B. Run on your own NVIDIA GPU (FLUX.2 image works on 4090/5090; LTX-2.3 video on 5090)
+# B. Run on your own GPU using the reference workflows we ship.
+#    FLUX.2 Klein image works on 4090/5090; LTX-2.3 video on 5090. Swap in
+#    lighter models (or different ones entirely) and lighter GPUs work too.
 git clone --branch v0.21.1 --depth 1 https://github.com/comfyanonymous/ComfyUI.git
 cd ComfyUI && python3 -m venv .venv && source .venv/bin/activate
 pip install --extra-index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
@@ -35,13 +37,17 @@ bash custom_nodes/loovie-community/docker/download_models.sh && python main.py -
 
 ## What you can do with it
 
-| Capability | Mode | Reference workflow |
+The Loovie app speaks five capability modes. The "Reference workflow" column shows what `comfyui-loovie/` ships out of the box for each mode; you can swap any of these for a different model (WAN, HunyuanVideo, CogVideoX, SDXL, anything else) or write your own workflow, as long as it produces the same input/output shape as the contract requires.
+
+| Capability | Mode | Reference workflow (one of many possible) |
 |---|---|---|
 | Text → image | `t2i` | FLUX.2 Klein |
 | Image → image (refs + edit) | `i2i` | FLUX.2 Klein |
 | Text → single‑shot video | `t2v` | LTX‑2.3 fast / pro |
 | Image → single‑shot video | `i2v` | LTX‑2.3 fast / pro |
 | First‑and‑last‑frame → video | `fl2v` | LTX‑2.3 fast / pro |
+
+**You can also bring your own inference backend.** ComfyUI is the reference we publish (`comfyui-loovie/`), but anything that speaks the contract is valid: Wan2GP, a hand-rolled FastAPI / Express / Go server, a different node-graph engine, etc. We ship a minimal FastAPI example at [`examples/minimal-server/`](examples/minimal-server/) precisely so you can see how short the non-Comfy path can be. **The contract is the line, not the implementation.**
 
 Multi‑shot video, local LLM, and MCP tooling are on the post‑beta roadmap.
 
@@ -64,7 +70,7 @@ sequenceDiagram
     loop until terminal
       App->>Srv: GET /images/status?taskId=...
     end
-    App->>API: complete callback with R2 storage key
+    App->>API: completion callback
 ```
 
 The Loovie backend **never** calls your server. The mobile app does. Direct device‑to‑server traffic is the only path. See *Privacy* below.
@@ -81,13 +87,13 @@ The Loovie backend **never** calls your server. The mobile app does. Direct devi
 
 ## Privacy in one paragraph
 
-Your BYO server URL and bearer token live in the **Loovie app on your device only** — they have to, because the app is what calls your server. They are **never sent to Loovie's backend servers and are not accessible to Loovie staff**. Uninstall the app or tap *Clear saved server* in Preferences and they are gone — there is no copy in our cloud to be deleted. The metadata we do store about a generation (prompt, parameters, the final media file) is the same as for any Loovie generation. Details: [LEGAL.md](LEGAL.md), [docs/15-terms-and-privacy.md](docs/15-terms-and-privacy.md), and [loovie.app/privacy](https://loovie.app/privacy).
+Your BYO server URL and bearer token live in the **Loovie app on your device only**, they have to, because the app is what calls your server. They are **never sent to Loovie's backend servers and are not accessible to Loovie staff**. Uninstall the app or tap *Clear saved server* in Preferences and they are gone, there is no copy in our cloud to be deleted. The metadata we do store about a generation (prompt, parameters, the final media file) is the same as for any Loovie generation. Details: [LEGAL.md](LEGAL.md), [docs/15-terms-and-privacy.md](docs/15-terms-and-privacy.md), and [loovie.app/privacy](https://loovie.app/privacy).
 
 ## Status
 
 **Public beta.** Free in the Loovie app while in beta (no subscription, no credits). After beta we expect to introduce a small flat‑fee *BYO Pass* subscription. **Generations stay 0 credits forever.** If you rent a GPU (e.g. RunPod), that provider charges you separately; Loovie itself charges nothing for BYO.
 
-### Beta API stability — read this before you depend on the contract
+### Beta API stability, read this before you depend on the contract
 
 While we are on the `0.x` line, **the BYO HTTP contract may introduce breaking changes between minor versions.** Every change is documented in [CHANGELOG.md](CHANGELOG.md) and reflected in `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). **Pin to a specific tag or commit SHA** if you depend on it. The contract becomes strict semver at `1.0.0`.
 
@@ -106,7 +112,7 @@ While we are on the `0.x` line, **the BYO HTTP contract may introduce breaking c
 
 ## Contributing
 
-We use **DCO sign‑off** (`git commit -s`), not a CLA, and **Conventional Commits** on the subject. See [CONTRIBUTING.md](CONTRIBUTING.md). New workflows are very welcome — see [`docs/80-adding-a-workflow.md`](docs/80-adding-a-workflow.md).
+We use **DCO sign‑off** (`git commit -s`), not a CLA, and **Conventional Commits** on the subject. See [CONTRIBUTING.md](CONTRIBUTING.md). New workflows are very welcome, see [`docs/80-adding-a-workflow.md`](docs/80-adding-a-workflow.md).
 
 ## Security
 
@@ -114,8 +120,8 @@ Vulnerabilities go through [GitHub Private Vulnerability Reporting](https://gith
 
 ## Community
 
-Community‑supported beta, best‑effort, no SLA. The Loovie Discord is the primary support venue once the server opens — invite link will appear here. Until then, [GitHub Discussions](https://github.com/looviehq/loovie-community/discussions) is the fallback.
+Community‑supported beta, best‑effort, no SLA. The Loovie Discord is the primary support venue once the server opens, invite link will appear here. Until then, [GitHub Discussions](https://github.com/looviehq/loovie-community/discussions) is the fallback.
 
 ## License
 
-Apache‑2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE). Bundled and referenced **models are not ours** — each has its own license, including some that are gated on HuggingFace. See [docs/MODELS.md](docs/MODELS.md). You are responsible for accepting model licenses before downloading them.
+Apache‑2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE). Bundled and referenced **models are not ours**, each has its own license, including some that are gated on HuggingFace. See [docs/MODELS.md](docs/MODELS.md). You are responsible for accepting model licenses before downloading them.

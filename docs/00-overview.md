@@ -8,36 +8,40 @@
 
 ## Pick a hosting path
 
+BYO works with **any server that implements the contract and is reachable from your phone**. The setups below are the common ones we document, but **you are not limited to these**: open a port on your router, point any cloud GPU provider (RunPod, QuickPod, Vast.ai, Lambda, Salad, Hyperstack, your own VPS, etc.) at the contract, or expose the server through any reverse proxy or tunnel of your choice. If the Loovie app can reach the URL and the URL speaks the contract, it works.
+
 | Path | When it fits | Cost | What you need |
 |---|---|---|---|
-| **1. Your own machine** | You have an NVIDIA GPU with at least 24 GB VRAM and don't mind using the server only when you are on the same network or running a tunnel. | Electricity. | NVIDIA GPU, Linux/Windows/macOS, ~70 GB disk, Python, git, a [HuggingFace token](25-huggingface-and-gated-models.md). |
-| **2. RunPod (rented GPU)** | You don't have a GPU, or want the server always reachable from anywhere. | Per-minute GPU pricing from RunPod (Loovie charges nothing). | A RunPod account, a HuggingFace token, ~10 minutes to set up. |
-| **3. Your machine + Cloudflare Tunnel** | You have a GPU at home and want to reach it from your phone on cellular without exposing your home IP. | Electricity + a Cloudflare account (free). | Same as path 1 plus a few minutes to set up `cloudflared`. |
+| **1. Your own machine** | You have a capable GPU and don't mind using the server only when you are on the same network or running a tunnel. | Electricity. | A capable GPU, Linux/Windows/macOS, disk space for your models, Python, git, and (for the reference workflows) a [HuggingFace token](25-huggingface-and-gated-models.md). |
+| **2. Rented cloud GPU** | You don't have a GPU, or want the server always reachable from anywhere. We document RunPod because we have a referral, but **any cloud GPU provider works the same way**: QuickPod, Vast.ai, Lambda, Salad, Hyperstack, etc. | Per-minute or hourly GPU pricing from your provider (Loovie charges nothing). | A provider account, a HuggingFace token if you use the reference models, ~10 minutes to set up. |
+| **3. Your machine + a tunnel** | You have a GPU at home and want to reach it from your phone on cellular without exposing your home IP. | Electricity + the tunnel provider (Cloudflare Tunnel is free, ngrok / Tailscale Funnel / others also work). | Same as path 1 plus a few minutes to set up your tunnel. A properly secured router port forward works equally well. |
 
-Decision rule: have a beefy NVIDIA GPU and want the cheapest option? Path 1 or 3. No GPU? Path 2. On a Mac or older GPU and just want to try it? Path 2 again, with a smaller GPU and a quick stop after.
+The decision rule is simple: can the Loovie app reach a URL that speaks the contract? Then it works. Pick whichever path matches your hardware and your network.
 
-## GPU compatibility (tested at launch)
+## GPU compatibility (applies to the reference workflows)
 
-- **Image models:** verified on **RTX 4090** and **RTX 5090**.
-- **Video models:** verified **only on RTX 5090** at launch. Other GPUs may work but are unverified.
+The numbers below describe the **reference workflows we ship** (FLUX.2 Klein for image, LTX-2.3 for video). If you swap in lighter models, smaller GPUs work too. If you swap in heavier models, you'll need more VRAM. **The contract has nothing to say about GPU class**; that's a property of whichever model and workflow you choose to run.
+
+- **Image (FLUX.2 Klein reference):** verified on **RTX 4090** and **RTX 5090**.
+- **Video (LTX-2.3 reference):** verified **only on RTX 5090** at launch. Other GPUs may work but are unverified.
 
 We expect the 4090 to handle the `fast` video variant once we have more time on it; we are not promising that yet.
 
 ## What's in the rest of these docs
 
-1. [`10-create-a-loovie-account.md`](10-create-a-loovie-account.md) — make an account in the Loovie iOS app (no web signup).
-2. [`15-terms-and-privacy.md`](15-terms-and-privacy.md) — what we store about a BYO generation and what we explicitly do not.
-3. [`20-quickstart-your-own-machine.md`](20-quickstart-your-own-machine.md) — install ComfyUI, plug in `comfyui-loovie`, generate locally.
-4. [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md) — HuggingFace token + accepting gated model licenses.
-5. [`30-runpod.md`](30-runpod.md) — the rented-GPU path, with the Loovie referral link.
-6. [`40-cloudflare-tunnel.md`](40-cloudflare-tunnel.md) — make a home server reachable from your phone.
-7. [`50-security-and-tokens.md`](50-security-and-tokens.md) — required reading before opening any port.
-8. [`60-configure-the-app.md`](60-configure-the-app.md) — paste URL + token into Loovie, pick *Your server (BYO)*.
-9. [`70-troubleshooting.md`](70-troubleshooting.md) — symptom-to-fix table.
-10. [`80-adding-a-workflow.md`](80-adding-a-workflow.md) — contribute a new workflow.
-11. [`85-editing-api-workflows.md`](85-editing-api-workflows.md) — how to author or edit a workflow JSON.
-12. [`90-the-contract.md`](90-the-contract.md) — human-readable mirror of the OpenAPI spec.
-13. [`MODELS.md`](MODELS.md) — every model the reference implementation pulls, its license, gated status.
+1. [`10-create-a-loovie-account.md`](10-create-a-loovie-account.md), make an account in the Loovie iOS app (no web signup).
+2. [`15-terms-and-privacy.md`](15-terms-and-privacy.md), what we store about a BYO generation and what we explicitly do not.
+3. [`20-quickstart-your-own-machine.md`](20-quickstart-your-own-machine.md), install ComfyUI, plug in `comfyui-loovie`, generate locally.
+4. [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md), HuggingFace token + accepting gated model licenses.
+5. [`30-runpod.md`](30-runpod.md), the rented-GPU path, with the Loovie referral link.
+6. [`40-cloudflare-tunnel.md`](40-cloudflare-tunnel.md), make a home server reachable from your phone.
+7. [`50-security-and-tokens.md`](50-security-and-tokens.md), required reading before opening any port.
+8. [`60-configure-the-app.md`](60-configure-the-app.md), paste URL + token into Loovie, pick *Your server (BYO)*.
+9. [`70-troubleshooting.md`](70-troubleshooting.md), symptom-to-fix table.
+10. [`80-adding-a-workflow.md`](80-adding-a-workflow.md), contribute a new workflow.
+11. [`85-editing-api-workflows.md`](85-editing-api-workflows.md), how to author or edit a workflow JSON.
+12. [`90-the-contract.md`](90-the-contract.md), human-readable mirror of the OpenAPI spec.
+13. [`MODELS.md`](MODELS.md), every model the reference implementation pulls, its license, gated status.
 
 ## Honest expectations
 

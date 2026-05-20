@@ -1,10 +1,12 @@
 # Models
 
-This page lists every model the reference implementation ([`comfyui-loovie/`](../comfyui-loovie/)) ships with, along with its upstream source and licence. Loovie does **not** relicense these models. **You are responsible for accepting each upstream licence before downloading and for honouring its terms when using the model.**
+This page lists every model the **reference implementation** ([`comfyui-loovie/`](../comfyui-loovie/)) ships with, along with its upstream source and licence. Loovie does **not** relicense these models. **You are responsible for accepting each upstream licence before downloading and for honouring its terms when using the model.**
+
+> **You are not required to use these models.** They are the ones we tested and currently ship workflows for. BYO is model-agnostic at the contract level: as long as your workflow's input shape matches what `/images/create` or `/videos/create` sends, and its output shape matches what `/{images,videos}/status` returns, you can run **any** image or video model you have rights to run. Examples people have used or asked about: WAN 2.x, HunyuanVideo, CogVideoX, Mochi, AnimateDiff variants for video; SDXL, SD3.5, Stable Cascade, Lumina, HiDream for image. We don't promise to test all of them, but the contract doesn't care which one you use.
 
 The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](../docker/models.manifest) and pulls the files from the HuggingFace repos below. Some of these are **gated**, meaning HuggingFace requires you to accept the licence on the web UI while logged in before the download will succeed. See [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
 
-> **This list reflects the current `v0.1.x-beta` line.** Adding a model in a PR also means adding it here.
+> **This list reflects the current `v0.1.x-beta` line.** Adding a model in a PR also means adding it here. If you want to add a new reference workflow built on a different model, see [`80-adding-a-workflow.md`](80-adding-a-workflow.md).
 
 ## Image generation
 
@@ -13,9 +15,9 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 - **Purpose:** primary text-to-image and image-to-image model for the `loovie-custom` image tier.
 - **HuggingFace repo:** [`Comfy-Org/flux2`](https://huggingface.co/Comfy-Org/flux2) (Comfy-Org's packaged-for-ComfyUI build).
 - **Upstream:** [Black Forest Labs / FLUX](https://github.com/black-forest-labs/flux).
-- **Licence:** Black Forest Labs FLUX.2 Klein licence. **Gated on HuggingFace** — accept on the repo page while logged in before downloading. Read the terms.
+- **Licence:** Black Forest Labs FLUX.2 Klein licence. **Gated on HuggingFace**, accept on the repo page while logged in before downloading. Read the terms.
 - **Files:** `flux-2-klein-4b.safetensors`, `flux2-vae.safetensors`, `qwen_3_4b_flux2.safetensors`.
-- **Approx size:** ~24 GB combined.
+- **Approx size:** ~24 GB combined (includes the VAE and the Qwen-3 text encoder listed below).
 
 ### Qwen-3 text encoder for FLUX.2
 
@@ -30,24 +32,24 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 
 - **Purpose:** primary text-to-video / image-to-video / first-and-last-frame-to-video model for the `loovie-custom` video tier.
 - **HuggingFace repo:** [`Comfy-Org/ltx-2`](https://huggingface.co/Comfy-Org/ltx-2) (Comfy-Org's packaged-for-ComfyUI build of [Lightricks/LTX-Video](https://github.com/Lightricks/LTX-Video)).
-- **Licence:** Lightricks LTX community licence. Read the terms — there are restrictions on commercial use depending on the variant. Loovie's `comfyui-loovie/` repo only ships workflows; **your generations are your responsibility** under the LTX licence.
-- **Files:** `ltx-2.3-22b-dev-fp8.safetensors`, `ltx-2.3-22b-distilled-lora-384.safetensors`.
-- **Approx size:** ~37 GB combined.
+- **Licence:** Lightricks LTX community licence. Read the terms, there are restrictions on commercial use depending on the variant. Loovie's `comfyui-loovie/` repo only ships workflows; **your generations are your responsibility** under the LTX licence.
+- **Files:** `ltx-2.3-22b-dev-fp8.safetensors` (main fp8 checkpoint), `ltx-2.3-22b-distilled-lora-384.safetensors` (rank-384 distilled LoRA used by the `pro` variant).
+- **Approx size:** ~57 GB combined. The main fp8 checkpoint is roughly 22 GB on its own; the distilled LoRA at rank 384 is substantially larger than a typical LoRA because it carries enough capacity to materially change the model's output (closer to a model delta than a stylistic adapter).
 
 ### Gemma-3 12B text encoder (fp8 scaled)
 
 - **Purpose:** text encoder used by LTX-2.3. Without it, the video model cannot tokenise prompts.
 - **HuggingFace repo:** [`Comfy-Org/ltx-2`](https://huggingface.co/Comfy-Org/ltx-2) (the merged single-file variant Lightricks ships alongside LTX-2.3).
 - **Upstream:** [Google Gemma](https://huggingface.co/google/gemma-3-12b-it).
-- **Licence:** Google [Gemma Terms of Use](https://ai.google.dev/gemma/terms). **Gated on HuggingFace** — accept on the upstream repo page while logged in before downloading. Read the terms; Gemma has its own acceptable-use policy.
-- **Approx size:** ~13 GB.
+- **Licence:** Google [Gemma Terms of Use](https://ai.google.dev/gemma/terms). **Gated on HuggingFace**, accept on the upstream repo page while logged in before downloading. Read the terms; Gemma has its own acceptable-use policy.
+- **Approx size:** ~12 GB.
 
 ### LTX-2.3 spatial upscaler (pro tier)
 
 - **Purpose:** spatial upscaling stage used by the LTX-2.3 pro variants.
 - **HuggingFace repo:** [`Comfy-Org/ltx-2`](https://huggingface.co/Comfy-Org/ltx-2).
 - **Licence:** Lightricks LTX community licence (same as the main LTX checkpoint).
-- **Approx size:** ~700 MB.
+- **Approx size:** ~1 GB.
 
 ### RealESRGAN x2plus
 
@@ -58,14 +60,15 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 
 ## Disk budget
 
-| `LOOVIE_KIND` | Approx total |
-|---|---|
-| `images` | ~24 GB |
-| `videos` (fast tier only) | ~50 GB |
-| `videos` (with pro upscaler + ESRGAN) | ~52 GB |
-| `all` | ~76 GB |
+These are **downloaded sizes**. Add roughly 5 to 10 GB of headroom for ComfyUI's cache, intermediate decoded outputs, swap files, and OS overhead. Plan a real disk budget that's higher than the downloaded total, especially on cloud-rented disks where you can't grow the volume on demand.
 
-Pre-allocate at least 80 GB if you choose `all`.
+| `LOOVIE_KIND` | Downloaded | Plan for at least |
+|---|---|---|
+| `images` (FLUX.2 Klein bundle) | ~24 GB | 30 GB |
+| `videos` (LTX-2.3 main + LoRA + Gemma encoder + upscaler + ESRGAN) | ~70 GB | 80 GB |
+| `all` (both of the above) | ~99 GB | 100 GB |
+
+Per-file approximate sizes used above: FLUX.2 Klein bundle ~24 GB (main + VAE + Qwen encoder), LTX-2.3 22B main fp8 ~22 GB, LTX-2.3 22B distilled LoRA ~35 GB, Gemma-3 12B fp8 ~12 GB, LTX-2.3 spatial upscaler ~1 GB, RealESRGAN ~64 MB. These are rough figures from Comfy-Org's published builds; the exact bytes on disk depend on which point release of each repo you fetch. The truthful source of truth is what HuggingFace serves to your token; treat the numbers above as planning aids, not contracts.
 
 ## Adding a new model in a PR
 

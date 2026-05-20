@@ -13,7 +13,7 @@ Cloudflare returned a 5xx-class error because the tunnel or the origin is down.
 
 ### "Server responded 401 at /loovie/capabilities"
 
-You put authentication in front of the probe path. Don't do that — `/loovie/health` and `/loovie/capabilities` are intentionally public so the app can find the server before the token is configured.
+You put authentication in front of the probe path. Don't do that, `/loovie/health` and `/loovie/capabilities` are intentionally public so the app can find the server before the token is configured.
 
 - If you're using Cloudflare Access, scope it to `/images/*` and `/videos/*` only. See [`40-cloudflare-tunnel.md`](40-cloudflare-tunnel.md).
 
@@ -60,17 +60,17 @@ Your server failed the generation. This is on your server, not Loovie. The most 
 | `OUTPUT_MISSING` | Workflow ran but produced no output. | Workflow JSON is broken. Re-export from ComfyUI editor. |
 | `HISTORY_MISSING` | The task disappeared from ComfyUI's history. | ComfyUI restarted mid-run; retry. |
 | `BYO_INVALID_RESULT` | Server returned a file that isn't a valid image/video. | Workflow output bytes don't match the declared MIME. Verify the final save node and the format. |
-| `BYO_TIMEOUT` | Generation exceeded 10 minutes. | Cold model load, undersized GPU, pro tier on 24 GB. Use a bigger GPU or the `fast` variant. Pre-warm by running once before the real generation. |
+| `BYO_TIMEOUT` | Generation exceeded 30 minutes. | Cold model load, undersized GPU, very long video, pro tier on a tight VRAM budget. Use a bigger GPU, a shorter duration, or the `fast` variant. Pre-warm by running once before the real generation. |
 
-### Timed out after 10 minutes
+### Timed out after 30 minutes
 
-Same as `BYO_TIMEOUT` above. The Loovie Durable Object that watches the job times out after 10 minutes of no terminal state.
+Same as `BYO_TIMEOUT` above. The Loovie API times out after 30 minutes of no terminal state. Most generations finish in well under that; long videos (8 second pro variants, large resolutions) and cold model loads on undersized GPUs are the usual culprits when you hit the cap.
 
 - For LTX-2.3 pro on a 24 GB GPU you may genuinely run out of time on first cold start. Switch to `fast` variant, or use a 48 GB GPU, or pre-warm.
 
 ### macOS / Apple Silicon is very slow or OOMs
 
-Expected. LTX-2.3 and FLUX.2 are heavy and the Metal backend isn't competitive with CUDA for these workloads. Use [RunPod](30-runpod.md).
+Expected for the reference workflows. LTX-2.3 and FLUX.2 are heavy and the Metal backend isn't competitive with CUDA for these workloads. Either swap in a lighter image / video model that runs comfortably on your hardware (the contract is model-agnostic; see [`80-adding-a-workflow.md`](80-adding-a-workflow.md)) or use a rented cloud GPU like [RunPod](30-runpod.md).
 
 ## In the app
 
@@ -78,7 +78,7 @@ Expected. LTX-2.3 and FLUX.2 are heavy and the Metal backend isn't competitive w
 
 In order of likelihood:
 
-1. **Not in the beta.** *Preferences → Local Compute (BYO) — join the beta* → tap → force-quit → reopen.
+1. **Not in the beta.** *Preferences → Local Compute (BYO), join the beta* → tap → force-quit → reopen.
 2. **The server didn't advertise that section.** If `images` is absent from `/loovie/capabilities`, the image BYO tier is hidden. Same for `ss_videos`. Check the capabilities response.
 3. **Server unreachable.** Reopen the BYO sheet; check the green / red status.
 
@@ -88,7 +88,7 @@ Loovie set a server-side kill switch (`BYO_KILL_SWITCH=true`). We do this only i
 
 ### The generate screen shows a banner: "Your BYO server isn't being used right now. We've switched to <tier>, which will charge credits."
 
-The app couldn't route the request to your BYO server (flag off, no WS session, server unreachable, or the kill switch is on) and fell back to your previous non-BYO quality tier — **which costs credits**.
+The app couldn't route the request to your BYO server (flag off, no WS session, server unreachable, or the kill switch is on) and fell back to your previous non-BYO quality tier, **which costs credits**.
 
 - Tap the banner to open the BYO sheet and fix the server.
 - The banner stays until you dismiss it or the next successful BYO save.

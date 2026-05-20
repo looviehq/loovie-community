@@ -24,7 +24,8 @@ info:
     A static bearer token chosen by the operator (`LOOVIE_API_TOKEN`).
     Required for all remote callers; localhost (`127.0.0.1`, `::1`) may
     bypass. If no token is configured the server MUST refuse remote
-    requests (fail closed). The endpoints `/loovie/health` and
+    requests (fail closed: deny by default rather than letting requests
+    through unauthenticated). The endpoints `/loovie/health` and
     `/loovie/capabilities` are intentionally unauthenticated so the app
     can probe them.
 
@@ -354,7 +355,7 @@ components:
         - `EXECUTION_ERROR`: a node in the workflow raised an exception during execution. `failMsg` SHOULD include the operator readable traceback summary (missing model, CUDA OOM, etc.).
         - `OUTPUT_MISSING`: workflow ran to completion but produced no output file. Usually a broken workflow JSON, verify the final save node.
         - `HISTORY_MISSING`: the task disappeared from the backend's history (e.g. ComfyUI restarted mid-run). Safe to retry.
-        - `TIMEOUT`: the server's own internal timeout fired before the job completed. Distinct from the Loovie 10-minute wrapper timeout (which the app surfaces as `BYO_TIMEOUT` and is computed client-side).
+        - `TIMEOUT`: the server's own internal timeout fired before the job completed. Distinct from the Loovie 30-minute wrapper timeout (which the app surfaces as `BYO_TIMEOUT` and is computed client-side).
 
         ### Content moderation
 
@@ -383,7 +384,7 @@ components:
         ### Notes for server authors
 
         - Any code outside this set is preserved but treated by the app as a generic BYO failure (toast + retry, no special UI).
-        - The Loovie API namespaces non-prefixed codes as `BYO_<CODE>` at its boundary when telemetering them to Sentry, but the wire value on this endpoint is the bare code.
+        - The Loovie app namespaces non-prefixed codes as `BYO_<CODE>` at its boundary when surfacing them in telemetry, but the wire value on this endpoint is the bare code.
         - Reserved prefix: `BYO_*` codes are emitted by the Loovie app / API itself (e.g. `BYO_TIMEOUT`, `BYO_UNAUTHORIZED`, `BYO_CLIENT_OFFLINE`). BYO servers MUST NOT emit codes starting with `BYO_`.
       enum:
         - WORKFLOW_NOT_FOUND

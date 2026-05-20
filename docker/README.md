@@ -1,4 +1,4 @@
-# `docker/` — Loovie BYO reference server image and RunPod template
+# `docker/`, Loovie BYO reference server image and RunPod template
 
 This directory builds and ships the reference Docker image you can either run yourself or import as a RunPod template. It implements the [Loovie BYO HTTP contract](../openapi/loovie-server.openapi.yaml) using the [`comfyui-loovie/`](../comfyui-loovie/) reference implementation.
 
@@ -10,11 +10,11 @@ This directory builds and ships the reference Docker image you can either run yo
 
 ## Two ways to run
 
-### Option A — RunPod (no hardware required)
+### Option A, RunPod (no hardware required)
 
 You will need a [HuggingFace account and read token](../docs/25-huggingface-and-gated-models.md) and a strong server token from `scripts/new-token.sh`.
 
-1. **Create a RunPod account** — [https://runpod.io?ref=vg16q1rz](https://runpod.io?ref=vg16q1rz). *(Links in this section use the Loovie RunPod referral. It supports Loovie at no extra cost to you.)*
+1. **Create a RunPod account**, [https://runpod.io?ref=vg16q1rz](https://runpod.io?ref=vg16q1rz). *(Links in this section use the Loovie RunPod referral. It supports Loovie at no extra cost to you.)*
 2. **Generate a server token locally**:
 
    ```sh
@@ -25,14 +25,14 @@ You will need a [HuggingFace account and read token](../docs/25-huggingface-and-
 3. **Deploy the template.** Import `docker/runpod-template.json` in the RunPod console (Settings → Templates → New). A one-click "Deploy to RunPod" button will appear in the docs once the template is published to RunPod's public catalogue.
 4. **Pick a GPU.** Per the compat note above: 4090 or 5090 for images; 5090 for video.
 5. **Set the two required secrets** when launching:
-   - `LOOVIE_API_TOKEN` — the token from step 2.
-   - `HF_TOKEN` — your HuggingFace read token.
-6. **Wait for first boot** — usually 15–40 minutes while the container downloads the model weights into the attached volume. Subsequent boots reuse the volume and start in under a minute.
+   - `LOOVIE_API_TOKEN`: the token from step 2.
+   - `HF_TOKEN`: your HuggingFace read token.
+6. **Wait for first boot**, usually 15–40 minutes while the container downloads the model weights into the attached volume. Subsequent boots reuse the volume and start in under a minute.
 7. **Copy the pod's HTTPS proxy URL** (e.g. `https://<pod-id>-8188.proxy.runpod.net`). Open the Loovie iOS app → Preferences → BYO server, and paste the URL plus the token.
 8. **Generate.** Image or Video quality → *Your server (BYO)*.
 9. **Stop the pod when you are done.** RunPod keeps billing as long as it is running.
 
-### Option B — Self-host (your own NVIDIA GPU)
+### Option B, Self-host (your own NVIDIA GPU)
 
 ```sh
 # Generate a token (kept on your host, not committed anywhere).
@@ -69,8 +69,8 @@ For phone-to-LAN-server use, see [`docs/20-quickstart-your-own-machine.md`](../d
 
 | Variable | Required | Default | What it does |
 |---|---|---|---|
-| `LOOVIE_API_TOKEN` | **yes** for non-loopback binds | — | Static bearer token the app sends. Entrypoint refuses to start if unset and the bind is remote-reachable. |
-| `HF_TOKEN` | for gated model downloads | — | HuggingFace read token. Required for Gemma-3 (LTX text encoder) and FLUX.2 weights. See [`docs/25`](../docs/25-huggingface-and-gated-models.md). |
+| `LOOVIE_API_TOKEN` | **yes** for non-loopback binds |, | Static bearer token the app sends. Entrypoint refuses to start if unset and the bind is remote-reachable. |
+| `HF_TOKEN` | for gated model downloads |, | HuggingFace read token. Required for Gemma-3 (LTX text encoder) and FLUX.2 weights. See [`docs/25`](../docs/25-huggingface-and-gated-models.md). |
 | `DOWNLOAD_MODELS` | no | `0` | Set to `1` to run `loovie-download-models` on container start. |
 | `LOOVIE_KIND` | no | `images` | Which model sets to download (`images`, `videos`, `all`). |
 | `LOOVIE_MODELS_ROOT` | no | `/runpod-volume/models` | Where models live on disk. |
@@ -79,7 +79,7 @@ For phone-to-LAN-server use, see [`docs/20-quickstart-your-own-machine.md`](../d
 
 ## Tags
 
-Released tags follow `:vX.Y.Z` (full semver), `:vX.Y` (minor), `:beta` (latest beta), and `sha-<short>` (commit-addressable). **No `:latest` tag during beta** — for ML inference images, `:latest` causes silent breakage. Pin to `:beta` or a specific `:vX.Y.Z` (see [Beta API stability](../README.md#beta-api-stability)).
+Released tags follow `:vX.Y.Z` (full semver), `:vX.Y` (minor), `:beta` (latest beta), and `sha-<short>` (commit-addressable). **No `:latest` tag during beta**, for ML inference images, `:latest` causes silent breakage. Pin to `:beta` or a specific `:vX.Y.Z` (see [Beta API stability](../README.md#beta-api-stability)).
 
 ## Building from source
 

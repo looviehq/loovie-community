@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Loovie Community reference server — container entrypoint.
+# Loovie Community reference server, container entrypoint.
 #
 # Responsibilities:
 #   1. Validate that LOOVIE_API_TOKEN is set (unless explicitly bound to
@@ -33,8 +33,8 @@ log "Binding to ${COMFYUI_HOST}:${COMFYUI_PORT}"
 log "Models root: ${MODELS_ROOT}"
 log ""
 log "GPU compatibility (tested at release):"
-log "  Image models — RTX 4090 and 5090."
-log "  Video models — RTX 5090 only."
+log "  Image models, RTX 4090 and 5090."
+log "  Video models, RTX 5090 only."
 log "  Other GPUs may work but are unverified at launch."
 log ""
 
@@ -62,7 +62,7 @@ log ""
 # Optional model download
 # ----------------------------------------------------------------------------
 if [[ "${DOWNLOAD_MODELS:-0}" == "1" ]]; then
-  log "DOWNLOAD_MODELS=1 — invoking loovie-download-models (kind=${LOOVIE_KIND})."
+  log "DOWNLOAD_MODELS=1, invoking loovie-download-models (kind=${LOOVIE_KIND})."
   if ! /usr/local/bin/loovie-download-models; then
     fail "Model download failed. See the log above; usually this is a missing or unaccepted HuggingFace token (see docs/25-huggingface-and-gated-models.md)."
   fi

@@ -1,0 +1,26 @@
+{
+  // markdownlint-cli2 config. Loaded automatically by the GitHub Action
+  // (DavidAnson/markdownlint-cli2-action). Keeps rule config + glob and
+  // ignore list in one place so they don't drift.
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD024": { "siblings_only": true },
+    "MD033": false,
+    "MD041": false,
+    "MD046": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": [
+    // release-please autogenerates CHANGELOG.md with a fixed format we
+    // don't control (asterisk vs dash list style, double blank lines
+    // between version sections). Ignoring it so our style rules don't
+    // keep losing fights with the generator.
+    "CHANGELOG.md",
+    "node_modules/",
+    ".venv/",
+    "venv/",
+    "dist/",
+    "build/"
+  ]
+}

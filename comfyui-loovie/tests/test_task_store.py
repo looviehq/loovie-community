@@ -88,7 +88,7 @@ def test_cleanup_removes_only_terminal_tasks_older_than_cutoff() -> None:
 
 
 def test_cleanup_does_not_remove_pending_or_processing_tasks() -> None:
-    """Even ancient non-terminal tasks survive cleanup — they're still in-flight."""
+    """Even ancient non-terminal tasks survive cleanup, they're still in-flight."""
     store = TaskStore.get_instance()
     ancient_pending = store.create_task(prompt="x", aspect_ratio="1:1", workflow_name="w")
     ancient_pending.created_at = time.time() - 86400  # a day ago

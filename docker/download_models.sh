@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Loovie Community reference server — model downloader.
+# Loovie Community reference server, model downloader.
 #
 # Reads docker/models.manifest (one entry per line) and downloads each model
 # into the canonical ComfyUI folder under ${LOOVIE_MODELS_ROOT}/.
@@ -9,7 +9,7 @@
 #
 #   kind  hf_repo                                       hf_filename                                   target_subdir
 #
-#   kind         = "image" | "video" — used to select via LOOVIE_KIND.
+#   kind         = "image" | "video", used to select via LOOVIE_KIND.
 #   hf_repo      = HuggingFace repo (e.g. Comfy-Org/ltx-2).
 #   hf_filename  = path-in-repo (huggingface_hub will preserve subdirs).
 #   target_subdir= ComfyUI folder name (diffusion_models, checkpoints,
@@ -120,7 +120,7 @@ while IFS=$'\t' read -r kind repo filename target_subdir; do
     downloaded=$((downloaded + 1))
   else
     rc=$?
-    log "    failed (exit ${rc}) — likely cause: missing HF_TOKEN or unaccepted gated license."
+    log "    failed (exit ${rc}), likely cause: missing HF_TOKEN or unaccepted gated license."
     log "    Open https://huggingface.co/${repo} while logged in, click 'Agree and access repository'."
     failures=$((failures + 1))
   fi

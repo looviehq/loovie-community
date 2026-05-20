@@ -144,7 +144,7 @@ def test_video_section_has_no_variants_falls_back_to_fast_default() -> None:
 
 
 # ---------------------------------------------------------------------
-# OpenAPI conformance test — the load-bearing one.
+# OpenAPI conformance test, the load-bearing one.
 # ---------------------------------------------------------------------
 
 

@@ -24,15 +24,21 @@ sequenceDiagram
     App->>Srv: GET /images/status?taskId=...
     Srv-->>App: progress + state
   end
-  App->>API: complete callback with R2 storage key
-  API-->>App: job finalized
+  App->>API: completion callback
+  API-->>App: job finalised
 ```
 
 The Loovie backend **never** calls your server. The mobile app does. Direct device-to-server traffic is the only path. Your server URL and bearer token live in the app on the user's device only; they are not accessible to Loovie staff or sent to Loovie's backend.
 
-## ANY server, not just ComfyUI
+## ANY server, ANY model, ANY backend
 
-Any HTTP server that conforms to this contract is valid. ComfyUI is the reference implementation we publish (`comfyui-loovie/`), and a small FastAPI proof lives in `examples/minimal-server/`. The contract is the line.
+Three things are **not** part of the contract and you can swap them independently:
+
+1. **The inference backend.** ComfyUI is the reference we publish (`comfyui-loovie/`), but anything serving HTTP works: Wan2GP, a hand-rolled FastAPI / Express / Go server, a different node-graph engine, a wrapper around `diffusers`, etc. A small FastAPI proof lives in `examples/minimal-server/`.
+2. **The model.** FLUX.2 Klein and LTX-2.3 are what our reference workflows use, but the contract knows nothing about which model is running. Image: SDXL, SD3.5, Stable Cascade, Lumina, HiDream, your own fine-tune, whatever. Video: WAN 2.x, HunyuanVideo, CogVideoX, Mochi, AnimateDiff variants, whatever. You're responsible for the licence on whichever model you pick.
+3. **The hardware.** NVIDIA, AMD (ROCm), Apple Silicon, multi-GPU, single-GPU: the contract has nothing to say. Your model and workflow set the VRAM floor, not us.
+
+The contract is the line. If your server speaks the request and response shapes below, the Loovie app will drive it the same way it drives ours.
 
 ## Endpoints are conditional on capabilities
 
@@ -89,7 +95,7 @@ The single most important endpoint. Tells the app what your server can do.
 }
 ```
 
-**Hard rules.** Unknown enum values fail the entire parse — the app falls back to bundled defaults and fires `byo_caps_schema_unsupported` analytics. `schemaVersion` is currently `1`; bump only when the shape changes. Omit sections you can't serve. `promptCharLimit` `3000` is the server's real hard cap.
+**Hard rules.** Unknown enum values fail the entire parse, the app falls back to bundled defaults and fires `byo_caps_schema_unsupported` analytics. `schemaVersion` is currently `1`; bump only when the shape changes. Omit sections you can't serve. `promptCharLimit` `3000` is the server's real hard cap.
 
 ### `POST /images/create` (Bearer, conditional on `images`)
 
@@ -163,11 +169,11 @@ Same response envelope: `{ "code": 200, "data": { "taskId": "..." } }`.
 
 Multipart `file=…` OR JSON `{ "filename": "…", "data_base64": "…" }`. Returns `{ filename, url, sizeBytes }`.
 
-You don't need to implement this if your operator workflow doesn't push files into the server. The Loovie app does not use it — the app references images via URL.
+You don't need to implement this if your operator workflow doesn't push files into the server. The Loovie app does not use it, the app references images via URL.
 
 ## Auth
 
-Static bearer token of your choosing. Required for remote callers. Localhost (`127.0.0.1` / `::1`) **may** bypass auth — the contract allows it but doesn't require it. **The server MUST fail closed when no token is configured and the caller is non-loopback.** Returning anything other than `401` for an unauthenticated remote request is a protocol violation.
+Static bearer token of your choosing. Required for remote callers. Localhost (`127.0.0.1` / `::1`) **may** bypass auth, the contract allows it but doesn't require it. **The server MUST [fail closed](50-security-and-tokens.md#what-fail-closed-means) when no token is configured and the caller is non-loopback** (in plain English: refuse the request rather than letting it through unauthenticated). Returning anything other than `401` for an unauthenticated remote request is a protocol violation.
 
 `/loovie/health` and `/loovie/capabilities` are always unauthenticated, even when a token is configured.
 
@@ -183,24 +189,24 @@ The contract advertises a `promptCharLimit` (default 3000) per section. The serv
 
 The server-side failCodes the reference implementation emits:
 
-- `WORKFLOW_NOT_FOUND` — the requested workflow / variant isn't installed.
-- `SUBMISSION_ERROR` — the workflow couldn't be submitted to ComfyUI.
-- `EXECUTION_ERROR` — a node blew up during execution.
-- `OUTPUT_MISSING` — workflow ran but produced no output file.
-- `HISTORY_MISSING` — task disappeared from history (server restart mid-run).
-- `TIMEOUT` — generation exceeded `max_wait_seconds` for the workflow.
+- `WORKFLOW_NOT_FOUND`: the requested workflow / variant isn't installed.
+- `SUBMISSION_ERROR`: the workflow couldn't be submitted to ComfyUI.
+- `EXECUTION_ERROR`: a node blew up during execution.
+- `OUTPUT_MISSING`: workflow ran but produced no output file.
+- `HISTORY_MISSING`: task disappeared from history (server restart mid-run).
+- `TIMEOUT`: generation exceeded `max_wait_seconds` for the workflow.
 
 Custom servers may emit additional codes; the Loovie app prefixes any non-`BYO_*` code with `BYO_` at the failure boundary, so e.g. `OUTPUT_MISSING` becomes `BYO_OUTPUT_MISSING` in the Loovie error-tracking funnel.
 
 ## Result media size and type
 
-The Loovie app validates the result file before uploading to its own R2:
+The Loovie app validates the result file before uploading it to Loovie:
 
 - **Magic bytes** must match the declared MIME (PNG / JPEG / WebP for images, MP4 / WebM for video).
 - **Decode probe** must succeed.
-- **Size cap**: ≤ 50 MB images, ≤ 500 MB videos.
+- **Size cap**: <= 50 MB images, <= 500 MB videos.
 
-Anything failing is rejected with `BYO_INVALID_RESULT` on the device side and never reaches Loovie's R2. Make sure your workflow's save node emits a real, decodable file in one of these formats.
+Anything failing is rejected with `BYO_INVALID_RESULT` on the device side and never reaches Loovie. Make sure your workflow's save node emits a real, decodable file in one of these formats.
 
 ## A worked curl example
 

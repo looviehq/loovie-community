@@ -1,13 +1,13 @@
-# Loovie Community reference server — model manifest.
+# Loovie Community reference server, model manifest.
 #
 # Tab-separated.  Lines starting with '#' are comments. Fields:
-#   kind         : "image" or "video" — selected via LOOVIE_KIND.
+#   kind         : "image" or "video", selected via LOOVIE_KIND.
 #   hf_repo      : HuggingFace repo.
 #   hf_filename  : path-in-repo.
 #   target_subdir: ComfyUI folder name (diffusion_models, checkpoints,
 #                  text_encoders, vae, loras, upscale_models, latent_upscale_models).
 #
-# Some entries are GATED on HuggingFace — accept the licence on the HF web
+# Some entries are GATED on HuggingFace, accept the licence on the HF web
 # UI while logged in before the download will succeed. See
 # docs/25-huggingface-and-gated-models.md.
 #
