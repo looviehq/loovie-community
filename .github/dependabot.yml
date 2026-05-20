@@ -22,6 +22,14 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 3
+    ignore:
+      # schemathesis 4.x renamed several CLI args we use in
+      # .github/workflows/contract.yml (--base-url -> --url,
+      # --hypothesis-max-examples -> --max-examples, removed
+      # --experimental=openapi-3.1, etc). Pin to <4 until the CLI
+      # invocation is migrated in a dedicated PR.
+      - dependency-name: schemathesis
+        versions: [">=4"]
     groups:
       security:
         applies-to: security-updates
@@ -38,7 +46,7 @@ updates:
       day: monday
     open-pull-requests-limit: 3
 
-  # GitHub Actions, pinned by SHA, Dependabot updates the SHAs.
+  # GitHub Actions, pinned by SHA. Dependabot updates the SHAs.
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -46,6 +54,11 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
+      # Bundle minor + patch SHA bumps into one PR. Majors get their
+      # own PR each so they can be reviewed in isolation, since major
+      # bumps on common actions (checkout, setup-python, codeql-action,
+      # docker/*) periodically ship breaking behaviour changes.
       actions:
         applies-to: version-updates
+        update-types: [minor, patch]
         patterns: ["*"]
