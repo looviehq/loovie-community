@@ -46,11 +46,7 @@ class LoovieLoraStack:
             if not name:
                 continue
             raw_strength = kwargs.get(f"strength_{i}", 0.8)
-            strength = (
-                float(raw_strength)
-                if isinstance(raw_strength, (int, float, str))
-                else 0.8
-            )
+            strength = float(raw_strength) if isinstance(raw_strength, (int, float, str)) else 0.8
             path = folder_paths.get_full_path("loras", name)
             if path is None:
                 logger.warning("LoRA not found: %s", name)
