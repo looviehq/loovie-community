@@ -38,6 +38,15 @@ info:
 
     ## Versioning
 
+    **Beta API stability.** While we are on the `0.x` line, breaking
+    changes MAY land in minor bumps - renaming or removing endpoints,
+    narrowing or replacing enum values, changing field requiredness,
+    reshaping responses. Every break is documented in CHANGELOG.md and
+    reflected in `info.version` here (and in `schemaVersion` on the
+    capabilities manifest when the shape changes). If you depend on
+    this contract, pin to a specific tag or commit SHA rather than
+    tracking `main`. Strict semver applies once we reach `1.0.0`.
+
     `info.version` follows semver and is independent of any individual
     implementation's version. The capabilities manifest's `schemaVersion`
     is currently `1`; it bumps only when the manifest SHAPE changes.

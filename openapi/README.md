@@ -46,9 +46,9 @@ CI runs the lint on every PR that touches `openapi/**` (see [`.github/workflows/
 
 ## Versioning
 
-`info.version` follows semver and is independent of any individual implementation's version. The capabilities manifest carries its own `schemaVersion` (currently `1`); it bumps only when the manifest SHAPE changes — adding a new mode to an enum, adding an optional field with a default, removing a field, or changing requiredness.
+> ⚠️ **Beta API stability — pin your version.** While we are on the `0.x` line, **breaking changes may land in minor bumps.** That includes renaming or removing endpoints, narrowing or replacing enum values, changing field requiredness, and reshaping responses. We document every break in [CHANGELOG.md](../CHANGELOG.md) and reflect it in `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). **If you depend on the contract, pin to a specific tag or commit SHA** rather than tracking `main`. Strict semver kicks in at `1.0.0`.
 
-Pre-1.0 minor bumps may include breaking changes (and are noted in [CHANGELOG.md](../CHANGELOG.md)). At 1.0 the spec follows strict semver.
+`info.version` follows semver and is independent of any individual implementation's version. The capabilities manifest carries its own `schemaVersion` (currently `1`); it bumps only when the manifest SHAPE changes — adding a new mode to an enum, adding an optional field with a default, removing a field, or changing requiredness.
 
 ## Spec extensions
 

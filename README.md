@@ -9,6 +9,16 @@
 
 **Pre-beta scaffold.** This repo is being assembled in the open. The first usable release will be tagged `v0.1.0-beta`. Until then, the only things that work are the governance files you see here. Track progress in [CHANGELOG.md](CHANGELOG.md) and the [issues](https://github.com/looviehq/loovie-community/issues).
 
+### Beta API stability — read this before you depend on the contract
+
+While we are on the `0.x` line, **the BYO HTTP contract ([`openapi/loovie-server.openapi.yaml`](openapi/loovie-server.openapi.yaml)) may introduce breaking changes between minor versions.** We will:
+
+- Document every change in [CHANGELOG.md](CHANGELOG.md).
+- Bump `info.version` on the spec accordingly.
+- Bump the manifest's `schemaVersion` whenever the capabilities SHAPE changes.
+
+**If you are building against the contract, pin to a specific version** (an exact tag like `v0.1.0-beta` or, better, a specific commit SHA) rather than tracking `main`. The contract becomes strict semver at `1.0.0`. We aim to keep breaks rare and signposted, but the explicit promise during beta is "we may need to break things to ship a good 1.0."
+
 When `v0.1.0-beta` ships, this README will be replaced with the proper hero, quickstart, and repo map. Until then, here's what you can expect:
 
 | Path | What it will be |
