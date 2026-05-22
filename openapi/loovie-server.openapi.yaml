@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Loovie BYO Server Contract
-  version: 0.2.1-beta.1
+  version: 0.2.2-beta.1
   summary: >-
     The HTTP contract a third-party server implements to be drivable by the
     Loovie mobile app.

@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 > **Beta API stability.** While we are on the `0.x` line, the BYO HTTP contract (`openapi/loovie-server.openapi.yaml`) may introduce breaking changes between minor versions. Every breaking change is logged below and reflected in a bump of `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). Pin to a specific tag or commit SHA if you depend on the contract; strict semver kicks in at `1.0.0`.
 
+## [0.2.2-beta.1](https://github.com/looviehq/loovie-community/compare/v0.2.1-beta.1...v0.2.2-beta.1) (2026-05-22)
+
+
+### Bug Fixes
+
+* **workflows:** correct LTX 2.3 graphs and reduce artifacts ([#16](https://github.com/looviehq/loovie-community/issues/16)) ([04fa449](https://github.com/looviehq/loovie-community/commit/04fa449f7cd41df908886cb048e38fe8a7a80255))
+
 ## [0.2.1-beta.1](https://github.com/looviehq/loovie-community/compare/v0.2.0-beta.1...v0.2.1-beta.1) (2026-05-20)
 
 
