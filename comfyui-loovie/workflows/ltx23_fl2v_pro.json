@@ -95,11 +95,9 @@
         "12",
         5
       ],
-      "resize_type": {
-        "resize_type": "scale shorter dimension",
-        "shorter_size": 544
-      },
-      "scale_method": "bicubic"
+      "resize_type": "scale shorter dimension",
+      "scale_method": "bicubic",
+      "resize_type.shorter_size": 544
     },
     "class_type": "ResizeImageMaskNode",
     "_meta": {
@@ -112,7 +110,7 @@
         "25",
         0
       ],
-      "img_compression": 35
+      "img_compression": 18
     },
     "class_type": "LTXVPreprocess",
     "_meta": {
@@ -125,11 +123,9 @@
         "12",
         7
       ],
-      "resize_type": {
-        "resize_type": "scale shorter dimension",
-        "shorter_size": 544
-      },
-      "scale_method": "bicubic"
+      "resize_type": "scale shorter dimension",
+      "scale_method": "bicubic",
+      "resize_type.shorter_size": 544
     },
     "class_type": "ResizeImageMaskNode",
     "_meta": {
@@ -142,7 +138,7 @@
         "27",
         0
       ],
-      "img_compression": 35
+      "img_compression": 18
     },
     "class_type": "LTXVPreprocess",
     "_meta": {
@@ -243,8 +239,8 @@
   "42": {
     "inputs": {
       "video_latent": [
-        "40",
-        0
+        "37",
+        2
       ],
       "audio_latent": [
         "41",
@@ -271,7 +267,7 @@
         2
       ],
       "latent": [
-        "42",
+        "40",
         0
       ],
       "image": [
@@ -320,7 +316,7 @@
     "inputs": {
       "noise_seed": [
         "11",
-        6
+        7
       ]
     },
     "class_type": "RandomNoise",
@@ -426,8 +422,8 @@
         0
       ],
       "latent_image": [
-        "37",
-        2
+        "42",
+        0
       ]
     },
     "class_type": "SamplerCustomAdvanced",
@@ -459,8 +455,8 @@
   "81": {
     "inputs": {
       "samples": [
-        "60",
-        0
+        "108",
+        2
       ],
       "upscale_model": [
         "80",
@@ -529,7 +525,7 @@
     "inputs": {
       "noise_seed": [
         "11",
-        6
+        7
       ]
     },
     "class_type": "RandomNoise",
@@ -775,6 +771,26 @@
     },
     "_meta": {
       "title": "Loovie Audio Gate"
+    }
+  },
+  "108": {
+    "inputs": {
+      "positive": [
+        "37",
+        0
+      ],
+      "negative": [
+        "37",
+        1
+      ],
+      "latent": [
+        "60",
+        0
+      ]
+    },
+    "class_type": "LTXVCropGuides",
+    "_meta": {
+      "title": "Crop Guides"
     }
   }
 }

@@ -95,11 +95,9 @@
         "12",
         5
       ],
-      "resize_type": {
-        "resize_type": "scale shorter dimension",
-        "shorter_size": 544
-      },
-      "scale_method": "bicubic"
+      "resize_type": "scale shorter dimension",
+      "scale_method": "bicubic",
+      "resize_type.shorter_size": 544
     },
     "class_type": "ResizeImageMaskNode",
     "_meta": {
@@ -112,7 +110,7 @@
         "25",
         0
       ],
-      "img_compression": 35
+      "img_compression": 18
     },
     "class_type": "LTXVPreprocess",
     "_meta": {
@@ -182,7 +180,7 @@
         "40",
         0
       ],
-      "strength": 0.7
+      "strength": 0.9
     },
     "class_type": "LTXVImgToVideoConditionOnly",
     "_meta": {
@@ -251,7 +249,7 @@
     "inputs": {
       "noise_seed": [
         "11",
-        6
+        7
       ]
     },
     "class_type": "RandomNoise",
@@ -448,7 +446,7 @@
     "inputs": {
       "noise_seed": [
         "11",
-        6
+        7
       ]
     },
     "class_type": "RandomNoise",
