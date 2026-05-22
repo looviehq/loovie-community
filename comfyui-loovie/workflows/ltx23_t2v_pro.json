@@ -178,7 +178,7 @@
     "inputs": {
       "noise_seed": [
         "11",
-        6
+        7
       ]
     },
     "class_type": "RandomNoise",
@@ -387,7 +387,7 @@
     "inputs": {
       "noise_seed": [
         "11",
-        6
+        7
       ]
     },
     "class_type": "RandomNoise",

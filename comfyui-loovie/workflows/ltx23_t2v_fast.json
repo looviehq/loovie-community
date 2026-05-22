@@ -178,7 +178,7 @@
     "inputs": {
       "noise_seed": [
         "11",
-        6
+        7
       ]
     },
     "class_type": "RandomNoise",
@@ -307,22 +307,18 @@
   },
   "61": {
     "inputs": {
-      "latents": [
+      "samples": [
         "60",
         0
       ],
       "vae": [
         "20",
         2
-      ],
-      "horizontal_tiles": 2,
-      "vertical_tiles": 2,
-      "overlap": 6,
-      "last_frame_fix": true
+      ]
     },
-    "class_type": "LTXVTiledVAEDecode",
+    "class_type": "VAEDecode",
     "_meta": {
-      "title": "Tiled VAE Decode (Video)"
+      "title": "VAE Decode (Video)"
     }
   },
   "62": {
