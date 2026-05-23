@@ -4,6 +4,23 @@ When BYO fails, it is almost always your server, your network, or your hardware.
 
 ## Setting up
 
+### `Cannot import .../custom_nodes/loovie-community/...` or `loovie-community` is not a node
+
+ComfyUI imports **every folder** under `custom_nodes/`. The monorepo root is not a node pack.
+
+- **Fix:** move the clone out of `custom_nodes/` and install only `comfyui-loovie/`:
+
+  ```sh
+  cd ComfyUI
+  mv custom_nodes/loovie-community .    # if you cloned there by mistake
+  COMFY_DIR=. ./loovie-community/comfyui-loovie/scripts/install.sh
+  pip install -r loovie-community/comfyui-loovie/requirements.txt
+  ```
+
+  Use `install.sh --copy` if you do not want a symlink.
+
+- If you leave the whole repo in `custom_nodes/` anyway, ComfyUI logs a **skip** warning for `loovie-community` (harmless). You still need `custom_nodes/loovie` pointing at the pack via the installer or a symlink.
+
 ### "Could not reach your BYO server (520..527 / 530)"
 
 Cloudflare returned a 5xx-class error because the tunnel or the origin is down.

@@ -30,9 +30,10 @@ git clone --branch v0.21.1 --depth 1 https://github.com/comfyanonymous/ComfyUI.g
 cd ComfyUI && python3 -m venv .venv && source .venv/bin/activate
 pip install --extra-index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
 pip install -r requirements.txt
-cd custom_nodes && git clone https://github.com/looviehq/loovie-community.git && ln -s loovie-community/comfyui-loovie loovie
-cd .. && export HF_TOKEN=hf_xxx LOOVIE_API_TOKEN=$(bash custom_nodes/loovie-community/scripts/new-token.sh)
-bash custom_nodes/loovie-community/docker/download_models.sh && python main.py --listen 0.0.0.0 --port 8188
+git clone https://github.com/looviehq/loovie-community.git
+COMFY_DIR=. ./loovie-community/comfyui-loovie/scripts/install.sh
+export HF_TOKEN=hf_xxx LOOVIE_API_TOKEN=$(bash loovie-community/scripts/new-token.sh)
+bash loovie-community/docker/download_models.sh && python main.py --listen 0.0.0.0 --port 8188
 ```
 
 ## What you can do with it

@@ -29,18 +29,41 @@ pip install -r requirements.txt
 
 ### 2. Install the Loovie reference custom-node pack
 
-```sh
-cd custom_nodes
-git clone https://github.com/looviehq/loovie-community.git loovie-community
-ln -s loovie-community/comfyui-loovie loovie
+**Do not clone the whole repo into `custom_nodes/`.** ComfyUI tries to import every folder there as a custom node. The git repo root is docs, Docker, OpenAPI, etc. Only [`comfyui-loovie/`](../comfyui-loovie/) is the node pack.
 
-# Required Python deps for the Loovie nodes.
+Git cannot clone a single subfolder to a flat directory with normal `git pull` updates. Sparse checkout still leaves a `comfyui-loovie/` prefix inside the clone. Use one of these instead:
+
+#### Option A (recommended): clone beside ComfyUI, run the installer
+
+The repo lives at `ComfyUI/loovie-community/`. Only `custom_nodes/loovie` is the node (symlink or copy, your choice).
+
+```sh
+# Still in the ComfyUI directory from step 1
+git clone https://github.com/looviehq/loovie-community.git
+COMFY_DIR=. ./loovie-community/comfyui-loovie/scripts/install.sh
+pip install -r loovie-community/comfyui-loovie/requirements.txt
+```
+
+Symlink is the default (easy `git pull` in the repo). No symlinks? Pass `--copy`:
+
+```sh
+COMFY_DIR=. ./loovie-community/comfyui-loovie/scripts/install.sh --copy
+```
+
+Re-run `install.sh --copy` after pulling big pack updates if you use copy mode.
+
+#### Option B: manual symlink (same layout, no installer script)
+
+```sh
+git clone https://github.com/looviehq/loovie-community.git
+ln -s ../loovie-community/comfyui-loovie custom_nodes/loovie
 pip install -r loovie-community/comfyui-loovie/requirements.txt
 ```
 
 You also need the ComfyUI-LTXVideo node pack for LTX-2.3 single-shot video:
 
 ```sh
+cd custom_nodes
 git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git
 cd ComfyUI-LTXVideo
 git checkout 229437c6b65796d6a7a63ae34be2bd5ba31fa543
@@ -50,25 +73,64 @@ cd ..
 
 ### 3. Download the models
 
-Set your HuggingFace token, then run the downloader from the cloned repo.
+Run the downloader from the **ComfyUI directory** (same place as steps 1–2). It reads [`docker/models.manifest`](../docker/models.manifest), which lists the FLUX.2 Klein and LTX 2.3 weights the reference workflows expect.
 
-`LOOVIE_KIND` is an environment variable read by `docker/download_models.sh` and the container entrypoint. It selects which model sets to pull from HuggingFace:
+#### Environment variables
 
-- `images`: image-generation models only (FLUX.2 Klein + text encoder + VAE). ~24 GB.
-- `videos`: video-generation models only (LTX-2.3 + Gemma text encoder + upscaler + LoRA). ~70 GB.
-- `all`: both. ~99 GB.
+| Variable | Required | Default when unset | Override example |
+|---|---|---|---|
+| `HF_TOKEN` | **yes** for gated models | none (script warns and downloads may fail) | `export HF_TOKEN=hf_...` |
+| `LOOVIE_MODELS_ROOT` | no | **Auto-detected** (see order below) | `export LOOVIE_MODELS_ROOT="$PWD/../models"` |
+| `LOOVIE_KIND` | no | `images` | `export LOOVIE_KIND=all` |
+| `LOOVIE_MODELS_MANIFEST` | no | `docker/models.manifest` next to the script | rarely needed |
+| `HUGGING_FACE_HUB_TOKEN` | no | same as `HF_TOKEN` if `HF_TOKEN` unset | alias for `HF_TOKEN` |
 
-Pick the smallest set you need. The capabilities your server advertises through `/loovie/capabilities` will automatically reflect what you actually have on disk: if you only download images, the video tier won't appear in the Loovie app.
+**`LOOVIE_MODELS_ROOT` auto-detection order** (first match wins):
+
+1. **`LOOVIE_MODELS_ROOT`** if you set it explicitly (always wins).
+2. **`ComfyUI/models`** when the script can find a ComfyUI tree relative to itself (typical bare-metal path: repo at `ComfyUI/loovie-community/`).
+3. **`/runpod-volume/models`** when `/runpod-volume` exists (RunPod pod or container with a mounted network volume).
+4. **`/workspace/models`** when `/workspace` exists (some RunPod images).
+5. Fallback **`/runpod-volume/models`** with a log hint to set `LOOVIE_MODELS_ROOT`.
+
+On a **bare-metal ComfyUI install**, even inside a Docker dev container that also has `/runpod-volume`, the script now prefers **`ComfyUI/models`** unless you override. If you intentionally want the RunPod volume, set `LOOVIE_MODELS_ROOT=/runpod-volume/models`.
+
+The script prints the resolved path and source at startup, for example:
+
+```text
+[loovie-download-models] Models root: /ComfyUI/models
+[loovie-download-models]   source: auto-detected ComfyUI at /ComfyUI
+```
+
+#### Which models to download
+
+`LOOVIE_KIND` selects which rows from the manifest to pull:
+
+- `images`: FLUX.2 Klein + text encoder + VAE (~24 GB).
+- `videos`: LTX-2.3 + Gemma text encoder + upscaler + LoRA + ESRGAN (~70 GB).
+- `all`: both (~99 GB).
+
+Pick the smallest set you need. `/loovie/capabilities` reflects what is actually on disk.
+
+#### Command
+
+From the **ComfyUI directory**:
 
 ```sh
 export HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-export LOOVIE_MODELS_ROOT="$PWD/../models"   # whatever path ComfyUI knows as `models/`
-export LOOVIE_KIND=all                       # or `images` or `videos`, see above
+export LOOVIE_KIND=all                       # or images / videos
+
+# Optional: force a specific models directory (overrides auto-detection)
+# export LOOVIE_MODELS_ROOT="$PWD/models"
 
 bash loovie-community/docker/download_models.sh
 ```
 
-If you see `401 Unauthorized`, you have not accepted a gated licence yet. Open the offending repo URL on huggingface.co while logged in, click *Agree and access repository*, and re-run. See [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
+Accept gated licences first: [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
+
+If downloads fail with `Repository not found` on repos like `Comfy-Org/flux2`, your checkout is on an **old manifest**. `git pull` in `loovie-community` (or re-clone) so `docker/models.manifest` lists the current HuggingFace repos.
+
+If you see `401 Unauthorized`, you have not accepted a gated licence yet. Open the repo URL from the error while logged in, click *Agree and access repository*, and re-run.
 
 ### 4. Generate a strong bearer token
 
@@ -118,6 +180,9 @@ ComfyUI runs on macOS, but LTX-2.3 and FLUX.2 are heavy. CPU and MPS are slow en
 
 See [`70-troubleshooting.md`](70-troubleshooting.md). The most common stumbles:
 
+- `Models root: /runpod-volume/models` on a bare ComfyUI install → set `export LOOVIE_MODELS_ROOT="$PWD/../models"`, or pull the latest script (ComfyUI is preferred over `/runpod-volume` when both exist). Check the `source:` line in the log.
+- `Repository not found` for `Comfy-Org/flux2` → old `models.manifest`; `git pull` in `loovie-community`.
+- `Manifest not found` from `download_models.sh` → run from the ComfyUI directory, or set `LOOVIE_MODELS_MANIFEST`.
 - `401` from `download_models.sh` → revisit [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
 - The Loovie app shows "Server reachable" but generation fails with `BYO server access denied` → your bearer token in the app does not match the `LOOVIE_API_TOKEN` you exported.
 - The `Your server (BYO)` option does not appear in the picker → you have not joined the beta yet (see [`10-create-a-loovie-account.md`](10-create-a-loovie-account.md)) or your server did not advertise that section in `/loovie/capabilities` (check the curl output in step 6).

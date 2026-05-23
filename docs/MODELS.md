@@ -13,7 +13,7 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 ### FLUX.2 Klein (4B)
 
 - **Purpose:** primary text-to-image and image-to-image model for the `loovie-custom` image tier.
-- **HuggingFace repo:** [`Comfy-Org/flux2`](https://huggingface.co/Comfy-Org/flux2) (Comfy-Org's packaged-for-ComfyUI build).
+- **HuggingFace repos:** [`black-forest-labs/FLUX.2-klein-4B`](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B) (UNet), [`Comfy-Org/flux2-dev`](https://huggingface.co/Comfy-Org/flux2-dev) (VAE), [`Comfy-Org/flux2-klein-4B`](https://huggingface.co/Comfy-Org/flux2-klein-4B) (Qwen text encoder).
 - **Upstream:** [Black Forest Labs / FLUX](https://github.com/black-forest-labs/flux).
 - **Licence:** Black Forest Labs FLUX.2 Klein licence. **Gated on HuggingFace**, accept on the repo page while logged in before downloading. Read the terms.
 - **Files:** `flux-2-klein-4b.safetensors`, `flux2-vae.safetensors`, `qwen_3_4b_flux2.safetensors`.
@@ -22,7 +22,7 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 ### Qwen-3 text encoder for FLUX.2
 
 - **Purpose:** text encoder used by FLUX.2 Klein.
-- **HuggingFace repo:** [`Comfy-Org/flux2`](https://huggingface.co/Comfy-Org/flux2) (packaged with the rest of the FLUX.2 set).
+- **HuggingFace repo:** [`Comfy-Org/flux2-klein-4B`](https://huggingface.co/Comfy-Org/flux2-klein-4B) (packaged Qwen encoder for Klein 4B).
 - **Upstream:** [Alibaba Cloud Qwen](https://huggingface.co/Qwen).
 - **Licence:** Apache-2.0 (Qwen) **but redistributed via the FLUX.2 gated repo**, so you accept the FLUX.2 page in practice.
 
@@ -31,7 +31,7 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 ### LTX-2.3 22B (fast + pro)
 
 - **Purpose:** primary text-to-video / image-to-video / first-and-last-frame-to-video model for the `loovie-custom` video tier.
-- **HuggingFace repo:** [`Comfy-Org/ltx-2`](https://huggingface.co/Comfy-Org/ltx-2) (Comfy-Org's packaged-for-ComfyUI build of [Lightricks/LTX-Video](https://github.com/Lightricks/LTX-Video)).
+- **HuggingFace repos:** [`Lightricks/LTX-2.3-fp8`](https://huggingface.co/Lightricks/LTX-2.3-fp8) (main fp8 checkpoint), [`Lightricks/LTX-2.3`](https://huggingface.co/Lightricks/LTX-2.3) (distilled LoRA and spatial upscaler).
 - **Licence:** Lightricks LTX community licence. Read the terms, there are restrictions on commercial use depending on the variant. Loovie's `comfyui-loovie/` repo only ships workflows; **your generations are your responsibility** under the LTX licence.
 - **Files:** `ltx-2.3-22b-dev-fp8.safetensors` (main fp8 checkpoint), `ltx-2.3-22b-distilled-lora-384.safetensors` (rank-384 distilled LoRA used by the `pro` variant).
 - **Approx size:** ~57 GB combined. The main fp8 checkpoint is roughly 22 GB on its own; the distilled LoRA at rank 384 is substantially larger than a typical LoRA because it carries enough capacity to materially change the model's output (closer to a model delta than a stylistic adapter).
@@ -39,7 +39,7 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 ### Gemma-3 12B text encoder (fp8 scaled)
 
 - **Purpose:** text encoder used by LTX-2.3. Without it, the video model cannot tokenise prompts.
-- **HuggingFace repo:** [`Comfy-Org/ltx-2`](https://huggingface.co/Comfy-Org/ltx-2) (the merged single-file variant Lightricks ships alongside LTX-2.3).
+- **HuggingFace repo:** [`Comfy-Org/ltx-2`](https://huggingface.co/Comfy-Org/ltx-2) (`split_files/text_encoders/...` path in the manifest).
 - **Upstream:** [Google Gemma](https://huggingface.co/google/gemma-3-12b-it).
 - **Licence:** Google [Gemma Terms of Use](https://ai.google.dev/gemma/terms). **Gated on HuggingFace**, accept on the upstream repo page while logged in before downloading. Read the terms; Gemma has its own acceptable-use policy.
 - **Approx size:** ~12 GB.
@@ -47,14 +47,14 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 ### LTX-2.3 spatial upscaler (pro tier)
 
 - **Purpose:** spatial upscaling stage used by the LTX-2.3 pro variants.
-- **HuggingFace repo:** [`Comfy-Org/ltx-2`](https://huggingface.co/Comfy-Org/ltx-2).
+- **HuggingFace repo:** [`Lightricks/LTX-2.3`](https://huggingface.co/Lightricks/LTX-2.3).
 - **Licence:** Lightricks LTX community licence (same as the main LTX checkpoint).
 - **Approx size:** ~1 GB.
 
 ### RealESRGAN x2plus
 
 - **Purpose:** ESRGAN-class pixel-space 2× refiner used at the end of the LTX-2.3 pro pipeline.
-- **HuggingFace repo:** [`xinntao/Real-ESRGAN`](https://huggingface.co/xinntao/Real-ESRGAN).
+- **HuggingFace repo:** [`2kpr/Real-ESRGAN`](https://huggingface.co/2kpr/Real-ESRGAN).
 - **Licence:** BSD-3-Clause (academic-friendly, broad commercial reuse allowed).
 - **Approx size:** ~64 MB.
 

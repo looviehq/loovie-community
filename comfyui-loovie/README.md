@@ -40,13 +40,13 @@ app; add a new one to extend the surface.
 ## Install
 
 ```bash
-# 1. Clone into ComfyUI's custom_nodes directory
-cd /path/to/ComfyUI/custom_nodes
+# 1. From your ComfyUI checkout (clone the repo beside custom_nodes/, not inside it)
+cd /path/to/ComfyUI
 git clone https://github.com/looviehq/loovie-community.git
-ln -s loovie-community/comfyui-loovie loovie
+ln -s ../loovie-community/comfyui-loovie custom_nodes/loovie
 
 # 2. Install Python deps (into ComfyUI's venv)
-pip install -r loovie/requirements.txt
+pip install -r loovie-community/comfyui-loovie/requirements.txt
 
 # 3. Configure the bearer token
 export LOOVIE_API_TOKEN="$(openssl rand -hex 32)"

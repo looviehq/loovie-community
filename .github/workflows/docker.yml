@@ -86,10 +86,14 @@ jobs:
       - name: Validate models.manifest
         run: |
           bad=0
-          while IFS=$'\t' read -r kind repo file target; do
+          while IFS=$'\t' read -r kind repo hf_path local_name target_subdir; do
             case "$kind" in ''|\#*) continue ;; esac
-            if [ -z "$repo" ] || [ -z "$file" ] || [ -z "$target" ]; then
-              echo "Bad row (need 4 fields): kind=$kind repo=$repo file=$file target=$target"
+            if [ -z "$target_subdir" ]; then
+              target_subdir="$local_name"
+              local_name="$(basename "$hf_path")"
+            fi
+            if [ -z "$repo" ] || [ -z "$hf_path" ] || [ -z "$local_name" ] || [ -z "$target_subdir" ]; then
+              echo "Bad row (need 5 fields, or 4 legacy fields): kind=$kind repo=$repo hf_path=$hf_path local_name=$local_name target_subdir=$target_subdir"
               bad=1
               continue
             fi

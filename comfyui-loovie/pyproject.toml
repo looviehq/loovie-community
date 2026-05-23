@@ -68,6 +68,11 @@ select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 python_version = "3.10"
 strict         = true
 files          = ["src/comfyui_loovie"]
+# The node entrypoint at comfyui-loovie/__init__.py (required by ComfyUI) sits in
+# a hyphenated directory, which is not a valid Python package name. Map sources
+# via the src base instead of letting mypy crawl up into it.
+mypy_path              = "src"
+explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 module = [
