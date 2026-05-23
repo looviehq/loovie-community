@@ -49,17 +49,27 @@ The tests cover:
 
 ## Contract conformance
 
-CI runs [`schemathesis`](https://schemathesis.readthedocs.io/) against this app on every PR that touches `openapi/**` or `examples/**`. Locally:
+CI runs [`schemathesis`](https://schemathesis.readthedocs.io/) against this app on every PR that touches `openapi/**` or `examples/**`. To reproduce the CI run locally:
 
 ```sh
 # in one terminal
-uvicorn app:app --host 0.0.0.0 --port 8188
+export LOOVIE_API_TOKEN="contract-test-token"
+uvicorn app:app --host 127.0.0.1 --port 8188
 
 # in another
-schemathesis run --checks all \
-  --base-url http://localhost:8188 \
+schemathesis run \
+  --experimental=openapi-3.1 \
+  --checks not_a_server_error,status_code_conformance,content_type_conformance,response_headers_conformance,response_schema_conformance,negative_data_rejection \
+  --base-url http://127.0.0.1:8188 \
+  --header "Authorization: Bearer ${LOOVIE_API_TOKEN}" \
+  --hypothesis-max-examples 50 \
   ../../openapi/loovie-server.openapi.yaml
 ```
+
+A couple of notes on the flag choice (matches `.github/workflows/contract.yml`):
+
+- `ignored_auth` is intentionally excluded. The OpenAPI contract lets localhost (`127.0.0.1`, `::1`) bypass the bearer token; since schemathesis runs FROM localhost, it interprets that documented bypass as an auth-enforcement bug. It is not.
+- `--hypothesis-max-examples 50` keeps the negative-data fuzzing budget bounded. With a much larger budget (the schemathesis default is 100, `--checks all` plus a wide budget pushes it higher), hypothesis eventually generates HTTP requests with bytes that uvicorn's protocol layer rejects with a raw `400 text/plain` before FastAPI ever sees them. Those are uvicorn-level protocol responses, not contract behavior, so they don't belong in the spec.
 
 The placeholder outputs aren't intended to satisfy semantic checks beyond shape conformance, for that you need a real implementation like [`comfyui-loovie/`](../../comfyui-loovie/).
 

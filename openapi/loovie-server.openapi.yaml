@@ -843,6 +843,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TaskStatus'
+        '400':
+          description: Malformed request (e.g. empty or non-ASCII `taskId`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
         '401':
           description: Missing or invalid bearer token.
           content:
@@ -918,6 +924,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TaskStatus'
+        '400':
+          description: Malformed request (e.g. empty or non-ASCII `taskId`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
         '401':
           description: Missing or invalid bearer token.
           content:
