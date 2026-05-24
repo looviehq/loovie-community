@@ -24,10 +24,13 @@ While logged into HuggingFace, open each of the following pages and click **Agre
 
 | Model | HuggingFace repo | Why we need it | Status |
 |---|---|---|---|
-| **Gemma-3 text encoder (fp8 scaled)** | [Comfy-Org/ltx-2](https://huggingface.co/Comfy-Org/ltx-2) | LTX-2.3 video uses Gemma as its text encoder. | Gated by Google. |
-| **FLUX.2 Klein** weights, VAE, Qwen-3-4B text encoder | [Comfy-Org/flux2](https://huggingface.co/Comfy-Org/flux2) | Image generation. | Gated by Black Forest Labs. |
-| **LTX-2.3 22B fp8 + distilled LoRA + spatial upscaler** | [Comfy-Org/ltx-2](https://huggingface.co/Comfy-Org/ltx-2) | Video generation. | Lightricks community licence; one-click acceptance. |
-| **RealESRGAN 2x** | [xinntao/Real-ESRGAN](https://huggingface.co/xinntao/Real-ESRGAN) | Pro-tier video upscaling. | Public, no acceptance needed. |
+| **FLUX.2 Klein 4B** | [black-forest-labs/FLUX.2-klein-4B](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B) | Image diffusion weights. | Gated by Black Forest Labs. |
+| **FLUX.2 VAE** | [Comfy-Org/flux2-dev](https://huggingface.co/Comfy-Org/flux2-dev) | Image VAE. | Gated (Comfy-Org pack). |
+| **Qwen-3-4B text encoder (FLUX.2)** | [Comfy-Org/flux2-klein-4B](https://huggingface.co/Comfy-Org/flux2-klein-4B) | Image text encoder. | Gated (Comfy-Org pack). |
+| **Gemma-3 text encoder (fp8 scaled)** | [Comfy-Org/ltx-2](https://huggingface.co/Comfy-Org/ltx-2) | LTX-2.3 video text encoder. | Gated by Google. |
+| **LTX-2.3 22B fp8 checkpoint** | [Lightricks/LTX-2.3-fp8](https://huggingface.co/Lightricks/LTX-2.3-fp8) | Video generation. | Lightricks community licence. |
+| **LTX-2.3 distilled LoRA + spatial upscaler** | [Lightricks/LTX-2.3](https://huggingface.co/Lightricks/LTX-2.3) | Pro-tier video pipeline. | Lightricks community licence. |
+| **RealESRGAN 2x** | [2kpr/Real-ESRGAN](https://huggingface.co/2kpr/Real-ESRGAN) | Pro-tier pixel upscaling. | Public, no acceptance needed. |
 
 If a download fails with `HTTP 401`, the message points back to the exact repo URL. Open it, click *Agree*, re-run.
 
@@ -53,10 +56,15 @@ docker run --rm -d \
 
 ### Bare ComfyUI (your own machine)
 
-Export the token before running the downloader:
+From the **ComfyUI directory** (repo at `ComfyUI/loovie-community/`). See [`20-quickstart-your-own-machine.md`](20-quickstart-your-own-machine.md) for full defaults and overrides.
 
 ```sh
 export HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export LOOVIE_KIND=all   # default is images if unset
+
+# Optional: override auto-detected models path (default prefers ComfyUI/models)
+# export LOOVIE_MODELS_ROOT="$PWD/models"
+
 bash loovie-community/docker/download_models.sh
 ```
 

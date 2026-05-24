@@ -67,15 +67,38 @@ For phone-to-LAN-server use, see [`docs/20-quickstart-your-own-machine.md`](../d
 
 ## Environment variables
 
+### Container entrypoint (`entrypoint.sh`)
+
 | Variable | Required | Default | What it does |
 |---|---|---|---|
 | `LOOVIE_API_TOKEN` | **yes** for non-loopback binds |, | Static bearer token the app sends. Entrypoint refuses to start if unset and the bind is remote-reachable. |
-| `HF_TOKEN` | for gated model downloads |, | HuggingFace read token. Required for Gemma-3 (LTX text encoder) and FLUX.2 weights. See [`docs/25`](../docs/25-huggingface-and-gated-models.md). |
+| `HF_TOKEN` | for gated model downloads |, | HuggingFace read token. See [`docs/25`](../docs/25-huggingface-and-gated-models.md). |
 | `DOWNLOAD_MODELS` | no | `0` | Set to `1` to run `loovie-download-models` on container start. |
 | `LOOVIE_KIND` | no | `images` | Which model sets to download (`images`, `videos`, `all`). |
-| `LOOVIE_MODELS_ROOT` | no | `/runpod-volume/models` | Where models live on disk. |
+| `LOOVIE_MODELS_ROOT` | no | `/runpod-volume/models` | Where models live on disk in the **container image** (RunPod volume mount). |
 | `COMFYUI_HOST` | no | `0.0.0.0` | Bind interface. Set to `127.0.0.1` for a loopback-only instance with no token. |
 | `COMFYUI_PORT` | no | `8188` | Bind port. |
+
+### Model downloader (`download_models.sh`)
+
+Used on bare-metal ComfyUI installs and inside the container when `DOWNLOAD_MODELS=1`.
+
+| Variable | Required | Default when unset | Override |
+|---|---|---|---|
+| `HF_TOKEN` | for gated models | none | `export HF_TOKEN=hf_...` |
+| `LOOVIE_MODELS_ROOT` | no | auto-detected (see below) | `export LOOVIE_MODELS_ROOT=/path/to/models` |
+| `LOOVIE_KIND` | no | `images` | `export LOOVIE_KIND=all` |
+| `LOOVIE_MODELS_MANIFEST` | no | `models.manifest` next to script, or `/opt/comfyui/loovie-models.manifest` in Docker | full path to manifest |
+
+**`LOOVIE_MODELS_ROOT` auto-detection** (when unset):
+
+1. Explicit `LOOVIE_MODELS_ROOT` (always wins).
+2. `ComfyUI/models` if the script finds `main.py` in a parent ComfyUI tree (bare-metal / dev container).
+3. `/runpod-volume/models` if `/runpod-volume` exists.
+4. `/workspace/models` if `/workspace` exists.
+5. Fallback `/runpod-volume/models` with a log hint.
+
+The script logs `Models root:` and `source:` at startup so you can see which rule matched. On bare metal, prefer letting it pick `ComfyUI/models`; on RunPod with a network volume, set `LOOVIE_MODELS_ROOT=/runpod-volume/models` in the template if auto-detection does not match your layout.
 
 ## Tags
 
@@ -102,8 +125,8 @@ amd64-only. There is no usable arm64 GPU compute path for FLUX.2 / LTX‑2.3 inf
 |---|---|
 | [`Dockerfile`](./Dockerfile) | Multi-stage build: builder layer installs Python deps; runtime layer copies the venv + ComfyUI tree. |
 | [`entrypoint.sh`](./entrypoint.sh) | Validates token, optionally invokes the downloader, prints the boot banner, hands off to ComfyUI. |
-| [`download_models.sh`](./download_models.sh) | Reads `models.manifest` and downloads the weights via `huggingface-cli`. Fails loudly with a pointer to `docs/25` if HF auth is missing or a gated licence has not been accepted. |
-| [`models.manifest`](./models.manifest) | Tab-separated list of `(kind, hf_repo, hf_filename, target_subdir)` entries the downloader reads. Edit this file to add or replace weights. |
+| [`download_models.sh`](./download_models.sh) | Reads `models.manifest` and downloads the weights via `hf download` (HuggingFace Hub CLI). Fails loudly with a pointer to `docs/25` if HF auth is missing or a gated licence has not been accepted. |
+| [`models.manifest`](./models.manifest) | Tab-separated list of `(kind, hf_repo, hf_path, local_name, target_subdir)` entries the downloader reads. Edit this file to add or replace weights. |
 | [`extra_model_paths.yaml`](./extra_model_paths.yaml) | ComfyUI config that maps the mounted volume into ComfyUI's `diffusion_models/`, `checkpoints/`, `text_encoders/`, etc. |
 | [`runpod-template.json`](./runpod-template.json) | RunPod template you can import directly. |
 

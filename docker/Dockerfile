@@ -104,9 +104,9 @@ COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /opt/comfyui /opt/comfyui
 ENV PATH="/opt/venv/bin:${PATH}"
 
-# huggingface-cli is what download_models.sh uses; install it into the venv
+# hf (huggingface_hub CLI) is what download_models.sh uses; install it into the venv
 # so HF gated-model downloads work with an HF_TOKEN env var.
-RUN pip install --upgrade "huggingface_hub[cli]>=0.25,<1"
+RUN pip install --upgrade "huggingface_hub[cli]>=0.25"
 
 # Bring in the entrypoint, model downloader and the extra-model-paths
 # configuration that maps a network volume into ComfyUI's folder names.
