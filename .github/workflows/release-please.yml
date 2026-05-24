@@ -27,9 +27,14 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          # Token defaults to GITHUB_TOKEN; the permissions block above
-          # gives it write access to contents + pull-requests within this
-          # repo (no PAT needed).
+          # Use a fine-grained PAT (scoped to this repo, contents:rw +
+          # pull-requests:rw) instead of the default GITHUB_TOKEN. PRs
+          # opened by GITHUB_TOKEN do not trigger other workflows
+          # (anti-recursion safeguard), which leaves required checks
+          # like CodeQL `Analyze (actions)` stuck waiting for a status
+          # that will never be reported. A PAT-opened PR triggers
+          # downstream workflows normally.
+          token: ${{ secrets.RELEASE_PLEASE_PAT }}
 
       - name: Summary
         if: always()
