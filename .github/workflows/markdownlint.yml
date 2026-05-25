@@ -28,4 +28,4 @@ jobs:
         # No globs / config passed: the action picks them up from
         # .markdownlint-cli2.jsonc at repo root (which also carries the
         # ignores list, e.g. for release-please's autogen CHANGELOG.md).
-        uses: DavidAnson/markdownlint-cli2-action@v19
+        uses: DavidAnson/markdownlint-cli2-action@v23
