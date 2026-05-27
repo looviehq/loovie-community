@@ -1,0 +1,14 @@
+{
+  "name": "loovie",
+  "owner": {
+    "name": "Loovie",
+    "url": "https://loovie.app"
+  },
+  "plugins": [
+    {
+      "name": "loovie-mcp",
+      "source": "./loovie-mcp",
+      "description": "Loovie: AI video creation from Claude Code"
+    }
+  ]
+}

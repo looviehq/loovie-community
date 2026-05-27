@@ -1,0 +1,73 @@
+name: Publish @loovie/mcp
+
+# Publishes the @loovie/mcp npm package on `cli-v*` tag pushes (cut by
+# release-please).
+#
+# Authentication uses npm trusted publishing — the workflow requests a
+# short-lived OIDC token from GitHub at runtime and exchanges it with
+# npm. No long-lived NPM_TOKEN is stored as a secret.
+#
+# One-time setup on npmjs.com (after the first manual publish creates
+# the package):
+#   1. Visit https://www.npmjs.com/package/@loovie/mcp/access (or
+#      Settings → Trusted Publishers).
+#   2. Add a GitHub Actions trusted publisher with:
+#        - Organization or user: looviehq
+#        - Repository: loovie-community
+#        - Workflow filename: cli-publish.yml
+#        - Environment: (leave blank, or set "npm-publish" if you
+#          also configure the matching environment + required
+#          reviewers in this repo's Settings → Environments)
+#   3. Save. All subsequent `cli-v*` tags publish automatically with
+#      provenance attestations.
+
+on:
+  push:
+    tags: ['cli-v*']
+
+permissions:
+  contents: read
+  id-token: write  # required for npm trusted publishing (OIDC)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Optional: gate publishes behind a protected environment. Configure
+    # the "npm-publish" environment under Settings → Environments to
+    # require manual approval before each release. Match the env name
+    # in the npm trusted publisher config if you enable it.
+    # environment: npm-publish
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # npm trusted publishing requires npm >= 11.5.1. Node 22 ships
+      # with npm 10.x, so upgrade explicitly. Pin to a known-good
+      # major to avoid surprises.
+      - name: Update npm to a version with trusted publishing support
+        run: npm install -g npm@latest
+
+      - name: Install workspace
+        run: pnpm install --frozen-lockfile
+        working-directory: packages/cli
+
+      - name: Build
+        run: pnpm build
+        working-directory: packages/cli
+
+      # Use `npm publish` directly. pnpm publish wraps npm internally
+      # but the OIDC token exchange is owned by the npm CLI, so going
+      # straight to npm is the most robust path. --provenance attaches
+      # the SLSA build provenance attestation that trusted publishing
+      # enables.
+      - name: Publish to npm (trusted publisher)
+        run: npm publish --access public --provenance
+        working-directory: packages/cli

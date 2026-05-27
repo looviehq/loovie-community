@@ -1,0 +1,50 @@
+{
+  "manifest_version": "0.3",
+  "name": "loovie-mcp",
+  "display_name": "Loovie",
+  "version": "0.1.0",
+  "description": "Create AI characters, generate images and videos, and edit Loovie projects from Claude Desktop. Connects to the hosted Loovie MCP server (OAuth, Streamable HTTP).",
+  "long_description": "Loovie is an AI video creation platform. This extension exposes 100+ tools and 20+ resources covering characters, image and video generation (text-to-image, image-to-video, first/last frame, swap, motion control, AI VFX), timeline editing, library assets, exports, and credit management. Every spend tool follows an estimate / approval / execute flow so Claude Desktop always confirms credit cost before any generation runs. On first use a browser window opens for OAuth sign-in; the token is then cached locally by the mcp-remote bridge.",
+  "author": {
+    "name": "Loovie",
+    "url": "https://loovie.app"
+  },
+  "homepage": "https://loovie.app",
+  "documentation": "https://github.com/looviehq/loovie-community/tree/main/loovie-mcp",
+  "support": "https://github.com/looviehq/loovie-community/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/looviehq/loovie-community"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "loovie",
+    "video",
+    "ai",
+    "image-generation",
+    "character",
+    "filmmaking",
+    "mcp",
+    "oauth",
+    "streamable-http"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "node_modules/mcp-remote/dist/proxy.js",
+    "mcp_config": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://api.loovie.app/v1/mcp"
+      ]
+    }
+  },
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}

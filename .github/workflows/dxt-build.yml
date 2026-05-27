@@ -1,0 +1,107 @@
+name: dxt-build
+
+# Packages loovie-mcp/ as a Claude Desktop bundle (.dxt / .mcpb) and uploads
+# it as a release asset on every release-please tag.
+#
+# Tag format: `v*` (see release-please-config.json: include-v-in-tag = true).
+# Spec:       Anthropic MCPB (formerly DXT) v0.3
+#               https://github.com/anthropics/dxt/blob/main/MANIFEST.md
+# Packager:   @anthropic-ai/mcpb (formerly @anthropic-ai/dxt)
+#               https://www.npmjs.com/package/@anthropic-ai/mcpb
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to attach the asset to (e.g. v0.2.1-beta.1)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Pack and upload Loovie .dxt
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to upload release assets
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+
+      - name: Install mcp-remote into the bundle
+        # The Loovie MCP server is hosted remotely; mcp-remote is the
+        # stdio<->Streamable-HTTP bridge that handles OAuth + DCR. We install
+        # it into loovie-mcp/node_modules so the resulting bundle is fully
+        # self-contained and Claude Desktop can spawn it offline-after-install.
+        working-directory: loovie-mcp
+        run: |
+          # Use a minimal package.json so npm doesn't pull anything else.
+          cat > package.json <<'JSON'
+          {
+            "name": "loovie-mcp-bundle",
+            "version": "0.0.0",
+            "private": true,
+            "dependencies": {
+              "mcp-remote": "latest"
+            }
+          }
+          JSON
+          npm install --omit=dev --ignore-scripts
+
+      - name: Validate manifest
+        # `mcpb validate` lints manifest.json against the v0.3 schema.
+        working-directory: loovie-mcp
+        run: npx -y @anthropic-ai/mcpb@latest validate manifest.json
+
+      - name: Pack bundle
+        working-directory: loovie-mcp
+        run: |
+          npx -y @anthropic-ai/mcpb@latest pack . ../loovie-mcp.dxt
+          ls -la ../loovie-mcp.dxt
+
+      - name: Resolve tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          REF_NAME:  ${{ github.ref_name }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            echo "name=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=$REF_NAME" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload to GitHub Release
+        # Attaches loovie-mcp.dxt to the tag's release. release-please
+        # creates the release on tag push; this job runs after the tag is
+        # already live so the release exists.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG:      ${{ steps.tag.outputs.name }}
+          REPO:     ${{ github.repository }}
+        run: |
+          gh release upload "$TAG" loovie-mcp.dxt \
+            --repo "$REPO" \
+            --clobber
+
+      - name: Summary
+        env:
+          TAG:  ${{ steps.tag.outputs.name }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            echo "## dxt-build"
+            echo "- tag:    $TAG"
+            echo "- asset:  loovie-mcp.dxt"
+            echo "- url:    https://github.com/$REPO/releases/download/$TAG/loovie-mcp.dxt"
+            echo "- latest: https://github.com/$REPO/releases/latest/download/loovie-mcp.dxt"
+          } >> "$GITHUB_STEP_SUMMARY"

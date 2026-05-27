@@ -24,7 +24,7 @@ Thanks for the contribution! A few things to confirm before we merge:
 
 ## Checklist
 
-- [ ] My commits are signed off (`git commit -s`) per the [DCO](../CONTRIBUTING.md#sign-off-dco-not-a-cla).
+- [ ] My commits are signed off (`git commit -s`) per the [DCO](https://github.com/looviehq/loovie-community/blob/main/CONTRIBUTING.md#sign-off-dco-not-a-cla).
 - [ ] My commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/).
 - [ ] I ran `ruff check` and `ruff format --check` locally (Python changes).
 - [ ] I added or updated tests where appropriate.
