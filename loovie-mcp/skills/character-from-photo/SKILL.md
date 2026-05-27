@@ -12,7 +12,7 @@ You are turning a reference image into a Loovie character. A character sheet (mu
 1. Two-step approval applies to every spend: `estimate_*` → user approves → `execute_*`.
 2. Quote credits, never dollars. Never name internal models.
 3. **Uploads go direct to R2.** Bytes never transit the MCP server. If the user gave you a remote URL, you download it locally first, then upload — do not ask the server to fetch on your behalf.
-4. **Downsize before you upload.** Reference images don't need to be full resolution; Loovie's pipeline resizes to ~1024px long-edge internally. A 2 MB phone photo wastes bandwidth, can blow past the inline-base64 preview cap, and in chat clients can exhaust the conversation context window. Always preprocess the image first per the "Downsize first" step below.
+4. **Preserve the original on the primary path.** When the presigned-PUT path is available (most clients with shell access), upload the file at its native resolution — Loovie keeps it in R2 at full quality and reuses it for future variations, character sheets, and re-generations. Only downsize when forced onto the `dataBase64` fallback (the conversation transport can't carry multi-MB binary). Details in step 1 below.
 
 ## Playbook
 
@@ -20,23 +20,7 @@ You are turning a reference image into a Loovie character. A character sheet (mu
 
 All paths end with a `storageKey` you'll pass into the next step.
 
-#### Downsize first (mandatory for every path)
-
-Before any upload, resize the image to **1024px max on the long edge, JPEG quality 80**. A typical 2 MB phone photo becomes ~150 KB this way, which keeps the wire payload small AND lets `get_asset_preview` render the result inline later (the inline-base64 cap is 800 KiB; full-res photos exceed it).
-
-Pick whichever toolchain your runtime has:
-
-- **Python (Pillow / PIL)**:
-  ```python
-  from PIL import Image
-  img = Image.open('/path/to/original')
-  img.thumbnail((1024, 1024))  # preserves aspect ratio
-  img.convert('RGB').save('/tmp/loovie-ref.jpg', 'JPEG', quality=80)
-  ```
-- **Bash (ImageMagick)**: `magick /path/to/original -resize 1024x1024\> -quality 80 /tmp/loovie-ref.jpg`
-- **Node (sharp)**: `sharp(input).resize({ width: 1024, height: 1024, fit: 'inside' }).jpeg({ quality: 80 }).toFile('/tmp/loovie-ref.jpg')`
-
-Use the **resized file** (`/tmp/loovie-ref.jpg`) as the input to whichever upload path you take below. If the user's reference is already < 500 KB, skip the resize — it adds no value.
+**Upload the original whenever the presigned-PUT path works.** Loovie stores the bytes you send at full quality in R2 and uses them for downstream variations, character sheets, and re-generations. Resizing pre-upload permanently loses data the user might want for higher-quality work later. The pipeline does its own resize for inference, but that's an internal optimisation; the stored asset stays at whatever resolution you uploaded. **Only downsize when you're forced onto the `dataBase64` fallback** below — that's a separate path with a real wire-cost ceiling.
 
 Upload paths:
 
@@ -52,12 +36,30 @@ Upload paths:
 
 - **Image already exists in the library**: `loovie://library/...` or `list_characters` to find it; reuse its `storageKey`.
 
-- **No shell access at all** (rare): only then, use `upload_image_for_reference({ url })` or `upload_image_for_reference({ dataBase64, mimeType, filename })` as a fallback. Both are slower and consume MCP transport bandwidth. The base64 path is hard-capped at ~300 KB encoded by most chat clients' context windows; the downsize step above is what makes that fit. If the downsized base64 still exceeds ~300 KB, stop and ask the user to share a smaller image or a hosted URL instead — do NOT try to send raw multi-megabyte base64 (it'll exhaust the conversation context).
+- **No shell access at all** (rare): only then, use `upload_image_for_reference({ url })` or `upload_image_for_reference({ dataBase64, mimeType, filename })` as a fallback. Both are slower and consume MCP transport bandwidth. **For the `dataBase64` variant only, downsize first** — see the recipe below. The base64 path is hard-capped at ~300 KB encoded by most chat clients' context windows; without the downsize a multi-MB source will exhaust the conversation context mid-upload.
 
 - **Chat-attached image** (user dropped an image into the Claude.ai / Claude Desktop / Cursor chat):
   1. The image lives on the agent's filesystem temporarily. Read its bytes via whatever code-execution tool your runtime exposes (e.g. Test Integration / Code Interpreter / Bash).
-  2. Apply the "Downsize first" step above. **This is the path that benefits most from downsizing** — a typical chat-dropped photo is 2-5 MB, which would otherwise exhaust the conversation context on base64.
-  3. If your runtime can curl-PUT to arbitrary HTTPS hosts, use the presigned-URL path (R2 SigV4 hosts must be allowlisted; some sandboxes block them). If R2 is blocked, fall back to `upload_image_for_reference({ dataBase64, mimeType: 'image/jpeg', filename })` with the downsized bytes.
+  2. **If your runtime can curl-PUT to arbitrary HTTPS hosts, upload the original** via the presigned-URL path above — no downsize, full quality stored. R2 SigV4 hosts must be allowlisted; some sandboxes (Claude.ai web at time of writing) block them.
+  3. **If R2 PUT is blocked**, fall back to `upload_image_for_reference({ dataBase64, mimeType: 'image/jpeg', filename })` with **downsized** bytes per the recipe below. Quality loss is the price of being able to upload at all in restricted runtimes.
+
+#### Downsize recipe (ONLY for the `dataBase64` fallback)
+
+Skip this entirely when using the presigned-PUT path — uploading the original gives Loovie a higher-quality reference for future re-generations. Apply only when the channel itself forces you to (no presigned-PUT egress).
+
+Target: **1024px max on the long edge, JPEG quality 80**. A typical 2 MB phone photo becomes ~150 KB this way, which fits the `dataBase64` ~300 KB context budget. If your downsized image is STILL larger than ~300 KB, stop and ask the user for a smaller source — don't try to push multi-MB base64 through the conversation transport.
+
+- **Python (Pillow / PIL)**:
+  ```python
+  from PIL import Image
+  img = Image.open('/path/to/original')
+  img.thumbnail((1024, 1024))  # preserves aspect ratio
+  img.convert('RGB').save('/tmp/loovie-ref.jpg', 'JPEG', quality=80)
+  ```
+- **Bash (ImageMagick)**: `magick /path/to/original -resize 1024x1024\> -quality 80 /tmp/loovie-ref.jpg`
+- **Node (sharp)**: `sharp(input).resize({ width: 1024, height: 1024, fit: 'inside' }).jpeg({ quality: 80 }).toFile('/tmp/loovie-ref.jpg')`
+
+Then base64-encode `/tmp/loovie-ref.jpg` and pass to `upload_image_for_reference({ dataBase64, mimeType: 'image/jpeg' })`.
 
 ### 2. Create the character shell
 
