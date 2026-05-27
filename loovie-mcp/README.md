@@ -180,6 +180,10 @@ Loovie stores assets in Cloudflare R2 and uses presigned URLs so the client uplo
 - **No shell access (rare)**: fallback only — `upload_image_for_reference({ url })` (server fetches once) or `upload_image_for_reference({ dataBase64 })` for small inline bytes.
 - **Reads**: every asset URL the MCP returns is a presigned R2 URL — your client / browser fetches directly from R2, not through the API.
 
+### Image size: downsize before you upload
+
+Reference images don't need to be full resolution — Loovie's pipeline resizes to ~1024px long-edge internally. A 2 MB phone photo wastes bandwidth, can exceed the inline-preview cap (so `get_asset_preview` returns "too-large"), and on chat clients can blow past the conversation context window during the `dataBase64` fallback. The bundled `character-from-photo` skill teaches the agent to downsize to 1024px JPEG q80 before any upload path — a typical phone photo becomes ~150 KB after that. Other clients should apply the same preprocessing when handing images to Loovie.
+
 ## What's bundled in the Claude Code plugin
 
 - **Skills** — auto-invoked workflow guides for common tasks:
