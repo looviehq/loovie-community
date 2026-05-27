@@ -1,6 +1,4 @@
 {
-  "$comment_spec": "Anthropic MCPB (formerly DXT) manifest, spec v0.3 — https://github.com/anthropics/dxt/blob/main/MANIFEST.md",
-  "$comment_remote": "MCPB v0.3 does not define a native 'remote' server type for hosted Streamable HTTP MCP servers. Until it does, this bundle ships a tiny stdio<->HTTP shim via `mcp-remote` (https://www.npmjs.com/package/mcp-remote), which handles the MCP OAuth 2.0 + DCR handshake against api.loovie.app/v1/mcp and exposes the result as a local stdio MCP server that Claude Desktop can spawn.",
   "manifest_version": "0.3",
   "name": "loovie-mcp",
   "display_name": "Loovie",
@@ -30,7 +28,6 @@
     "oauth",
     "streamable-http"
   ],
-  "$comment_icon": "Icon path is relative to the bundle root. Drop a 512x512 PNG at loovie-mcp/icon.png to enable; until then this field is omitted so `mcpb pack` doesn't fail validation.",
   "server": {
     "type": "node",
     "entry_point": "node_modules/mcp-remote/dist/proxy.js",
