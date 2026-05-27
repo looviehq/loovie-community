@@ -1,0 +1,61 @@
+name: smithery-publish
+
+# Re-publishes the Loovie MCP server listing on Smithery after each
+# release. Smithery does NOT auto-detect new versions of a remote MCP
+# server, so we have to call `smithery mcp publish` every release for the
+# listing (capabilities, version label, README excerpts) to refresh.
+#
+# Triggered on `release: published` (rather than tag-push) so it runs
+# after release-please has actually created the GitHub Release, which
+# also keeps Smithery decoupled from cli-publish.yml: a Smithery hiccup
+# never blocks the npm publish.
+#
+# REQUIRED SECRET
+#   SMITHERY_API_KEY  generate at https://smithery.ai/account/api-keys
+#                     and add under Settings > Secrets > Actions.
+#                     Without it this workflow will fail loudly, which
+#                     is intentional: a silent skip would let the
+#                     Smithery listing drift out of sync with releases.
+#
+# TODO(verify): The Smithery CLI README documents OAuth login + service
+# tokens but does NOT explicitly document the env-var name for
+# non-interactive CI auth. SMITHERY_API_KEY is the conventional choice;
+# if the CLI expects a different name (e.g. SMITHERY_TOKEN) or a
+# `--key` / `--token` flag, update the `env:` and/or `run:` line below.
+# Verify against `npx -y @smithery/cli@latest mcp publish --help` once
+# and pin.
+# Refs: https://smithery.ai/docs/build/publish
+#       https://github.com/smithery-ai/cli
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish listing to Smithery
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Publish to Smithery
+        env:
+          SMITHERY_API_KEY: ${{ secrets.SMITHERY_API_KEY }}
+        run: |
+          npx -y @smithery/cli@latest mcp publish \
+            https://api.loovie.app/v1/mcp \
+            -n looviehq/loovie-mcp

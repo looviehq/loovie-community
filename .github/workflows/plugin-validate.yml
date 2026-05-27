@@ -1,0 +1,55 @@
+name: plugin-validate
+
+# PR + push validation for the Claude Code plugin (.claude-plugin/) and the
+# MCPB / DXT bundle manifest (loovie-mcp/). Cheap (< 30s) sanity checks that
+# catch malformed manifests before they ship in a release.
+
+on:
+  pull_request:
+    paths:
+      - 'loovie-mcp/**'
+      - '.claude-plugin/**'
+      - '.github/workflows/plugin-validate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'loovie-mcp/**'
+      - '.claude-plugin/**'
+      - '.github/workflows/plugin-validate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate plugin + MCPB manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Validate Claude Code plugin manifest
+        # `claude plugin validate <path> --strict` lints the plugin
+        # manifest, skill/agent/command frontmatter, and hooks config.
+        # --strict treats unknown-field warnings as errors so misspellings
+        # fail CI before publish.
+        # Docs: https://code.claude.com/docs/en/plugins-reference#debugging-and-development-tools
+        run: npx -y @anthropic-ai/claude-code@latest plugin validate ./loovie-mcp --strict
+
+      - name: Validate MCPB bundle manifest
+        # `mcpb validate` lints loovie-mcp/manifest.json against the v0.3
+        # MCPB (formerly DXT) schema. Same package the dxt-build workflow
+        # uses to pack the release asset.
+        # Docs: https://www.npmjs.com/package/@anthropic-ai/mcpb
+        working-directory: loovie-mcp
+        run: npx -y @anthropic-ai/mcpb@latest validate manifest.json
