@@ -36,6 +36,25 @@
           "jsonpath": "$.info.version"
         }
       ]
+    },
+    "packages/cli": {
+      "release-type": "node",
+      "package-name": "@loovie/mcp",
+      "component": "cli",
+      "include-component-in-tag": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "loovie-mcp/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "loovie-mcp/manifest.json",
+          "jsonpath": "$.version"
+        }
+      ]
     }
   }
 }

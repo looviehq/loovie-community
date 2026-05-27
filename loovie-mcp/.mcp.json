@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "loovie": {
+      "type": "http",
+      "url": "https://api.loovie.app/v1/mcp"
+    }
+  }
+}

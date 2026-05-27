@@ -1,0 +1,9 @@
+src
+test
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+.gitignore
+node_modules
+*.tgz
+*.loovie-backup-*

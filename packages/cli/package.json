@@ -1,0 +1,51 @@
+{
+  "name": "@loovie/mcp",
+  "version": "0.1.0",
+  "description": "One-shot installer for the Loovie MCP server across Cursor, Claude Code, Claude Desktop, VS Code, Continue, Cline, and OpenCode.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "loovie-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "prompts": "*"
+  },
+  "devDependencies": {
+    "@types/node": "*",
+    "@types/prompts": "*",
+    "tsup": "*",
+    "typescript": "*",
+    "vitest": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/looviehq/loovie-community.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/looviehq/loovie-community/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/looviehq/loovie-community/issues"
+  },
+  "keywords": [
+    "mcp",
+    "loovie",
+    "claude",
+    "cursor",
+    "ai",
+    "video",
+    "installer"
+  ]
+}

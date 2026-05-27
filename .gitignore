@@ -1,3 +1,8 @@
+# Operational scratch (registry submission checklists, draft PR bodies,
+# etc.) — intentionally local. Lives at repo root, NOT inside loovie-mcp/
+# so Claude Code's plugin cache never copies these to user machines.
+_internal/
+
 # Python
 __pycache__/
 *.py[cod]
