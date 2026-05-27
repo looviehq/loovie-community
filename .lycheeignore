@@ -36,3 +36,14 @@ apps\.apple\.com/app/loovie
 #   may not exist yet on a feature branch (the previous tag in the chain
 #   only lands after main is bumped).
 github\.com/looviehq/loovie-community/compare/v
+
+# - MCP endpoint requires OAuth; 401 to anonymous CI is expected.
+^https?://api\.loovie\.app/v1/mcp
+
+# - Release-asset URL becomes valid after the first release tag publishes
+#   the .dxt bundle via dxt-build.yml.
+^https?://github\.com/looviehq/loovie-community/releases/latest/download/loovie-mcp\.dxt
+
+# - npm package URL becomes valid after the first manual `pnpm publish`
+#   per _internal/REGISTRY-SUBMISSIONS.md §1.3.
+^https?://www\.npmjs\.com/package/@loovie/mcp

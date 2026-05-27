@@ -15,21 +15,26 @@ You are turning a Loovie project into a deliverable MP4.
 ## Playbook
 
 ### 1. Pick the project
+
 - If the user hasn't named one, `list_projects` and default to most recent.
 - Read `loovie://projects/{id}` and summarise what's about to be exported ("3 clips, music set, captions on clips 1 and 2, total runtime ~45s").
 
 ### 2. Start the export
+
 - `start_export` with the `projectId` and any quality/resolution options the user gave you. Returns a `jobId`.
 - Quote any credit cost up front if the export carries one (most exports today are free at the Loovie layer; check the response).
 
 ### 3. Watch it run
+
 - Poll `get_export_status(jobId)` every 5s. Report progress to the user when the status field changes (queued → rendering → uploading → completed). Stop polling on `completed`, `failed`, or `cancelled`.
 
 ### 4. Deliver the result
+
 - On success, call `get_export_download_url` (or read the URL from the job result) and present it as a clickable link.
 - Optionally `get_asset_preview` to show a thumbnail of the first frame.
 
 ### 5. Optional: list past exports
+
 - `list_exports` for the project shows past renders. Useful for "show me my last export" or "redownload yesterday's render".
 
 ## When something fails

@@ -1,6 +1,6 @@
 ---
 name: editing-an-existing-project
-description: Use when the user wants to modify a Loovie project that already exists: change clips, captions, music, transitions, picture-in-picture, color grading, or speed. Covers reading project state and making targeted edits with the project's dedicated editor tools.
+description: "Use when the user wants to modify a Loovie project that already exists: change clips, captions, music, transitions, picture-in-picture, color grading, or speed. Covers reading project state and making targeted edits with the project's dedicated editor tools."
 ---
 
 # Editing an existing Loovie project
@@ -16,10 +16,12 @@ You are modifying a project the user already has. The MCP server's editor tools 
 ## Playbook
 
 ### 1. Pick the project
+
 - `list_projects` if the user doesn't name one. Default to most recent.
 - Read `loovie://projects/{id}` and summarise the timeline back to the user in plain language ("you have 3 clips, no music, default cuts between them") before suggesting changes.
 
 ### 2. Make the change
+
 Match the user's intent to a tool:
 
 | User intent | Tool |
@@ -49,6 +51,7 @@ Match the user's intent to a tool:
 | "add a keyframe / animation curve" | **Not supported today.** No dedicated tool covers keyframe writes yet; tell the user it's deferred. |
 
 ### 3. Confirm the result
+
 - Re-read `loovie://projects/{id}` and summarise what changed.
 - For AI edits that produced a new asset, `get_asset_preview` so the user can see it.
 

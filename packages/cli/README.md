@@ -77,7 +77,7 @@ npx -y @loovie/mcp install --all
 
 ## Endpoint
 
-```
+```text
 https://api.loovie.app/v1/mcp
 ```
 

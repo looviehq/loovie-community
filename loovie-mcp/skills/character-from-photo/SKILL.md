@@ -34,10 +34,12 @@ All paths end with a `storageKey` you'll pass into the next step.
 - **No shell access at all** (rare): only then, use `upload_image_for_reference({ url })` or `upload_image_for_reference({ dataBase64, mimeType, filename })` as a fallback. Both are slower and consume MCP transport bandwidth.
 
 ### 2. Create the character shell
+
 - Ask for a name and a one-line description if not given.
 - `create_character` with the name, description, and the uploaded image as the initial `original` variation.
 
 ### 3. (Optional) Generate a character sheet
+
 - Skip this step entirely if the user doesn't ask for it, or if the credit cost isn't justified for their use case. Downstream tools work without it.
 - If you do generate one:
   - `estimate_generate_character_sheet` with the `characterId`. Show the credit cost.
@@ -46,6 +48,7 @@ All paths end with a `storageKey` you'll pass into the next step.
   - `get_asset_preview` on the sheet URL so the user sees it inline.
 
 ### 4. (Optional) More variations
+
 - If the user wants extra looks (different outfit, different age, etc.): `estimate_add_character_variation` → approve → `execute_add_character_variation` → `confirm_character_variation`.
 - If a character sheet exists, prefer it as the reference for clothes/hair consistency; otherwise reference the original variation image.
 
