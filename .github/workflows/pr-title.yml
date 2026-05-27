@@ -1,0 +1,44 @@
+name: pr-title-lint
+
+# Enforces Conventional Commits on PR titles. Required because PRs are
+# squash-merged: the PR title becomes the single commit subject on `main`,
+# and release-please only cuts tags (including per-package tags like
+# `cli-v*`) when it can parse the subject as a conventional commit.
+#
+# See CLAUDE.md for the full convention.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint:
+    name: lint-pr-title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@e32d7e603df1aa1ba07e981f2a23455dee596825 # v5.5.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Must match the changelog-sections in release-please-config.json.
+          types: |
+            feat
+            fix
+            perf
+            docs
+            refactor
+            test
+            build
+            ci
+            chore
+          # Scopes are recommended but not required, so no `requireScope`.
+          # When a scope is present, it must be lowercase kebab/word.
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            must start with a lowercase character.
+          # Don't validate the merge commit if a maintainer edits it after the fact.
+          validateSingleCommit: false
