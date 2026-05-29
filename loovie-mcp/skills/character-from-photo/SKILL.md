@@ -50,12 +50,14 @@ Skip this entirely when using the presigned-PUT path — uploading the original 
 Target: **1024px max on the long edge, JPEG quality 80**. A typical 2 MB phone photo becomes ~150 KB this way, which fits the `dataBase64` ~300 KB context budget. If your downsized image is STILL larger than ~300 KB, stop and ask the user for a smaller source — don't try to push multi-MB base64 through the conversation transport.
 
 - **Python (Pillow / PIL)**:
+
   ```python
   from PIL import Image
   img = Image.open('/path/to/original')
   img.thumbnail((1024, 1024))  # preserves aspect ratio
   img.convert('RGB').save('/tmp/loovie-ref.jpg', 'JPEG', quality=80)
   ```
+
 - **Bash (ImageMagick)**: `magick /path/to/original -resize 1024x1024\> -quality 80 /tmp/loovie-ref.jpg`
 - **Node (sharp)**: `sharp(input).resize({ width: 1024, height: 1024, fit: 'inside' }).jpeg({ quality: 80 }).toFile('/tmp/loovie-ref.jpg')`
 
