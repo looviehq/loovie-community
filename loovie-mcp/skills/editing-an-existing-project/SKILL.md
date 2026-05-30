@@ -54,7 +54,7 @@ Match the user's intent to a tool:
 ### 3. Confirm the result
 
 - Re-read `loovie://projects/{id}` and summarise what changed.
-- For AI edits that produced a new asset, `get_asset_preview` so the user can see it.
+- For AI edits that produced a new asset, `get_asset_preview` so the user can see it inline. If it can't render inline, hand the user the asset URL as a clickable link instead — never end with nothing to view.
 
 ## When something fails
 

@@ -75,7 +75,7 @@ Then base64-encode `/tmp/loovie-ref.jpg` and pass to `upload_image_for_reference
   - `estimate_generate_character_sheet` with the `characterId`. Show the credit cost.
   - After approval: `execute_generate_character_sheet` → poll `get_job` until terminal.
   - The result is a draft variation. Call `confirm_character_variation` to persist it as the canonical character sheet, or `discard_character_variation` if the user doesn't like it.
-  - `get_asset_preview` on the sheet URL so the user sees it inline.
+  - `get_asset_preview` on the sheet URL so the user sees it inline. If it can't render inline (or the asset host isn't reachable from your runtime), give the user the sheet URL as a clickable link instead — don't loop on the preview tool and don't leave them with nothing.
 
 ### 4. (Optional) More variations
 
