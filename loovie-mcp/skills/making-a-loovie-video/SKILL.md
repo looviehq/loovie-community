@@ -13,6 +13,7 @@ You are working with the user to produce a finished video on Loovie. The Loovie 
 2. **Talk in credits, never dollars.** Quote `estimatedCredits` from the estimate response verbatim. Never invent a USD price.
 3. **Poll, don't block.** Generation tools return a `jobId`. Poll `get_job(jobId)` periodically (2s for the first 20s, then 5s thereafter) until `status` is terminal (`completed` / `failed` / `cancelled`). For N parallel jobs, fire all `execute_*` calls in one turn to collect jobIds, then poll each in parallel.
 4. **Show your work.** When a job completes, call `get_asset_preview` on the resulting asset URL so the user sees the result inline (Cursor) or as a clickable link (Claude Code / Desktop).
+5. **If the user supplies a reference image** (for the first-frame seed, a character, a background): upload the **original** via `request_image_upload_url` → curl PUT → `finalize_image_upload`. Only downsize when forced onto the `dataBase64` fallback (rare; sandboxed runtimes). Full recipe in the `character-from-photo` skill.
 
 ## Playbook
 

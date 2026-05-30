@@ -12,6 +12,7 @@ You are modifying a project the user already has. The MCP server's editor tools 
 1. **Read before you write.** Always read `loovie://projects/{id}` first to see the current timeline, clips, captions, music, transitions. Edits are computed against this state, not against your memory of a previous edit.
 2. **Use dedicated tools.** Every editing tool below validates against the project schema and is the right way to make its change. There is no JSON Patch escape hatch — if a mutation isn't covered by a dedicated tool today, tell the user the limit instead of inventing a workaround.
 3. Quote credits for any AI-driven edit (`ai-morph` transitions, AI VFX, swap, motion-control). Never invent a USD price.
+4. **Image uploads: original on presigned PUT, downsize only on the fallback.** Several edit tools take reference images (PiP source, swap target face, AI VFX reference, motion-control frame). For any of these: prefer `request_image_upload_url` → curl PUT → `finalize_image_upload` and **upload the original** — Loovie keeps it in R2 at full quality for future re-use. Only downsize (to 1024px JPEG q80) when R2 PUT is blocked by your runtime and you must fall back to `upload_image_for_reference({ dataBase64 })`. Full recipe in the `character-from-photo` skill.
 
 ## Playbook
 

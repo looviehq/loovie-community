@@ -180,6 +180,12 @@ Loovie stores assets in Cloudflare R2 and uses presigned URLs so the client uplo
 - **No shell access (rare)**: fallback only — `upload_image_for_reference({ url })` (server fetches once) or `upload_image_for_reference({ dataBase64 })` for small inline bytes.
 - **Reads**: every asset URL the MCP returns is a presigned R2 URL — your client / browser fetches directly from R2, not through the API.
 
+### Image size: upload originals where you can, downsize only for the fallback
+
+On the **presigned-PUT path** (the primary upload path, available whenever the agent has shell access), bytes go straight from the agent's machine to R2. Wire cost is identical whether the source is 150 KB or 50 MB, and Loovie keeps the original in R2 at full quality for downstream variations, character sheets, and re-generations. **Upload the original.**
+
+The exception is the **`dataBase64` fallback** path, used only when the runtime can't reach R2 directly (e.g. Claude.ai web's Code Interpreter at time of writing, where R2 SigV4 hosts aren't on the network allowlist). That path carries bytes through MCP tool params, which enter conversation context. A 2 MB photo would consume ~25% of a typical context window per upload. The bundled `character-from-photo` skill instructs the agent to downsize to 1024px JPEG q80 in that scenario only — a typical phone photo becomes ~150 KB, fitting comfortably in transport. Quality loss is the price of being able to upload at all in restricted runtimes; on the primary path nobody pays it.
+
 ## What's bundled in the Claude Code plugin
 
 - **Skills** — auto-invoked workflow guides for common tasks:
