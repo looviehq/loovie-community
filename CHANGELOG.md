@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 > **Beta API stability.** While we are on the `0.x` line, the BYO HTTP contract (`openapi/loovie-server.openapi.yaml`) may introduce breaking changes between minor versions. Every breaking change is logged below and reflected in a bump of `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). Pin to a specific tag or commit SHA if you depend on the contract; strict semver kicks in at `1.0.0`.
 
+## [0.2.3-beta.1](https://github.com/looviehq/loovie-community/compare/v0.2.2-beta.1...v0.2.3-beta.1) (2026-05-30)
+
+
+### Documentation
+
+* **mcp:** asset-host allowlist guidance + inline-preview fallback ([#31](https://github.com/looviehq/loovie-community/issues/31)) ([296ade2](https://github.com/looviehq/loovie-community/commit/296ade2812afc55f274a0a144386a184c1a8c94b))
+* **mcp:** bake downsize-before-upload guidance into skills ([#29](https://github.com/looviehq/loovie-community/issues/29)) ([165b9bf](https://github.com/looviehq/loovie-community/commit/165b9bf40053ddd395033235033fdcb66cb583f0))
+
 ## [0.2.2-beta.1](https://github.com/looviehq/loovie-community/compare/v0.2.1-beta.1...v0.2.2-beta.1) (2026-05-27)
 
 
