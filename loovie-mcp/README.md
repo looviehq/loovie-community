@@ -165,11 +165,20 @@ Loovie's output is media: images, videos, audio. The server returns markdown ima
 | Client | Images | Video / audio |
 |---|---|---|
 | Cursor | Rendered inline in chat, auto-saved to `assets/` | Clickable markdown link — opens in browser |
-| Claude Desktop / Claude.ai web | Rendered inline in the assistant's reply (markdown image) | Clickable markdown link |
+| Claude Desktop / Claude.ai web | Inline **only if the asset host is allowlisted** (see below); otherwise a clickable link | Clickable markdown link |
 | Claude Code (CLI) | Clickable URL (`cmd+click` in iTerm2, `ctrl+click` in others) | Clickable URL |
 | Other Streamable HTTP clients | Markdown-dependent — most render `![]()` inline | Clickable URL |
 
 Every result also includes the plain URL on a second line as a fallback, so it works in every client even when inline rendering doesn't.
+
+### Sandboxed clients: allowlist the asset host
+
+Claude.ai web and Claude Desktop run tool calls in a sandbox with a **network allowlist**. Both inline image rendering *and* any agent-side asset fetch (download, preview, image-to-image edits) only work if the asset host is reachable from that sandbox. When it isn't, the agent can't fetch the bytes — it falls back to handing you the plain asset URL to open in a browser.
+
+**Add `api.loovie.app` to your client's allowlist** so generated assets preview inline instead of degrading to a link:
+
+- **Claude.ai web / Claude Desktop**: Settings → Connectors → the Loovie connector → allowed domains / network access → add `api.loovie.app`.
+- **Self-hosted or dev server**: also allowlist whatever host your server serves asset URLs from, since those may differ from `api.loovie.app`.
 
 ## Uploads — direct to R2
 

@@ -50,12 +50,14 @@ Skip this entirely when using the presigned-PUT path — uploading the original 
 Target: **1024px max on the long edge, JPEG quality 80**. A typical 2 MB phone photo becomes ~150 KB this way, which fits the `dataBase64` ~300 KB context budget. If your downsized image is STILL larger than ~300 KB, stop and ask the user for a smaller source — don't try to push multi-MB base64 through the conversation transport.
 
 - **Python (Pillow / PIL)**:
+
   ```python
   from PIL import Image
   img = Image.open('/path/to/original')
   img.thumbnail((1024, 1024))  # preserves aspect ratio
   img.convert('RGB').save('/tmp/loovie-ref.jpg', 'JPEG', quality=80)
   ```
+
 - **Bash (ImageMagick)**: `magick /path/to/original -resize 1024x1024\> -quality 80 /tmp/loovie-ref.jpg`
 - **Node (sharp)**: `sharp(input).resize({ width: 1024, height: 1024, fit: 'inside' }).jpeg({ quality: 80 }).toFile('/tmp/loovie-ref.jpg')`
 
@@ -73,7 +75,7 @@ Then base64-encode `/tmp/loovie-ref.jpg` and pass to `upload_image_for_reference
   - `estimate_generate_character_sheet` with the `characterId`. Show the credit cost.
   - After approval: `execute_generate_character_sheet` → poll `get_job` until terminal.
   - The result is a draft variation. Call `confirm_character_variation` to persist it as the canonical character sheet, or `discard_character_variation` if the user doesn't like it.
-  - `get_asset_preview` on the sheet URL so the user sees it inline.
+  - `get_asset_preview` on the sheet URL so the user sees it inline. If it can't render inline (or the asset host isn't reachable from your runtime), give the user the sheet URL as a clickable link instead — don't loop on the preview tool and don't leave them with nothing.
 
 ### 4. (Optional) More variations
 
