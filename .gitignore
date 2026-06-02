@@ -108,3 +108,10 @@ Icon
 
 # Misc
 *.log
+
+# MCP bundle build artifacts and packaging scratch (built locally, not committed)
+loovie-mcp.dxt
+package.json
+package-lock.json
+loovie-mcp/package.json
+loovie-mcp/package-lock.json
