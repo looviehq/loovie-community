@@ -4,6 +4,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import {
   CLAUDE_CODE_MARKETPLACE,
+  CLAUDE_CODE_MARKETPLACE_NAME,
   CLAUDE_CODE_PLUGIN,
   LOOVIE_MCP_URL,
   SERVER_KEY,
@@ -64,6 +65,33 @@ export const claudeCode: ClientPlugin = {
       return { kind: "error", message: `claude plugin install failed: ${r2.stderr || r2.stdout}` };
     }
     return { kind: "installed", detail: "Claude Code: installed via marketplace" };
+  },
+  async update(ctx): Promise<InstallResult> {
+    const bin = await which("claude");
+    if (!bin) {
+      return {
+        kind: "manual",
+        instructions:
+          "Claude Code CLI not found. To update manually, run:\n" +
+          `    claude plugin marketplace update ${CLAUDE_CODE_MARKETPLACE_NAME}\n` +
+          `    claude plugin update ${CLAUDE_CODE_PLUGIN}`,
+      };
+    }
+    // Refresh the marketplace cache so the newest plugin (skills, commands,
+    // MCP block) is visible, then update the installed plugin.
+    const r1 = await run("claude", ["plugin", "marketplace", "update", CLAUDE_CODE_MARKETPLACE_NAME]);
+    if (r1.code !== 0 && /not found|no marketplace/i.test(r1.stderr + r1.stdout)) {
+      // Marketplace was never added — fall back to a clean install.
+      return claudeCode.install(ctx);
+    }
+    const r2 = await run("claude", ["plugin", "update", CLAUDE_CODE_PLUGIN]);
+    if (r2.code !== 0) {
+      if (/not installed|no plugin/i.test(r2.stderr + r2.stdout)) {
+        return claudeCode.install(ctx);
+      }
+      return { kind: "error", message: `claude plugin update failed: ${r2.stderr || r2.stdout}` };
+    }
+    return { kind: "installed", detail: "Claude Code: updated to latest (restart Claude Code to apply)" };
   },
   async uninstall(): Promise<InstallResult> {
     const bin = await which("claude");

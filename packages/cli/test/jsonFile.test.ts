@@ -5,6 +5,7 @@ import * as path from "node:path";
 import {
   atomicWriteJson,
   backupOnce,
+  deepEqual,
   deepMerge,
   newBackupSuffix,
   readJsonIfExists,
@@ -25,6 +26,7 @@ function ctx(): InstallContext {
     verbose: false,
     backedUp: new Set(),
     interactive: false,
+    force: false,
   };
 }
 
@@ -105,5 +107,28 @@ describe("backupOnce", () => {
     const c = ctx();
     const b = await backupOnce(path.join(tmpDir, "ghost.json"), c);
     expect(b).toBeNull();
+  });
+});
+
+describe("deepEqual", () => {
+  it("matches structurally equal objects regardless of key order", () => {
+    expect(deepEqual({ a: 1, b: 2 }, { b: 2, a: 1 })).toBe(true);
+  });
+
+  it("treats array order as significant", () => {
+    expect(deepEqual({ args: ["a", "b"] }, { args: ["b", "a"] })).toBe(false);
+    expect(deepEqual({ args: ["a", "b"] }, { args: ["a", "b"] })).toBe(true);
+  });
+
+  it("distinguishes the mcp-remote bridge entry from a bare url entry", () => {
+    const bridge = { command: "npx", args: ["-y", "mcp-remote@latest", "https://api.loovie.app/v1/mcp"] };
+    expect(deepEqual(bridge, { ...bridge, args: [...bridge.args] })).toBe(true);
+    expect(deepEqual(bridge, { url: "https://api.loovie.app/v1/mcp" })).toBe(false);
+  });
+
+  it("returns false for mismatched shapes", () => {
+    expect(deepEqual({ a: 1 }, { a: 1, b: 2 })).toBe(false);
+    expect(deepEqual(null, {})).toBe(false);
+    expect(deepEqual([1], { 0: 1 })).toBe(false);
   });
 });

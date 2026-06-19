@@ -75,6 +75,31 @@ export function deepMerge(base: JsonObject, patch: JsonObject): JsonObject {
   return out;
 }
 
+/**
+ * Structural equality for JSON-compatible values. Used to decide whether an
+ * existing MCP entry already matches what we'd write (idempotent install).
+ * Object key order is ignored; array order is significant.
+ */
+export function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a === null || b === null || typeof a !== "object" || typeof b !== "object") {
+    return false;
+  }
+  const aArr = Array.isArray(a);
+  const bArr = Array.isArray(b);
+  if (aArr !== bArr) return false;
+  if (aArr && bArr) {
+    if (a.length !== b.length) return false;
+    return a.every((v, i) => deepEqual(v, b[i]));
+  }
+  const ao = a as JsonObject;
+  const bo = b as JsonObject;
+  const aKeys = Object.keys(ao);
+  const bKeys = Object.keys(bo);
+  if (aKeys.length !== bKeys.length) return false;
+  return aKeys.every((k) => k in bo && deepEqual(ao[k], bo[k]));
+}
+
 export function newBackupSuffix(): string {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");

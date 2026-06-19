@@ -24,17 +24,33 @@ function reportResult(label: string, r: InstallResult): void {
   }
 }
 
+const VERB: Record<"install" | "uninstall" | "update", string> = {
+  install: "Installing",
+  uninstall: "Uninstalling",
+  update: "Updating",
+};
+
 export async function runInstall(
   selected: ClientId[],
   ctx: InstallContext,
-  mode: "install" | "uninstall",
+  mode: "install" | "uninstall" | "update",
 ): Promise<void> {
   for (const id of selected) {
     const plugin = CLIENTS[id];
-    log.step(`${mode === "install" ? "Installing" : "Uninstalling"} ${plugin.label}${plugin.tier === "compatible" ? "  [compatible — community support, not officially tested]" : ""}`);
+    log.step(`${VERB[mode]} ${plugin.label}${plugin.tier === "compatible" ? "  [compatible — community support, not officially tested]" : ""}`);
     try {
-      const res =
-        mode === "install" ? await plugin.install(ctx) : await plugin.uninstall(ctx);
+      let res: InstallResult;
+      if (mode === "uninstall") {
+        res = await plugin.uninstall(ctx);
+      } else if (mode === "update") {
+        // Dedicated update path if the client has out-of-band content
+        // (Claude Code skills/commands); otherwise a forced re-install just
+        // rewrites the canonical config entry. `ctx.force` is set by the
+        // caller for update runs so file-based clients refresh silently.
+        res = plugin.update ? await plugin.update(ctx) : await plugin.install(ctx);
+      } else {
+        res = await plugin.install(ctx);
+      }
       reportResult(plugin.label, res);
     } catch (err: unknown) {
       log.error(`${plugin.label}: ${(err as Error).message}`);
