@@ -2,9 +2,37 @@ import { log } from "./log.js";
 
 const REGISTRY = "https://registry.npmjs.org/@loovie/mcp/latest";
 
+/** Compare two dot-separated semver prerelease tails per SemVer §11: numeric
+ *  identifiers compare numerically (so `beta.10` > `beta.9`), numeric ranks
+ *  below non-numeric, and a shorter set ranks below a longer one with the same
+ *  prefix. Returns -1, 0, or 1. An empty tail (a stable release) is handled by
+ *  the caller, not here. */
+function comparePre(a: string, b: string): number {
+  const ai = a.split(".");
+  const bi = b.split(".");
+  const len = Math.max(ai.length, bi.length);
+  for (let i = 0; i < len; i++) {
+    const x = ai[i];
+    const y = bi[i];
+    if (x === undefined) return -1; // a ran out first → lower precedence
+    if (y === undefined) return 1;
+    const xn = /^\d+$/.test(x);
+    const yn = /^\d+$/.test(y);
+    if (xn && yn) {
+      const d = parseInt(x, 10) - parseInt(y, 10);
+      if (d !== 0) return d < 0 ? -1 : 1;
+    } else if (xn !== yn) {
+      return xn ? -1 : 1; // numeric identifiers rank below alphanumeric
+    } else if (x !== y) {
+      return x < y ? -1 : 1;
+    }
+  }
+  return 0;
+}
+
 /** Compare two dotted semver-ish strings. Returns true if `latest` > `current`.
- *  Prerelease suffixes are compared lexically after the numeric core, which is
- *  good enough for a best-effort "newer is available" nudge. */
+ *  Best-effort: the numeric core is compared field-by-field, then the
+ *  prerelease tail per SemVer precedence rules. */
 export function isNewer(latest: string, current: string): boolean {
   const split = (v: string) => {
     const [core = "", pre = ""] = v.replace(/^v/, "").split("-", 2);
@@ -22,7 +50,7 @@ export function isNewer(latest: string, current: string): boolean {
   if (a.pre === b.pre) return false;
   if (!a.pre) return !!b.pre;
   if (!b.pre) return false;
-  return a.pre > b.pre;
+  return comparePre(a.pre, b.pre) > 0;
 }
 
 /**

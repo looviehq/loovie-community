@@ -1,6 +1,7 @@
 import { ALL_CLIENT_IDS, CLIENTS, COMPATIBLE_IDS, OFFICIAL_IDS } from "./clients/index.js";
 import { LOOVIE_MCP_URL } from "./constants.js";
-import type { ClientId, InstallContext, InstallScope } from "./types.js";
+import type { ClientId, InstallContext } from "./types.js";
+import { type ParsedArgs, parseArgs, resolveForce, resolveMode } from "./args.js";
 import { runDoctor } from "./commands/doctor.js";
 import { pickClientsInteractively, runInstall } from "./commands/install.js";
 import { newBackupSuffix } from "./util/jsonFile.js";
@@ -9,77 +10,6 @@ import { printUpdateNoticeIfAny } from "./util/selfUpdate.js";
 
 // Version is replaced at build time but we keep a fallback for `--version`.
 const VERSION = "0.1.0";
-
-type ParsedArgs = {
-  command: "install" | "uninstall" | "update" | "doctor" | "help" | "version" | "default";
-  clients: ClientId[];
-  all: boolean;
-  scope: InstallScope;
-  verbose: boolean;
-  force: boolean;
-};
-
-function parseArgs(argv: string[]): ParsedArgs {
-  let command: ParsedArgs["command"] = "default";
-  const clients: ClientId[] = [];
-  let all = false;
-  let scope: InstallScope = "global";
-  let verbose = false;
-  let force = false;
-
-  const positional: string[] = [];
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i]!;
-    switch (a) {
-      case "-h":
-      case "--help":
-        command = "help";
-        break;
-      case "-v":
-      case "--version":
-        command = "version";
-        break;
-      case "--all":
-        all = true;
-        break;
-      case "--global":
-        scope = "global";
-        break;
-      case "--project":
-        scope = "project";
-        break;
-      case "--verbose":
-        verbose = true;
-        break;
-      case "--force":
-        force = true;
-        break;
-      case "--client": {
-        const next = argv[++i];
-        if (!next) throw new Error("--client requires a value");
-        if (!ALL_CLIENT_IDS.includes(next as ClientId)) {
-          throw new Error(`Unknown client: ${next}. Valid: ${ALL_CLIENT_IDS.join(", ")}`);
-        }
-        clients.push(next as ClientId);
-        break;
-      }
-      default:
-        if (a.startsWith("-")) throw new Error(`Unknown flag: ${a}`);
-        positional.push(a);
-    }
-  }
-
-  if (command === "default" && positional.length > 0) {
-    const cmd = positional[0];
-    if (cmd === "install" || cmd === "uninstall" || cmd === "update" || cmd === "doctor") {
-      command = cmd;
-    } else {
-      throw new Error(`Unknown command: ${cmd}`);
-    }
-  }
-
-  return { command, clients, all, scope, verbose, force };
-}
 
 function printHelp(): void {
   log.raw(`Loovie MCP installer v${VERSION}
@@ -136,9 +66,7 @@ async function main(): Promise<void> {
     verbose: args.verbose,
     backedUp: new Set(),
     interactive: process.stdout.isTTY === true,
-    // `update` always refreshes the canonical entry, so force replacement of a
-    // differing entry rather than prompting/skipping.
-    force: args.force || args.command === "update",
+    force: resolveForce(args),
   };
 
   if (args.command === "doctor") {
@@ -172,9 +100,7 @@ async function main(): Promise<void> {
     log.dim(`Selected: ${selected.join(", ")}`);
   }
 
-  const mode: "install" | "uninstall" | "update" =
-    args.command === "uninstall" || args.command === "update" ? args.command : "install";
-  await runInstall(selected, ctx, mode);
+  await runInstall(selected, ctx, resolveMode(args.command));
 
   log.raw("");
   log.success("Done. Run `npx -y @loovie/mcp doctor` to verify.");

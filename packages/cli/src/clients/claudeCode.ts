@@ -12,7 +12,7 @@ import {
 import type { ClientPlugin, DoctorResult, InstallResult } from "../types.js";
 import { readJsonIfExists, type JsonObject } from "../util/jsonFile.js";
 
-function which(bin: string): Promise<string | null> {
+function whichImpl(bin: string): Promise<string | null> {
   return new Promise((resolve) => {
     const cmd = process.platform === "win32" ? "where" : "which";
     const child = spawn(cmd, [bin], { stdio: ["ignore", "pipe", "ignore"] });
@@ -23,7 +23,7 @@ function which(bin: string): Promise<string | null> {
   });
 }
 
-function run(cmd: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
+function runImpl(cmd: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
     const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
@@ -34,6 +34,19 @@ function run(cmd: string, args: string[]): Promise<{ code: number; stdout: strin
     child.on("error", (e) => resolve({ code: 1, stdout, stderr: String(e) }));
   });
 }
+
+/**
+ * Process-spawning seam. Swappable in tests so the install/update branch logic
+ * (which is the trickiest part of this client) can be exercised without
+ * actually shelling out to `claude`.
+ */
+export const runtime: {
+  which: (bin: string) => Promise<string | null>;
+  run: (cmd: string, args: string[]) => Promise<{ code: number; stdout: string; stderr: string }>;
+} = { which: whichImpl, run: runImpl };
+
+const which = (bin: string) => runtime.which(bin);
+const run = (cmd: string, args: string[]) => runtime.run(cmd, args);
 
 export const claudeCode: ClientPlugin = {
   id: "claude-code",
