@@ -11,5 +11,11 @@
   "homepage": "https://loovie.app",
   "repository": "https://github.com/looviehq/loovie-community",
   "license": "Apache-2.0",
-  "keywords": ["loovie", "video", "ai", "characters", "mcp", "filmmaking"]
+  "keywords": ["loovie", "video", "ai", "characters", "mcp", "filmmaking"],
+  "mcpServers": {
+    "loovie": {
+      "type": "http",
+      "url": "https://api.loovie.app/v1/mcp"
+    }
+  }
 }
