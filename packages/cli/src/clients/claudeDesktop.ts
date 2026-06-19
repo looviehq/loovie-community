@@ -9,12 +9,23 @@ import {
 import { readJsonIfExists, type JsonObject } from "../util/jsonFile.js";
 import { log } from "../util/log.js";
 
-/** True when an entry already points at the Loovie endpoint, in either the
- *  modern Connectors `{ url }` shape or the mcp-remote bridge shape. */
+/** The endpoint an entry points at, in either the `{ url }` shape or the
+ *  mcp-remote bridge shape (`args` ending in the URL). null if neither. */
+function entryUrl(entry: JsonObject | undefined): string | null {
+  if (!entry) return null;
+  if (typeof entry.url === "string") return entry.url;
+  if (Array.isArray(entry.args)) {
+    const u = (entry.args as unknown[]).find(
+      (a): a is string => typeof a === "string" && /^https?:\/\//.test(a),
+    );
+    if (u) return u;
+  }
+  return null;
+}
+
+/** True when an entry already points at the Loovie endpoint. */
 function isLoovieEntry(entry: JsonObject | undefined): boolean {
-  if (!entry) return false;
-  if (entry.url === LOOVIE_MCP_URL) return true;
-  return Array.isArray(entry.args) && (entry.args as unknown[]).includes(LOOVIE_MCP_URL);
+  return entryUrl(entry) === LOOVIE_MCP_URL;
 }
 
 export const claudeDesktop: ClientPlugin = {
@@ -60,7 +71,7 @@ export const claudeDesktop: ClientPlugin = {
       configPath: filePath,
       exists: parsed !== null,
       loovieConfigured: !!entry,
-      url: typeof entry?.url === "string" ? entry.url : entry ? LOOVIE_MCP_URL : null,
+      url: entryUrl(entry),
       notes:
         entry && !isLoovieEntry(entry)
           ? [`entry does not point at ${LOOVIE_MCP_URL}`]

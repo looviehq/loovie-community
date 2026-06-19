@@ -34,7 +34,7 @@ npx -y @loovie/mcp install --all
 |---|---|
 | `(default)` | Interactive picker, then install |
 | `install` | Install into clients passed via `--client`/`--all` |
-| `update` | Refresh installed clients to the latest. For Claude Code, re-pulls the marketplace plugin (skills, commands, MCP block); for config-file clients, rewrites the canonical `loovie` entry |
+| `update` | Refresh selected clients to the latest. For Claude Code, re-pulls the marketplace plugin (skills, commands, MCP block); for config-file clients, rewrites the canonical `loovie` entry (installing it if absent) |
 | `uninstall` | Remove the `loovie` entry only — other servers are left alone |
 | `doctor` | Print a table of which clients have Loovie configured, plus an endpoint reachability check |
 | `--help`, `-h` | Help |

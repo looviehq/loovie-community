@@ -78,18 +78,18 @@ export const claudeCode: ClientPlugin = {
       };
     }
     // Refresh the marketplace cache so the newest plugin (skills, commands,
-    // MCP block) is visible, then update the installed plugin.
+    // MCP block) is visible, then update the installed plugin. Both fall back
+    // to a clean install on any failure rather than matching error text: the
+    // install path is itself idempotent (`marketplace add` and `plugin install`
+    // both tolerate an already-present state), so it safely covers the
+    // never-added and never-installed cases without depending on CLI wording.
     const r1 = await run("claude", ["plugin", "marketplace", "update", CLAUDE_CODE_MARKETPLACE_NAME]);
-    if (r1.code !== 0 && /not found|no marketplace/i.test(r1.stderr + r1.stdout)) {
-      // Marketplace was never added — fall back to a clean install.
+    if (r1.code !== 0) {
       return claudeCode.install(ctx);
     }
     const r2 = await run("claude", ["plugin", "update", CLAUDE_CODE_PLUGIN]);
     if (r2.code !== 0) {
-      if (/not installed|no plugin/i.test(r2.stderr + r2.stdout)) {
-        return claudeCode.install(ctx);
-      }
-      return { kind: "error", message: `claude plugin update failed: ${r2.stderr || r2.stdout}` };
+      return claudeCode.install(ctx);
     }
     return { kind: "installed", detail: "Claude Code: updated to latest (restart Claude Code to apply)" };
   },
