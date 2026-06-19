@@ -219,6 +219,7 @@ npx -y @loovie/mcp                                # interactive: detect + ask
 npx -y @loovie/mcp install --all                  # non-interactive: install to every detected client
 npx -y @loovie/mcp install --client cursor        # specific client
 npx -y @loovie/mcp install --client cursor --project  # project-scoped .cursor/mcp.json
+npx -y @loovie/mcp update --all                   # refresh installed clients to latest
 npx -y @loovie/mcp uninstall --all                # remove from every client
 npx -y @loovie/mcp doctor                         # report which clients are wired
 ```

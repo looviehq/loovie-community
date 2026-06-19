@@ -34,6 +34,7 @@ npx -y @loovie/mcp install --all
 |---|---|
 | `(default)` | Interactive picker, then install |
 | `install` | Install into clients passed via `--client`/`--all` |
+| `update` | Refresh selected clients to the latest. For Claude Code, re-pulls the marketplace plugin (skills, commands, MCP block); for config-file clients, rewrites the canonical `loovie` entry (installing it if absent) |
 | `uninstall` | Remove the `loovie` entry only — other servers are left alone |
 | `doctor` | Print a table of which clients have Loovie configured, plus an endpoint reachability check |
 | `--help`, `-h` | Help |
@@ -45,7 +46,10 @@ npx -y @loovie/mcp install --all
 - `--client <id>` — repeatable. Valid ids: `cursor`, `claude-code`, `claude-desktop`, `vscode`, `continue`, `cline`, `opencode`
 - `--global` — write to user-global config (default)
 - `--project` — write to `<cwd>/.cursor/mcp.json` or `.vscode/mcp.json` instead
+- `--force` — replace a differing existing `loovie` entry without prompting (handy for non-interactive runs)
 - `--verbose` — print the config path before writing
+
+On every run the CLI does a short, non-blocking check against the npm registry and prints a one-line notice if a newer `@loovie/mcp` is published. Suppress it with `LOOVIE_NO_UPDATE_CHECK=1`.
 
 ## Support tiers
 
@@ -60,7 +64,7 @@ npx -y @loovie/mcp install --all
 |---|---|---|
 | Cursor | `~/.cursor/mcp.json` (or `<cwd>/.cursor/mcp.json` with `--project`) | JSON merge under `mcpServers.loovie` |
 | Claude Code | (no file) | Runs `claude plugin marketplace add looviehq/loovie-community` and `claude plugin install loovie-mcp@loovie` |
-| Claude Desktop | macOS `~/Library/Application Support/Claude/claude_desktop_config.json` / Windows `%APPDATA%/Claude/claude_desktop_config.json` / Linux `~/.config/Claude/claude_desktop_config.json` | JSON merge. Restart Claude Desktop after. |
+| Claude Desktop | macOS `~/Library/Application Support/Claude/claude_desktop_config.json` / Windows `%APPDATA%/Claude/claude_desktop_config.json` / Linux `~/.config/Claude/claude_desktop_config.json` | JSON merge. Claude Desktop's config is **stdio-only**, so we wire the `mcp-remote` bridge (`npx -y mcp-remote@latest <url>`) which also handles OAuth — same as the `.dxt` bundle. Needs Node on PATH. Restart Claude Desktop after. |
 | VS Code (MCP) | `<cwd>/.vscode/mcp.json` (requires `--project`) | JSON merge |
 | Continue | (printed instructions) | Continue's config shape varies by version; we print both YAML and JSON snippets for you to paste |
 | Cline | (printed instructions) | Cline stores MCP config inside VS Code settings; we don't touch settings.json |
@@ -71,7 +75,7 @@ npx -y @loovie/mcp install --all
 - Every JSON mutation is **atomic** (write tempfile + rename).
 - Before mutating, we **back up** the file once per run to `<file>.loovie-backup-<timestamp>`.
 - We **never** touch keys other than `mcpServers.loovie` (or `mcp.loovie` for OpenCode).
-- If you already have a `loovie` entry pointing somewhere else, we ask before replacing (interactive only — non-interactive runs skip with a warning).
+- If you already have a `loovie` entry pointing somewhere else, we ask before replacing (interactive only — non-interactive runs skip with a warning unless you pass `--force`).
 - `uninstall` removes only the `loovie` key. Other servers are untouched.
 - No postinstall scripts. No telemetry. No network calls during install (apart from optional `doctor` reachability ping).
 
