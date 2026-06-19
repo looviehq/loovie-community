@@ -32,6 +32,6 @@ jobs:
         id: lychee
         uses: lycheeverse/lychee-action@v2.8.0
         with:
-          args: --cache --max-cache-age 7d --no-progress --exclude-mail './**/*.md'
+          args: --cache --max-cache-age 7d --no-progress './**/*.md'
           fail: ${{ github.event_name == 'pull_request' }}
           jobSummary: true
