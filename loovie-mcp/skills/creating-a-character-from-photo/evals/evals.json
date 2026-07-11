@@ -1,0 +1,50 @@
+{
+  "skill": "creating-a-character-from-photo",
+  "notes": "Run each scenario in a fresh context with the loovie MCP server connected. Upload scenarios should be run once in a shell-capable runtime and once in a sandboxed one.",
+  "scenarios": [
+    {
+      "id": "trigger-photo-to-character",
+      "type": "should_trigger",
+      "prompt": "Here's a photo of my dog - turn her into a Loovie character I can reuse",
+      "assertions": [
+        "The creating-a-character-from-photo skill activates",
+        "With shell access, the upload uses request_image_upload_url, a curl PUT, then finalize_image_upload",
+        "The original image is uploaded without downsizing on the presigned-PUT path",
+        "create_character is called with the uploaded image as the original variation"
+      ]
+    },
+    {
+      "id": "trigger-remote-url",
+      "type": "should_trigger",
+      "prompt": "Use this image link as the base for a new Loovie character: https://example.com/hero.png",
+      "assertions": [
+        "The agent downloads the image locally first, then uploads via the presigned-PUT path",
+        "upload_image_for_reference with a url parameter is NOT called when shell access is available"
+      ]
+    },
+    {
+      "id": "no-trigger-existing-character",
+      "type": "should_not_trigger",
+      "prompt": "Make a Loovie video starring my existing character Stella",
+      "expected_skill": "making-a-loovie-video"
+    },
+    {
+      "id": "output-base64-fallback-downsizes",
+      "type": "output",
+      "prompt": "Simulate: the runtime has no shell access and R2 PUT is blocked; the user supplies a 4 MB photo",
+      "assertions": [
+        "The agent downsizes to 1024px max long edge, JPEG quality 80 before base64 encoding",
+        "If the downsized image still exceeds ~300 KB encoded, the agent asks for a smaller source instead of pushing it through"
+      ]
+    },
+    {
+      "id": "output-sheet-is-optional",
+      "type": "output",
+      "prompt": "Turn this photo into a character. I don't want to spend extra credits.",
+      "assertions": [
+        "The agent skips character sheet generation",
+        "The agent does not present the sheet as required for downstream generation"
+      ]
+    }
+  ]
+}
