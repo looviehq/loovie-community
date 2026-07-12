@@ -5,14 +5,14 @@ description: "Use when the user wants to modify a Loovie project that already ex
 
 # Editing an existing Loovie project
 
-You are modifying a project the user already has. The MCP server's editor tools are read-modify-write over the project document. Get the current state first, then edit deliberately.
+You are modifying a project the user already has. All tools and `loovie://` resources named below live on the `loovie` MCP server; if your client namespaces tools by server, use the `loovie`-qualified names. The server's editor tools are read-modify-write over the project document. Get the current state first, then edit deliberately.
 
 ## Hard rules
 
 1. **Read before you write.** Always read `loovie://projects/{id}` first to see the current timeline, clips, captions, music, transitions. Edits are computed against this state, not against your memory of a previous edit.
 2. **Use dedicated tools.** Every editing tool below validates against the project schema and is the right way to make its change. There is no JSON Patch escape hatch — if a mutation isn't covered by a dedicated tool today, tell the user the limit instead of inventing a workaround.
 3. Quote credits for any AI-driven edit (`ai-morph` transitions, AI VFX, swap, motion-control). Never invent a USD price.
-4. **Image uploads: original on presigned PUT, downsize only on the fallback.** Several edit tools take reference images (PiP source, swap target face, AI VFX reference, motion-control frame). For any of these: prefer `request_image_upload_url` → curl PUT → `finalize_image_upload` and **upload the original** — Loovie keeps it in R2 at full quality for future re-use. Only downsize (to 1024px JPEG q80) when R2 PUT is blocked by your runtime and you must fall back to `upload_image_for_reference({ dataBase64 })`. Full recipe in the `character-from-photo` skill.
+4. **Reference images** (PiP source, swap target face, AI VFX reference, motion-control frame): follow the upload recipe in the `creating-a-character-from-photo` skill — upload the original via presigned PUT, downsize only on the `dataBase64` fallback.
 
 ## Playbook
 
@@ -48,7 +48,7 @@ Match the user's intent to a tool:
 | "VFX (rain, fire, etc.)" | `estimate_apply_ai_vfx` → approve → `execute_apply_ai_vfx` → poll `get_job` |
 | "cut out a subject (transparent overlay)" | `estimate_create_cutout` → approve → `execute_create_cutout` → poll `get_job` |
 | "look at alternate takes for a clip" | `list_clip_variants` → `set_active_clip_variant` to choose |
-| "apply a LUT / color preset" | **Not supported today.** The clip schema doesn't carry a LUT field yet; tell the user it's deferred. Color tweaks can still be done via `set_clip_color_grading`. |
+| "apply a LUT / color preset" | **Not supported today.** The clip schema doesn't carry a LUT field yet; tell the user it's deferred. The `loovie://library/luts` resource lets you *browse* the LUT catalog, but there is no tool to apply one to a clip. Color tweaks can still be done via `set_clip_color_grading`. |
 | "add a keyframe / animation curve" | **Not supported today.** No dedicated tool covers keyframe writes yet; tell the user it's deferred. |
 
 ### 3. Confirm the result

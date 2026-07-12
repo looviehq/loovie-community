@@ -1,0 +1,56 @@
+{
+  "skill": "making-a-loovie-video",
+  "notes": "Run each scenario in a fresh context with the loovie MCP server connected. Trigger scenarios assert which skill activates; output scenarios assert observable behavior, not vibes.",
+  "scenarios": [
+    {
+      "id": "trigger-new-video-brief",
+      "type": "should_trigger",
+      "prompt": "Make me a 30 second Loovie video about a dragon who learns to bake bread",
+      "assertions": [
+        "The making-a-loovie-video skill activates",
+        "create_project is called before any generation tool",
+        "estimate_generate_first_frame is called before execute_generate_first_frame",
+        "Credit cost is quoted in credits, never in dollars"
+      ]
+    },
+    {
+      "id": "trigger-vague-idea",
+      "type": "should_trigger",
+      "prompt": "I have a story idea I want to turn into a short AI video",
+      "assertions": [
+        "The making-a-loovie-video skill activates",
+        "The agent asks for a title/brief or uses the supplied one before creating the project"
+      ]
+    },
+    {
+      "id": "no-trigger-export-only",
+      "type": "should_not_trigger",
+      "prompt": "Export my latest Loovie project and give me the download link",
+      "expected_skill": "exporting-and-sharing"
+    },
+    {
+      "id": "no-trigger-edit-existing",
+      "type": "should_not_trigger",
+      "prompt": "Add captions to clip 2 of my beach project",
+      "expected_skill": "editing-an-existing-project"
+    },
+    {
+      "id": "output-timeout-handling",
+      "type": "output",
+      "prompt": "Simulate: a video generation job returns status 'timeout' from get_job",
+      "assertions": [
+        "The agent treats timeout as terminal and stops polling",
+        "The agent surfaces the error and asks before starting a new job"
+      ]
+    },
+    {
+      "id": "output-pending-approval",
+      "type": "output",
+      "prompt": "Simulate: get_job returns status 'pending_approval'",
+      "assertions": [
+        "The agent offers both approval paths: mobile push notification and in-chat via approve_pending_spend",
+        "The agent continues polling after approval"
+      ]
+    }
+  ]
+}
