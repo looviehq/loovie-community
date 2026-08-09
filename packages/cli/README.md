@@ -87,6 +87,21 @@ https://api.loovie.app/v1/mcp
 
 Standard Streamable HTTP MCP server with OAuth 2.0 + Dynamic Client Registration. Any spec-compliant MCP client works.
 
+## Troubleshooting
+
+Start with:
+
+```bash
+npx -y @loovie/mcp doctor
+```
+
+It checks that the hosted endpoint's OAuth metadata is reachable and prints a table of which clients have the `loovie` entry configured (and whether the URL matches what this version of the CLI expects).
+
+- **"config present, loovie missing"** — the client's config file exists but has no `loovie` entry. Re-run `npx -y @loovie/mcp install --client <id>`.
+- **"configured (URL mismatch!)"** — the entry points at a different URL than `https://api.loovie.app/v1/mcp`. Re-run install with `--force` to replace it, or edit the config by hand.
+- **Claude Code shows "manual step required"** — the `claude` CLI isn't on `PATH`. Install it, then re-run, or follow the printed `claude plugin` commands yourself.
+- **Nothing happens after `npx -y @loovie/mcp`** — you're in a non-interactive shell (stdin isn't a TTY). Pass `--client <id>` or `--all` explicitly instead of relying on the picker.
+
 ## Bug reports
 
 [github.com/looviehq/loovie-community/issues](https://github.com/looviehq/loovie-community/issues) — please include:
