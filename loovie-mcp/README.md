@@ -198,7 +198,7 @@ The exception is the **`dataBase64` fallback** path, used only when the runtime 
 ## What's bundled in the Claude Code plugin
 
 - **Skills** — auto-invoked workflow guides for common tasks:
-  - `making-a-loovie-video` — full happy path from idea to exported MP4
+  - `making-a-loovie-video` — full happy path from idea to exported MP4, including reference-driven video (`@tag` references for characters, assets, backgrounds, images and clips) and multi-shot
   - `character-from-photo` — turn a reference image into a reusable character
   - `editing-an-existing-project` — modify clips, captions, music, transitions
   - `exporting-and-sharing` — render and download
@@ -208,7 +208,7 @@ These ship inside the Claude Code plugin specifically (Claude Code has first-cla
 
 ## Credits and approvals
 
-Loovie generations are paid for in credits. The plugin always shows the credit cost up front and waits for your approval before spending. Set an `autoApproveBelow` threshold via the `set_mcp_spend_preferences` tool to skip prompts for small spends.
+Loovie generations are paid for in credits. Every spend shows the credit cost up front and needs your approval: clients that support MCP confirmation prompts show one with the cost, and otherwise the agent asks you in chat. If no prompt can be shown, the spend is escalated for approval in the Loovie mobile app (or you can approve in chat), and the agent waits for it. Set an `autoApproveBelow` threshold via the `set_mcp_spend_preferences` tool to skip prompts for small spends. Spend limits are yours to change; the agent never raises them to get past a refusal.
 
 ## CLI reference
 
