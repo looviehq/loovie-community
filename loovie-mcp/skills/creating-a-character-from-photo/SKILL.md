@@ -9,7 +9,7 @@ You are turning a reference image into a Loovie character. All tools and `loovie
 
 ## Hard rules
 
-1. Two-step approval applies to every spend: `estimate_*` → user approves → `execute_*`.
+1. Every spend is `estimate_*` then `execute_*`. If your client shows MCP confirmation prompts, quote the credit cost and call `execute_*` straight away: the prompt is the approval, so don't also ask for a chat "yes". Without prompts, wait for an explicit "yes". A declined spend is never retried, and a `pendingApprovalId` is followed with `wait_for_spend_approval` (full flow in `making-a-loovie-video`).
 2. Quote credits, never dollars. Never name internal models.
 3. **Uploads go direct to R2.** Bytes never transit the MCP server. If the user gave you a remote URL, you download it locally first, then upload — do not ask the server to fetch on your behalf.
 4. **Preserve the original on the primary path.** When the presigned-PUT path is available (most clients with shell access), upload the file at its native resolution — Loovie keeps it in R2 at full quality and reuses it for future variations, character sheets, and re-generations. Only downsize when forced onto the `dataBase64` fallback (the conversation transport can't carry multi-MB binary). Details in step 1 below.
@@ -73,14 +73,18 @@ Then base64-encode `/tmp/loovie-ref.jpg` and pass to `upload_image_for_reference
 - Skip this step entirely if the user doesn't ask for it, or if the credit cost isn't justified for their use case. Downstream tools work without it.
 - If you do generate one:
   - `estimate_generate_character_sheet` with the `characterId`. Show the credit cost.
-  - After approval: `execute_generate_character_sheet` → poll `get_job` until terminal.
+  - Then `execute_generate_character_sheet` → poll `get_job` until terminal.
   - The result is a draft variation. Call `confirm_character_variation` to persist it as the canonical character sheet, or `discard_character_variation` if the user doesn't like it.
   - `get_asset_preview` on the sheet URL so the user sees it inline. If it can't render inline (or the asset host isn't reachable from your runtime), give the user the sheet URL as a clickable link instead — don't loop on the preview tool and don't leave them with nothing.
 
 ### 4. (Optional) More variations
 
-- If the user wants extra looks (different outfit, different age, etc.): `estimate_add_character_variation` → approve → `execute_add_character_variation` → `confirm_character_variation`.
+- If the user wants extra looks (different outfit, different age, etc.): `estimate_add_character_variation` → `execute_add_character_variation` → `confirm_character_variation`.
 - If a character sheet exists, prefer it as the reference for clothes/hair consistency; otherwise reference the original variation image.
+
+### 5. Use the character in a video
+
+- Pass the character as a reference on video generation: `{ kind: "character", sourceId: <characterId>, tag: "<Name>" }`, plus `variationId` (from `get_character`) to pin a specific outfit or look. Then mention `@<Name>` in the prompt. This keeps the character consistent through the whole clip and is preferred over the legacy `characterIds` field. See `making-a-loovie-video`, step 3, for the full reference rules.
 
 ## When something fails
 
