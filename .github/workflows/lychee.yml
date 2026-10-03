@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Restore lychee cache
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v6.1.0
         with:
           path: .lycheecache
           key: cache-lychee-${{ github.sha }}
@@ -30,8 +30,8 @@ jobs:
 
       - name: Run lychee
         id: lychee
-        uses: lycheeverse/lychee-action@v2.4.1
+        uses: lycheeverse/lychee-action@v2.9.0
         with:
-          args: --cache --max-cache-age 7d --no-progress --exclude-mail './**/*.md'
+          args: --cache --max-cache-age 7d --no-progress './**/*.md'
           fail: ${{ github.event_name == 'pull_request' }}
           jobSummary: true

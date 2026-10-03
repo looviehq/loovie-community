@@ -39,7 +39,9 @@ export const opencode: ClientPlugin = {
       if (current.url === LOOVIE_MCP_URL && current.type === "remote") {
         return { kind: "already-installed", detail: `OpenCode: already configured (${filePath})` };
       }
-      if (ctx.interactive) {
+      if (ctx.force) {
+        log.dim(`  OpenCode: replacing existing "${SERVER_KEY}" entry (--force)`);
+      } else if (ctx.interactive) {
         const { replace } = await prompts({
           type: "confirm",
           name: "replace",
@@ -50,7 +52,7 @@ export const opencode: ClientPlugin = {
           return { kind: "skipped", reason: "OpenCode: user declined to replace existing entry" };
         }
       } else {
-        return { kind: "skipped", reason: "OpenCode: existing entry differs — re-run interactively" };
+        return { kind: "skipped", reason: "OpenCode: existing entry differs — re-run interactively or pass --force" };
       }
     }
 

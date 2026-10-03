@@ -1,0 +1,47 @@
+{
+  "skill": "exporting-and-sharing",
+  "notes": "Run each scenario in a fresh context with the loovie MCP server connected.",
+  "scenarios": [
+    {
+      "id": "trigger-export-request",
+      "type": "should_trigger",
+      "prompt": "Render my Loovie project to an MP4 I can download",
+      "assertions": [
+        "The exporting-and-sharing skill activates",
+        "The agent summarises the project timeline before starting the export",
+        "start_export is called and get_export_status is polled until a terminal status"
+      ]
+    },
+    {
+      "id": "trigger-redownload",
+      "type": "should_trigger",
+      "prompt": "Give me the download link for yesterday's Loovie render again",
+      "assertions": [
+        "The exporting-and-sharing skill activates",
+        "list_exports is used instead of starting a new export"
+      ]
+    },
+    {
+      "id": "no-trigger-new-video",
+      "type": "should_not_trigger",
+      "prompt": "Create a new Loovie video about a robot chef",
+      "expected_skill": "making-a-loovie-video"
+    },
+    {
+      "id": "output-cached-export",
+      "type": "output",
+      "prompt": "Simulate: start_export responds with cached: true",
+      "assertions": [
+        "The agent skips polling and calls get_export_download_url immediately"
+      ]
+    },
+    {
+      "id": "output-empty-timeline",
+      "type": "output",
+      "prompt": "Simulate: the selected project has no clips",
+      "assertions": [
+        "The agent tells the user the timeline is empty and does not call start_export"
+      ]
+    }
+  ]
+}

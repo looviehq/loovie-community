@@ -1,11 +1,11 @@
 ---
-name: character-from-photo
+name: creating-a-character-from-photo
 description: Use when the user wants to turn a reference image (a photo, an artwork, a screenshot) into a reusable Loovie character. Walks through upload, character creation, and (optionally) character sheet generation so the character can be used in subsequent video and image jobs.
 ---
 
-# Character from a photo
+# Creating a character from a photo
 
-You are turning a reference image into a Loovie character. A character sheet (multi-pose reference) is **optional** but recommended — when present, downstream first-frame and video generation uses it for stronger consistency. When absent, downstream generation falls back to the original variation image. Never block on the sheet.
+You are turning a reference image into a Loovie character. All tools and `loovie://` resources named below live on the `loovie` MCP server; if your client namespaces tools by server, use the `loovie`-qualified names. A character sheet (multi-pose reference) is **optional** but recommended — when present, downstream first-frame and video generation uses it for stronger consistency. When absent, downstream generation falls back to the original variation image. Never block on the sheet.
 
 ## Hard rules
 
@@ -40,7 +40,7 @@ Upload paths:
 
 - **Chat-attached image** (user dropped an image into the Claude.ai / Claude Desktop / Cursor chat):
   1. The image lives on the agent's filesystem temporarily. Read its bytes via whatever code-execution tool your runtime exposes (e.g. Test Integration / Code Interpreter / Bash).
-  2. **If your runtime can curl-PUT to arbitrary HTTPS hosts, upload the original** via the presigned-URL path above — no downsize, full quality stored. R2 SigV4 hosts must be allowlisted; some sandboxes (Claude.ai web at time of writing) block them.
+  2. **If your runtime can curl-PUT to arbitrary HTTPS hosts, upload the original** via the presigned-URL path above — no downsize, full quality stored. R2 SigV4 hosts must be allowlisted; some sandboxed runtimes block them — if the curl PUT fails with a network or allowlist error, treat R2 PUT as blocked and use the fallback below.
   3. **If R2 PUT is blocked**, fall back to `upload_image_for_reference({ dataBase64, mimeType: 'image/jpeg', filename })` with **downsized** bytes per the recipe below. Quality loss is the price of being able to upload at all in restricted runtimes.
 
 #### Downsize recipe (ONLY for the `dataBase64` fallback)

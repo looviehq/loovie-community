@@ -23,6 +23,7 @@ function ctx(): InstallContext {
     verbose: false,
     backedUp: new Set(),
     interactive: false,
+    force: false,
   };
 }
 
@@ -125,5 +126,50 @@ describe("uninstallMcpServerEntry", () => {
       clientLabel: "Test",
     });
     expect(res.kind).toBe("skipped");
+  });
+});
+
+describe("installMcpServerEntry — non-url (Claude Desktop bridge) entries", () => {
+  const bridge = {
+    command: "npx",
+    args: ["-y", "mcp-remote@latest", "https://api.loovie.app/v1/mcp"],
+  };
+
+  it("writes a command/args entry and is idempotent on re-install", async () => {
+    const filePath = path.join(tmpDir, "claude_desktop_config.json");
+    const c = ctx();
+    const first = await installMcpServerEntry({
+      filePath,
+      ctx: c,
+      entryValue: { ...bridge, args: [...bridge.args] },
+      clientLabel: "Claude Desktop",
+    });
+    expect(first.kind).toBe("installed");
+    expect(await readJsonIfExists(filePath)).toEqual({ mcpServers: { loovie: bridge } });
+
+    const second = await installMcpServerEntry({
+      filePath,
+      ctx: c,
+      entryValue: { ...bridge, args: [...bridge.args] },
+      clientLabel: "Claude Desktop",
+    });
+    expect(second.kind).toBe("already-installed");
+  });
+
+  it("replaces a differing entry when --force is set, without prompting", async () => {
+    const filePath = path.join(tmpDir, "mcp.json");
+    await fs.writeFile(
+      filePath,
+      JSON.stringify({ mcpServers: { loovie: { url: "https://stale.example" } } }),
+    );
+    const res = await installMcpServerEntry({
+      filePath,
+      ctx: { ...ctx(), force: true },
+      clientLabel: "Test",
+    });
+    expect(res.kind).toBe("installed");
+    expect(await readJsonIfExists(filePath)).toEqual({
+      mcpServers: { loovie: { url: "https://api.loovie.app/v1/mcp" } },
+    });
   });
 });

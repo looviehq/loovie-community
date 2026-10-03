@@ -14,10 +14,10 @@ You are working with the user to produce a finished video on Loovie. The Loovie 
 3. **One approval per spend.** If your client can show MCP confirmation prompts, tell the user the credit cost in your reply and call `execute_*` straight away: the confirmation prompt Loovie shows is the approval, so do not also ask for a "yes" in chat. Only when your client cannot show those prompts do you wait for an explicit "yes" in chat before calling `execute_*`. Holding an `approvalToken` is never approval by itself.
 4. **Declined means stop.** If `execute_*` comes back declined, do not retry. Never change spend limits (`set_mcp_spend_preferences`) to get past a refusal or a limit: those are the user's to raise in the Loovie app.
 5. **Escalated approvals.** If no prompt could be shown, the result names a `pendingApprovalId`. Tell the user they can tap the push notification in the Loovie app, or say "approve in chat" (then call `approve_pending_spend({ pendingApprovalId })`). Keep calling `wait_for_spend_approval({ pendingApprovalId })` until it returns `approved` (a `timeout` with `stillPending` is not an error, call it again). Then run the matching `execute_*` with the returned `originalParams` exactly as given, or pass `execute: true` to let the wait tool run it. Any drift in params fails server-side verification.
-6. **Poll, don't block.** Generation tools return a `jobId`. Poll `get_job(jobId)` (2s for the first 20s, then 5s) until `status` is terminal (`completed` / `failed` / `cancelled`). For video, poll the top-level `jobId`, never `video.id`, which 404s. For N parallel jobs, fire all `execute_*` calls in one turn to collect jobIds, then poll each.
+6. **Poll, don't block.** Generation tools return a `jobId`. Poll `get_job(jobId)` (2s for the first 20s, then 5s) until `status` is terminal (`completed` / `failed` / `cancelled` / `timeout`). For video, poll the top-level `jobId`, never `video.id`, which 404s. For N parallel jobs, fire all `execute_*` calls in one turn to collect jobIds, then poll each.
 7. **Show your work, and never leave the user with a blank.** When a job completes, call `get_asset_preview` on the resulting asset so the user sees it inline. If the client can't render it inline or you can't fetch the bytes (for example the asset host isn't on your runtime's network allowlist), don't loop on the preview tool: paste the asset URL as a plain clickable markdown link (`[Stella's first frame](https://…)`). Every completed job ends with either an inline preview or a working link. If the preview failed because of the allowlist, mention that the user can add `api.loovie.app` to their client's allowlist for inline previews.
 8. **Never surface internal model or provider names.** Talk in tier, variant, duration, resolution and audio terms only.
-9. **Uploads take storage keys, never URLs.** Anywhere a tool asks for a `storageKey`, it must come from an upload or the library. If the user supplies a reference image or clip, upload the **original** (presigned PUT, see `character-from-photo`). Only downsize when forced onto the `dataBase64` fallback.
+9. **Uploads take storage keys, never URLs.** Anywhere a tool asks for a `storageKey`, it must come from an upload or the library. If the user supplies a reference image or clip, upload the **original** (presigned PUT, see `creating-a-character-from-photo`). Only downsize when forced onto the `dataBase64` fallback.
 
 ## Playbook
 
@@ -36,9 +36,11 @@ You are working with the user to produce a finished video on Loovie. The Loovie 
 
 References are how you keep people, products, places and looks consistent through a clip. Collect them before writing the prompt, because the prompt has to point at them.
 
+If the user wants a new character from a prompt rather than a photo or a starter: `estimate_generate_character_image` → `execute_generate_character_image` → poll `get_job`. Optionally follow with `estimate_generate_character_sheet` → `execute_generate_character_sheet` for a multi-pose sheet, which strengthens consistency downstream. Skip it when the user doesn't want to spend the extra credits, since downstream tools work without it. Starter characters: read `loovie://library/starter-characters` and `clone_character`.
+
 | Reference kind | What it is | Where it comes from |
 |---|---|---|
-| `character` | A Loovie character (optionally a specific outfit/look) | `list_characters`, `clone_character` for a starter, or the `character-from-photo` skill. Pass `sourceId`, plus `variationId` (from `get_character`) to pin a look |
+| `character` | A Loovie character (optionally a specific outfit/look) | `list_characters`, `clone_character` for a starter, or the `creating-a-character-from-photo` skill. Pass `sourceId`, plus `variationId` (from `get_character`) to pin a look |
 | `asset` | A saved asset such as a product or prop | `list_assets`, `create_asset` |
 | `background` | A saved background | `list_backgrounds`, `execute_create_background` |
 | `upload` | An image the user supplied | `request_image_upload_url` → curl PUT → `finalize_image_upload`, pass the `storageKey` |
@@ -62,7 +64,7 @@ Pick the `generationMode` from what the user actually has:
 
 - `text_to_video`: prompt only, plus `references[]` if they have any. The most common path now: references carry consistency, so a separate first-frame step is optional.
 - `image_to_video`: the user wants to start from a specific image. Needs `firstFrameStorageKey`. Use `estimate_generate_first_frame` / `execute_generate_first_frame` to make one from a prompt and characters, then pass its storage key.
-- `start_end_frames`: a morph between two images. Needs first and last frame keys. Cannot be combined with references on the Spark tiers.
+- `start_end_frames`: a morph between two images. Needs first and last frame keys. If the user wants the shot to land on a specific closing image, make one first with `estimate_generate_last_frame` → `execute_generate_last_frame`. Cannot be combined with references on the Spark tiers.
 - `multi_shot`: several shots in one clip (see step 6).
 
 Only set `hasFirstFrame` / `hasLastFrame` on discovery tools when those frames really exist, since setting them speculatively reroutes the options.
@@ -99,8 +101,8 @@ Do not set `maxSpeed` unless the user wants a faster render. It is not cheaper, 
 
 ## When something fails
 
-- A rejected estimate names the offending field (reference count over the tier limit, unsupported duration or resolution, reference with a last frame on Spark, and so on). Fix that field or change tier, tell the user what changed, and estimate again. Don't retry the identical request.
-- A tool call returning `isError: true` with `Forbidden` on an experimental tier means that tier is gated for this user. Fall back to the default tier and say so.
+- A tool call rejecting a tier (a `Forbidden` or unavailable error) means that tier isn't enabled for this user or flow. Fall back to the default tier and say so.
 - A `get_job` poll returning `status: 'failed'` should be retried once with the same input. If it fails again, surface the error message to the user and stop. Do not silently keep spending credits.
+- A `get_job` poll returning `status: 'timeout'` is terminal, not retryable in place: surface the job's `error` block and ask the user before starting a new job.
 - A `get_job` poll returning `status: 'pending_approval'`, or an `execute_*` result with a `pendingApprovalId`, means the spend is waiting on approval. Follow hard rule 5.
 - If the user's balance won't cover the estimate, stop and tell them. Do not start the job.

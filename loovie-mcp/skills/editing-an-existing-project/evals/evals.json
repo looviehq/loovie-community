@@ -1,0 +1,50 @@
+{
+  "skill": "editing-an-existing-project",
+  "notes": "Run each scenario in a fresh context with the loovie MCP server connected.",
+  "scenarios": [
+    {
+      "id": "trigger-caption-edit",
+      "type": "should_trigger",
+      "prompt": "Add captions to the second clip of my beach Loovie project",
+      "assertions": [
+        "The editing-an-existing-project skill activates",
+        "The agent reads loovie://projects/{id} before making any edit",
+        "add_caption is used (with execute_transcribe_audio first if a transcript is needed)"
+      ]
+    },
+    {
+      "id": "trigger-music-swap",
+      "type": "should_trigger",
+      "prompt": "Change the background music on my latest Loovie project to something upbeat",
+      "assertions": [
+        "The editing-an-existing-project skill activates",
+        "The agent browses loovie://library/music before calling set_music_track"
+      ]
+    },
+    {
+      "id": "no-trigger-export",
+      "type": "should_not_trigger",
+      "prompt": "My project is done, render it to MP4",
+      "expected_skill": "exporting-and-sharing"
+    },
+    {
+      "id": "output-unsupported-lut",
+      "type": "output",
+      "prompt": "Apply the 'Teal & Orange' LUT to clip 1",
+      "assertions": [
+        "The agent tells the user LUT application is not supported via MCP yet",
+        "The agent does not attempt project_apply_patch or invent a workaround",
+        "The agent offers set_clip_color_grading as the available alternative"
+      ]
+    },
+    {
+      "id": "output-validation-error",
+      "type": "output",
+      "prompt": "Simulate: an editor tool returns a 422 validation error",
+      "assertions": [
+        "The agent re-reads the project, recomputes the edit, and retries once",
+        "The agent does not delete clips to make the error go away"
+      ]
+    }
+  ]
+}

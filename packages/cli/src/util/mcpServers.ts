@@ -5,10 +5,22 @@ import {
   type JsonObject,
   atomicWriteJson,
   backupOnce,
+  deepEqual,
   deepMerge,
   readJsonIfExists,
 } from "./jsonFile.js";
 import type { InstallContext, InstallResult } from "../types.js";
+
+/** Human-readable summary of an MCP entry for prompts/skip messages. */
+function describeEntry(entry: JsonObject | undefined): string {
+  if (!entry) return "<unknown>";
+  if (typeof entry.url === "string") return entry.url;
+  if (typeof entry.command === "string") {
+    const args = Array.isArray(entry.args) ? ` ${(entry.args as unknown[]).join(" ")}` : "";
+    return `${entry.command}${args}`;
+  }
+  return "<custom entry>";
+}
 
 /**
  * Generic install path for clients whose config uses the standard
@@ -39,16 +51,19 @@ export async function installMcpServerEntry(args: {
   const current = parent[entryKey] as JsonObject | undefined;
 
   if (current) {
-    const sameUrl =
-      typeof current.url === "string" && current.url === LOOVIE_MCP_URL;
-    if (sameUrl) {
+    // Idempotent when the existing entry already matches what we'd write —
+    // works for both URL-shaped (Cursor, VS Code) and command-shaped
+    // (Claude Desktop via the mcp-remote bridge) entries.
+    if (deepEqual(current, entryValue)) {
       return { kind: "already-installed", detail: `${clientLabel}: already configured (${filePath})` };
     }
-    if (ctx.interactive) {
+    if (ctx.force) {
+      log.dim(`  ${clientLabel}: replacing existing "${entryKey}" entry (--force)`);
+    } else if (ctx.interactive) {
       const { replace } = await prompts({
         type: "confirm",
         name: "replace",
-        message: `${clientLabel} already has an "${entryKey}" entry pointing to ${String(current.url ?? "<unknown>")}. Replace it?`,
+        message: `${clientLabel} already has an "${entryKey}" entry (${describeEntry(current)}). Replace it?`,
         initial: false,
       });
       if (!replace) {
@@ -57,7 +72,7 @@ export async function installMcpServerEntry(args: {
     } else {
       return {
         kind: "skipped",
-        reason: `${clientLabel}: existing entry differs (${String(current.url ?? "<unknown>")}). Re-run interactively or pass --force (not yet implemented) to replace.`,
+        reason: `${clientLabel}: existing entry differs (${describeEntry(current)}). Re-run interactively or pass --force to replace.`,
       };
     }
   }

@@ -5,14 +5,14 @@ description: "Use when the user wants to modify a Loovie project that already ex
 
 # Editing an existing Loovie project
 
-You are modifying a project the user already has. The MCP server's editor tools are read-modify-write over the project document. Get the current state first, then edit deliberately.
+You are modifying a project the user already has. All tools and `loovie://` resources named below live on the `loovie` MCP server; if your client namespaces tools by server, use the `loovie`-qualified names. The server's editor tools are read-modify-write over the project document. Get the current state first, then edit deliberately.
 
 ## Hard rules
 
 1. **Read before you write.** Always read `loovie://projects/{id}` first to see the current timeline, clips, captions, music, transitions. Edits are computed against this state, not against your memory of a previous edit.
 2. **Use dedicated tools.** Every editing tool below validates against the project schema and is the right way to make its change. There is no JSON Patch escape hatch — if a mutation isn't covered by a dedicated tool today, tell the user the limit instead of inventing a workaround.
 3. Quote credits for any AI-driven edit (`ai-morph` transitions, AI VFX, swap, motion-control, image edits). Never invent a price in any currency. Every spend is `estimate_*` then `execute_*`: with MCP confirmation prompts, quote the cost and call `execute_*` straight away (the prompt is the approval); without them, wait for a chat "yes". A declined spend is never retried, and a `pendingApprovalId` is followed with `wait_for_spend_approval`. Full flow in `making-a-loovie-video`.
-4. **Image uploads: original on presigned PUT, downsize only on the fallback.** Several edit tools take reference images (PiP source, swap target face, AI VFX reference, motion-control frame). For any of these: prefer `request_image_upload_url` → curl PUT → `finalize_image_upload` and **upload the original** — Loovie keeps it in R2 at full quality for future re-use. Only downsize (to 1024px JPEG q80) when R2 PUT is blocked by your runtime and you must fall back to `upload_image_for_reference({ dataBase64 })`. Full recipe in the `character-from-photo` skill.
+4. **Reference images** (PiP source, swap target face, AI VFX reference, motion-control frame): follow the upload recipe in the `creating-a-character-from-photo` skill. Upload the original via presigned PUT, downsize only on the `dataBase64` fallback.
 
 ## Playbook
 
@@ -53,7 +53,7 @@ Match the user's intent to a tool:
 | "change the project's aspect ratio or defaults" | `get_project_defaults`, `update_project_settings` |
 | "duplicate or delete a project" | `duplicate_project` / `delete_project` (confirm with the user before deleting) |
 | "look at alternate takes for a clip" | `list_clip_variants` → `set_active_clip_variant` to choose |
-| "apply a LUT / color preset" | **Not supported today.** The clip schema doesn't carry a LUT field yet; tell the user it's deferred. Color tweaks can still be done via `set_clip_color_grading`. |
+| "apply a LUT / color preset" | **Not supported today.** The clip schema doesn't carry a LUT field yet; tell the user it's deferred. The `loovie://library/luts` resource lets you *browse* the LUT catalog, but there is no tool to apply one to a clip. Color tweaks can still be done via `set_clip_color_grading`. |
 | "add a keyframe / animation curve" | **Not supported today.** `get_schema` documents keyframes, but no dedicated tool writes them yet; tell the user it's deferred. |
 | "generate a new clip that features a character, product or place" | Hand off to `making-a-loovie-video`: use `references[]` with `@tag` mentions on `estimate_generate_video` |
 

@@ -4,6 +4,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import {
   CLAUDE_CODE_MARKETPLACE,
+  CLAUDE_CODE_MARKETPLACE_NAME,
   CLAUDE_CODE_PLUGIN,
   LOOVIE_MCP_URL,
   SERVER_KEY,
@@ -11,7 +12,7 @@ import {
 import type { ClientPlugin, DoctorResult, InstallResult } from "../types.js";
 import { readJsonIfExists, type JsonObject } from "../util/jsonFile.js";
 
-function which(bin: string): Promise<string | null> {
+function whichImpl(bin: string): Promise<string | null> {
   return new Promise((resolve) => {
     const cmd = process.platform === "win32" ? "where" : "which";
     const child = spawn(cmd, [bin], { stdio: ["ignore", "pipe", "ignore"] });
@@ -22,7 +23,7 @@ function which(bin: string): Promise<string | null> {
   });
 }
 
-function run(cmd: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
+function runImpl(cmd: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
     const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
@@ -33,6 +34,19 @@ function run(cmd: string, args: string[]): Promise<{ code: number; stdout: strin
     child.on("error", (e) => resolve({ code: 1, stdout, stderr: String(e) }));
   });
 }
+
+/**
+ * Process-spawning seam. Swappable in tests so the install/update branch logic
+ * (which is the trickiest part of this client) can be exercised without
+ * actually shelling out to `claude`.
+ */
+export const runtime: {
+  which: (bin: string) => Promise<string | null>;
+  run: (cmd: string, args: string[]) => Promise<{ code: number; stdout: string; stderr: string }>;
+} = { which: whichImpl, run: runImpl };
+
+const which = (bin: string) => runtime.which(bin);
+const run = (cmd: string, args: string[]) => runtime.run(cmd, args);
 
 export const claudeCode: ClientPlugin = {
   id: "claude-code",
@@ -64,6 +78,33 @@ export const claudeCode: ClientPlugin = {
       return { kind: "error", message: `claude plugin install failed: ${r2.stderr || r2.stdout}` };
     }
     return { kind: "installed", detail: "Claude Code: installed via marketplace" };
+  },
+  async update(ctx): Promise<InstallResult> {
+    const bin = await which("claude");
+    if (!bin) {
+      return {
+        kind: "manual",
+        instructions:
+          "Claude Code CLI not found. To update manually, run:\n" +
+          `    claude plugin marketplace update ${CLAUDE_CODE_MARKETPLACE_NAME}\n` +
+          `    claude plugin update ${CLAUDE_CODE_PLUGIN}`,
+      };
+    }
+    // Refresh the marketplace cache so the newest plugin (skills, commands,
+    // MCP block) is visible, then update the installed plugin. Both fall back
+    // to a clean install on any failure rather than matching error text: the
+    // install path is itself idempotent (`marketplace add` and `plugin install`
+    // both tolerate an already-present state), so it safely covers the
+    // never-added and never-installed cases without depending on CLI wording.
+    const r1 = await run("claude", ["plugin", "marketplace", "update", CLAUDE_CODE_MARKETPLACE_NAME]);
+    if (r1.code !== 0) {
+      return claudeCode.install(ctx);
+    }
+    const r2 = await run("claude", ["plugin", "update", CLAUDE_CODE_PLUGIN]);
+    if (r2.code !== 0) {
+      return claudeCode.install(ctx);
+    }
+    return { kind: "installed", detail: "Claude Code: updated to latest (restart Claude Code to apply)" };
   },
   async uninstall(): Promise<InstallResult> {
     const bin = await which("claude");
