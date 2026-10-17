@@ -95,8 +95,8 @@ tags:
   - name: Music
     description: >-
       Text-to-music generation (vocals + accompaniment, or instrumental).
-      Required only if your /loovie/capabilities advertises a `music`
-      section. The reference workflow is YuE2; the contract is model-agnostic.
+      Required only if your /loovie/capabilities advertises a `music` section.
+      The reference workflow is YuE2; the contract is model-agnostic.
   - name: Upload
     description: Operator-side helper for staging input references.
 components:
@@ -304,11 +304,11 @@ components:
     MusicCapabilities:
       type: object
       description: >-
-        Text-to-music generation capabilities. Omit this object entirely if
-        the server has no music workflows. The reference model is YuE2
-        (vocals + accompaniment from a style prompt and lyric sheet), but
-        the contract is model-agnostic: any backend that renders the
-        requested duration of audio is valid.
+        Text-to-music generation capabilities. Omit this object entirely if the
+        server has no music workflows. The reference model is YuE2 (vocals +
+        accompaniment from a style prompt and lyric sheet), but the contract is
+        model-agnostic: any backend that renders the requested duration of audio
+        is valid.
       required:
         - capabilities
         - maxDurationSeconds
@@ -324,9 +324,9 @@ components:
           type: integer
           minimum: 1
           description: >-
-            Longest single render the server accepts, in whole seconds
-            (YuE2 reference: full songs up to ~240s). The app clamps the
-            requested duration to this value.
+            Longest single render the server accepts, in whole seconds (YuE2
+            reference: full songs up to ~240s). The app clamps the requested
+            duration to this value.
         supportsVocals:
           type: boolean
           description: Whether the server can render sung vocals from lyrics.
@@ -661,20 +661,20 @@ components:
           type: string
           maxLength: 2000
           description: >-
-            Style prompt (genre, instruments, vocal character, tempo). The
-            YuE2 reference treats this as the `style` field.
+            Style prompt (genre, instruments, vocal character, tempo). The YuE2
+            reference treats this as the `style` field.
         mode:
           $ref: '#/components/schemas/MusicMode'
         lyrics:
           type: string
           description: >-
-            Lyric sheet with section tags (e.g. [Verse], [Chorus]).
-            Omit or empty for instrumental renders.
+            Lyric sheet with section tags (e.g. [Verse], [Chorus]). Omit or
+            empty for instrumental renders.
         instrumental:
           type: boolean
           description: >-
-            Render instrumental music with no vocals. The YuE2 reference
-            moves the Vocal notes into the Ins voice in the score.
+            Render instrumental music with no vocals. The YuE2 reference moves
+            the Vocal notes into the Ins voice in the score.
         duration:
           type: integer
           minimum: 1
@@ -1064,8 +1064,8 @@ paths:
         '400':
           description: >-
             Malformed request (missing prompt, invalid enum, prompt >
-            promptCharLimit, duration > maxDurationSeconds, unknown
-            workflow, etc.).
+            promptCharLimit, duration > maxDurationSeconds, unknown workflow,
+            etc.).
           content:
             application/json:
               schema:
@@ -1087,9 +1087,7 @@ paths:
       tags:
         - Music
       summary: Poll a music task
-      description: >-
-        Required only when `/loovie/capabilities` advertises a `music`
-        section.
+      description: Required only when `/loovie/capabilities` advertises a `music` section.
       operationId: getMusicStatus
       parameters:
         - name: taskId

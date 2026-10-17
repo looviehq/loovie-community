@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "loovie-mcp",
   "displayName": "Loovie",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Create AI characters, generate images and videos, and edit Loovie projects from Claude Code.",
   "author": {
     "name": "Loovie",
@@ -11,7 +11,14 @@
   "homepage": "https://loovie.app",
   "repository": "https://github.com/looviehq/loovie-community",
   "license": "Apache-2.0",
-  "keywords": ["loovie", "video", "ai", "characters", "mcp", "filmmaking"],
+  "keywords": [
+    "loovie",
+    "video",
+    "ai",
+    "characters",
+    "mcp",
+    "filmmaking"
+  ],
   "mcpServers": {
     "loovie": {
       "type": "http",
