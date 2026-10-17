@@ -50,3 +50,7 @@ github\.com/looviehq/loovie-community/compare/v
 
 # - Smithery badge image endpoint returns 500 intermittently; the server page it links to is checked separately.
 ^https://smithery\.ai/badge/
+
+# - release-please changelogs link to compare/<prev>...<next> tags that only
+#   exist after the release PR is merged, so they 404 while the PR is open.
+github\.com/looviehq/loovie-community/compare/
