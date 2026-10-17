@@ -1,0 +1,6 @@
+# Probot DCO app config.
+# Org members skip the sign-off requirement. release-please opens its release
+# PR with a PAT, so its commit is authored by a member and carries no
+# Signed-off-by line. External contributors still need to sign off.
+require:
+  members: false
