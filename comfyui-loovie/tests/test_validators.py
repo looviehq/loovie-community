@@ -10,10 +10,13 @@ from __future__ import annotations
 import pytest
 
 from comfyui_loovie.validators import (
+    MAX_AUDIO_BYTES,
     MAX_IMAGE_BYTES,
     MAX_VIDEO_BYTES,
+    sniff_audio_mime,
     sniff_image_mime,
     sniff_video_mime,
+    validate_audio_bytes,
     validate_image_bytes,
     validate_video_bytes,
 )
@@ -137,3 +140,50 @@ def test_size_caps_are_in_a_sensible_range() -> None:
     assert MAX_IMAGE_BYTES > 1 * 1024 * 1024  # at least 1 MiB
     assert MAX_VIDEO_BYTES > 16 * 1024 * 1024  # at least 16 MiB
     assert MAX_VIDEO_BYTES > MAX_IMAGE_BYTES
+
+
+# ---------------------------------------------------------------------
+# sniff_audio_mime / validate_audio_bytes
+# ---------------------------------------------------------------------
+
+
+def test_flac_is_recognised(flac_bytes: bytes) -> None:
+    assert sniff_audio_mime(flac_bytes) == "audio/flac"
+
+
+def test_wav_is_recognised(wav_bytes: bytes) -> None:
+    assert sniff_audio_mime(wav_bytes) == "audio/wav"
+
+
+def test_mp3_id3_is_recognised(mp3_bytes: bytes) -> None:
+    assert sniff_audio_mime(mp3_bytes) == "audio/mpeg"
+
+
+def test_riff_without_wave_marker_is_not_audio() -> None:
+    """A RIFF container that isn't WAVE (e.g. WebP/AVI) is not sniffed as audio."""
+    not_wav = b"RIFF" + b"\x00\x00\x00\x00" + b"WEBP" + b"\x00" * 16
+    assert sniff_audio_mime(not_wav) is None
+
+
+def test_image_bytes_are_not_misidentified_as_audio(png_bytes: bytes) -> None:
+    assert sniff_audio_mime(png_bytes) is None
+
+
+def test_validate_audio_returns_mime(flac_bytes: bytes) -> None:
+    assert validate_audio_bytes(flac_bytes) == "audio/flac"
+
+
+def test_validate_audio_rejects_empty() -> None:
+    with pytest.raises(ValueError, match="empty"):
+        validate_audio_bytes(b"")
+
+
+def test_validate_audio_rejects_oversize(flac_bytes: bytes) -> None:
+    huge = flac_bytes + b"\x00" * (MAX_AUDIO_BYTES + 1)
+    with pytest.raises(ValueError, match="too large"):
+        validate_audio_bytes(huge)
+
+
+def test_validate_audio_rejects_unknown_format(random_bytes: bytes) -> None:
+    with pytest.raises(ValueError, match="does not match"):
+        validate_audio_bytes(random_bytes)

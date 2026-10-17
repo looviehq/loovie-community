@@ -97,10 +97,13 @@ jobs:
               bad=1
               continue
             fi
-            if [ "$kind" != "image" ] && [ "$kind" != "video" ]; then
-              echo "Bad kind: $kind (must be image or video)"
-              bad=1
-            fi
+            # Keep this set in lockstep with the `case "${LOOVIE_KIND}"` in
+            # docker/download_models.sh: a kind the downloader accepts but this
+            # check rejects fails CI on an otherwise valid manifest.
+            case "$kind" in
+              image|video|music) ;;
+              *) echo "Bad kind: $kind (must be image, video, or music)"; bad=1 ;;
+            esac
           done < docker/models.manifest
           if [ "$bad" = "1" ]; then exit 1; fi
           echo "models.manifest OK"

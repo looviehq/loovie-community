@@ -231,6 +231,10 @@ def _finalize_from_history(
         url = _extract_output_url(outputs, output_base_url, "images")
         if url is None:
             url = _extract_output_url(outputs, output_base_url, "videos")
+        if url is None:
+            # YuE2 / music workflows save through `SaveAudioAdvanced`,
+            # which ComfyUI reports under the `audio` output key.
+            url = _extract_output_url(outputs, output_base_url, "audio")
         if url:
             store.update_task(
                 task_id,
@@ -246,7 +250,7 @@ def _finalize_from_history(
         _mark_failed(
             task_id,
             "OUTPUT_MISSING",
-            "Workflow completed but no image or video output was produced",
+            "Workflow completed but no image, video, or audio output was produced",
         )
         return
 

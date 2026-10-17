@@ -29,3 +29,6 @@ video	Lightricks/LTX-2.3-fp8	ltx-2.3-22b-dev-fp8.safetensors	ltx-2.3-22b-dev-fp8
 video	Lightricks/LTX-2.3	ltx-2.3-22b-distilled-lora-384.safetensors	ltx-2.3-22b-distilled-lora-384.safetensors	loras
 video	Lightricks/LTX-2.3	ltx-2.3-spatial-upscaler-x2-1.1.safetensors	ltx-2.3-spatial-upscaler-x2-1.1.safetensors	latent_upscale_models
 video	2kpr/Real-ESRGAN	RealESRGAN_x2plus.pth	RealESRGAN_x2plus.pth	upscale_models
+
+# --- Music: YuE2 (~3.7 GB) ---------------------------------------------------
+music	Comfy-Org/YuE2	checkpoints/yue2_3b_int8_convrot.safetensors	yue2_3b_int8_convrot.safetensors	checkpoints

@@ -27,6 +27,11 @@ _IMAGE_RESOLUTION: list[str] = ["720p", "1K", "2K"]
 _IMAGE_ASPECT_RATIOS: list[str] = ["auto", "1:1", "16:9", "9:16", "4:3"]
 _IMAGE_REFERENCE_COUNT = 4
 
+# YuE2 reference: full songs up to ~240s; style prompt cap mirrors the
+# app-side 2000-char music prompt bound.
+_MUSIC_MAX_DURATION_SECONDS = 240
+_MUSIC_PROMPT_CHAR_LIMIT = 2000
+
 # Must match the hard cap enforced by the create handlers.
 _PROMPT_CHAR_LIMIT = 3000
 
@@ -69,6 +74,11 @@ def _video_section(workflow_names: list[str]) -> dict[str, Any] | None:
 _IMAGE_WORKFLOW_NAMES = frozenset({"flux-2-klein"})
 
 
+# Workflow names that count as "music" capable. Extend this set if you
+# register additional music workflows (e.g. a higher-quality YuE2 variant).
+_MUSIC_WORKFLOW_NAMES = frozenset({"yue2-t2m-fast"})
+
+
 def _image_section(workflow_names: list[str]) -> dict[str, Any] | None:
     """Build the `images` section from installed image workflows."""
     if not any(name in _IMAGE_WORKFLOW_NAMES for name in workflow_names):
@@ -80,6 +90,24 @@ def _image_section(workflow_names: list[str]) -> dict[str, Any] | None:
         "variants": ["fast", "pro"],
         "aspectRatios": _IMAGE_ASPECT_RATIOS,
         "promptCharLimit": _PROMPT_CHAR_LIMIT,
+    }
+
+
+def _music_section(workflow_names: list[str]) -> dict[str, Any] | None:
+    """Build the `music` section from installed music workflows.
+
+    The YuE2 reference renders vocals from a lyric sheet and can also
+    render instrumental, so both flags are advertised whenever any music
+    workflow is registered.
+    """
+    if not any(name in _MUSIC_WORKFLOW_NAMES for name in workflow_names):
+        return None
+    return {
+        "capabilities": ["t2m"],
+        "maxDurationSeconds": _MUSIC_MAX_DURATION_SECONDS,
+        "supportsVocals": True,
+        "supportsInstrumental": True,
+        "promptCharLimit": _MUSIC_PROMPT_CHAR_LIMIT,
     }
 
 
@@ -104,4 +132,7 @@ def build_capabilities_manifest(workflow_names: list[str], version: str) -> dict
     videos = _video_section(workflow_names)
     if videos is not None:
         manifest["ss_videos"] = videos
+    music = _music_section(workflow_names)
+    if music is not None:
+        manifest["music"] = music
     return manifest

@@ -56,6 +56,12 @@ _MP4_MINIMAL = bytes.fromhex(
     "0000001c66747970697336" + "6d" + "00000200" + "697336" + "6d" + "6176633100000008"
 )
 
+# 10 ms of silence, 8-bit mono 8 kHz. A real music render is far larger; this
+# only has to satisfy the contract's magic-byte check and be decodable.
+_WAV_MINIMAL = base64.b64decode(
+    "UklGRnQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA=="
+)
+
 # --- Auth --------------------------------------------------------------
 
 
@@ -107,6 +113,13 @@ CAPABILITIES: dict[str, Any] = {
         "supportsAudio": True,
         "promptCharLimit": PROMPT_CHAR_LIMIT,
     },
+    "music": {
+        "capabilities": ["t2m"],
+        "maxDurationSeconds": 240,
+        "supportsVocals": True,
+        "supportsInstrumental": True,
+        "promptCharLimit": 2000,
+    },
 }
 
 
@@ -115,7 +128,7 @@ CAPABILITIES: dict[str, Any] = {
 
 class _Task(BaseModel):
     task_id: str
-    kind: Literal["image", "video"]
+    kind: Literal["image", "video", "music"]
     state: Literal["pending", "processing", "success", "failed"] = "pending"
     created_at: float
     elapsed_seconds: float = 0.0
@@ -152,7 +165,11 @@ def _advance(task: _Task) -> None:
         task.result_url = (
             "data:image/png;base64," + base64.b64encode(_PNG_1X1_TRANSPARENT).decode("ascii")
             if task.kind == "image"
-            else "data:video/mp4;base64," + base64.b64encode(_MP4_MINIMAL).decode("ascii")
+            else (
+                "data:audio/wav;base64," + base64.b64encode(_WAV_MINIMAL).decode("ascii")
+                if task.kind == "music"
+                else "data:video/mp4;base64," + base64.b64encode(_MP4_MINIMAL).decode("ascii")
+            )
         )
 
 
@@ -298,6 +315,35 @@ async def create_video(body: VideoCreateRequest) -> JSONResponse:
 async def get_video_status(taskId: str) -> JSONResponse:
     task = TASKS.get(taskId)
     if not task or task.kind != "video":
+        return JSONResponse({"code": 404, "msg": "Task not found"}, status_code=404)
+    _advance(task)
+    return JSONResponse({"code": 200, "data": _task_to_payload(task)})
+
+
+# --- Music ------------------------------------------------------------
+
+
+class MusicCreateRequest(BaseModel):
+    prompt: str = Field(..., max_length=2000)
+    mode: Literal["t2m"] | None = None
+    lyrics: str | None = None
+    instrumental: bool | None = None
+    duration: int | None = Field(default=None, ge=1)
+    seed: int = -1
+    workflow: str | None = None
+
+
+@app.post("/music/create", tags=["Music"], dependencies=[Depends(require_bearer)])
+async def create_music(body: MusicCreateRequest) -> JSONResponse:
+    task_id = _make_task_id()
+    TASKS[task_id] = _Task(task_id=task_id, kind="music", created_at=time.monotonic())
+    return JSONResponse({"code": 200, "data": {"taskId": task_id}})
+
+
+@app.get("/music/status", tags=["Music"], dependencies=[Depends(require_bearer)])
+async def get_music_status(taskId: str) -> JSONResponse:
+    task = TASKS.get(taskId)
+    if not task or task.kind != "music":
         return JSONResponse({"code": 404, "msg": "Task not found"}, status_code=404)
     _advance(task)
     return JSONResponse({"code": 200, "data": _task_to_payload(task)})

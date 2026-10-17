@@ -38,6 +38,14 @@ logger = logging.getLogger("comfyui_loovie.routes")
 
 VERSION = "0.1.0"
 
+# Music prompt cap, mirroring the app-side music DTO bound. Distinct from the
+# 3000-char image/video cap so a long style prompt is rejected at the contract
+# boundary rather than silently trimmed.
+MUSIC_PROMPT_CHAR_LIMIT = 2000
+
+# Default text-to-music workflow when the request carries no `workflow`.
+_DEFAULT_MUSIC_WORKFLOW = "yue2-t2m-fast"
+
 
 # --- auth -------------------------------------------------------------------
 
@@ -120,13 +128,18 @@ def _redact(url: str) -> str:
 
 
 def _log_safe_body(body: dict[str, Any]) -> dict[str, Any]:
-    """Return a copy of `body` with prompts truncated and URLs redacted."""
+    """Return a copy of `body` with prompts/lyrics truncated and URLs redacted."""
     out = dict(body)
     prompt = out.get("prompt")
     if isinstance(prompt, str):
         out["prompt_length"] = len(prompt)
         if len(prompt) > 200:
             out["prompt"] = prompt[:200] + "..."
+    # A lyric sheet is user-authored creative text; log its length only.
+    lyrics = out.get("lyrics")
+    if isinstance(lyrics, str):
+        out["lyrics_length"] = len(lyrics)
+        out["lyrics"] = f"<{len(lyrics)} chars>"
     if isinstance(out.get("image_urls"), list):
         out["image_urls"] = [_redact(u) for u in out["image_urls"]]
     for key in ("mask_url", "start_frame_url", "end_frame_url"):
@@ -141,7 +154,6 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
     image_urls = list(body.get("image_urls") or [])
     mask_url = (body.get("mask_url") or "").strip()
     loras = body.get("loras") or []
-
     # Video request fields are normalised into `image_urls` for the
     # `LoovieImageInput` node so a single graph can serve i2v and fl2v.
     start_frame = (body.get("start_frame_url") or "").strip()
@@ -218,6 +230,42 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
             inputs["y"] = max(0, (gen_h - tgt_h) // 2)
 
 
+def _inject_music_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
+    """Inject music-request values into `LoovieMusicInput` nodes.
+
+    The YuE2 reference reads a style prompt and an optional lyric sheet.
+    `instrumental` moves the Vocal notes into the Ins voice in the score;
+    we pass it through so the graph decides how to realise it.
+    """
+    prompt = str(body.get("prompt", "") or "")
+    lyrics = str(body.get("lyrics", "") or "")
+    instrumental = bool(body.get("instrumental", False))
+
+    for node in workflow.values():
+        if node.get("class_type", "") != "LoovieMusicInput":
+            continue
+        inputs = node.setdefault("inputs", {})
+        inputs["prompt"] = prompt
+        inputs["lyrics"] = lyrics
+        inputs["instrumental"] = instrumental
+        inputs["seed"] = int(body.get("seed", -1))
+        duration = body.get("duration")
+        if duration is not None:
+            inputs["duration"] = float(duration)
+
+
+def _resolve_music_workflow_name(body: dict[str, Any]) -> str:
+    """Pick the music workflow id to run.
+
+    Honours an explicit `workflow` field, otherwise uses the default
+    `t2m` (text-to-music) workflow registered in `config.yaml`.
+    """
+    explicit = str(body.get("workflow", "") or "").strip()
+    if explicit:
+        return explicit
+    return "yue2-t2m-fast"
+
+
 def _resolve_workflow_name(body: dict[str, Any], default: str) -> str:
     """Pick the workflow id to run based on the request body.
 
@@ -243,18 +291,30 @@ async def _setup_and_submit(
     request: web.Request,
     body: dict[str, Any],
     default_workflow: str,
+    prompt_char_limit: int = 3000,
+    resolve_name: Any = None,
+    inject: Any = None,
 ) -> tuple[Any, web.Response | None]:
-    """Validate the body, create the task, submit to ComfyUI, start monitor."""
+    """Validate the body, create the task, submit to ComfyUI, start monitor.
+
+    `resolve_name` and `inject` default to the image/video mapping. The
+    music path passes its own resolver + `_inject_music_inputs` so the
+    prompt cap can differ from the video cap without a second copy of the
+    whole submit flow.
+    """
     prompt = (body.get("prompt") or "").strip()
     if not prompt:
         return None, web.json_response({"code": 400, "msg": "prompt is required"}, status=400)
-    if len(prompt) > 3000:
+    if len(prompt) > prompt_char_limit:
         return None, web.json_response(
-            {"code": 400, "msg": "prompt exceeds 3000 characters"},
+            {"code": 400, "msg": f"prompt exceeds {prompt_char_limit} characters"},
             status=400,
         )
 
-    workflow_name = _resolve_workflow_name(body, default_workflow)
+    resolve_name = resolve_name or _resolve_workflow_name
+    inject = inject or _inject_inputs
+
+    workflow_name = resolve_name(body, default_workflow)
     if not workflow_name:
         return None, web.json_response({"code": 400, "msg": "workflow is required"}, status=400)
 
@@ -278,7 +338,7 @@ async def _setup_and_submit(
 
     try:
         workflow_json = wf_manager.load_workflow(workflow_name)
-        _inject_inputs(workflow_json, body)
+        inject(workflow_json, body)
         comfy_prompt_id = await wf_manager.submit_workflow(workflow_json)
     except FileNotFoundError as exc:
         store.update_task(
@@ -333,6 +393,9 @@ async def _create_task_handler(
     request: web.Request,
     default_workflow: str,
     body: dict[str, Any] | None = None,
+    prompt_char_limit: int = 3000,
+    resolve_name: Any = None,
+    inject: Any = None,
 ) -> web.Response:
     auth_error = _check_auth(request)
     if auth_error:
@@ -350,7 +413,14 @@ async def _create_task_handler(
         json.dumps(_log_safe_body(body), ensure_ascii=False),
     )
 
-    task, error = await _setup_and_submit(request, body, default_workflow)
+    task, error = await _setup_and_submit(
+        request,
+        body,
+        default_workflow,
+        prompt_char_limit=prompt_char_limit,
+        resolve_name=resolve_name,
+        inject=inject,
+    )
     if error is not None:
         return error
 
@@ -442,6 +512,28 @@ async def create_video(request: web.Request) -> web.Response:
 
 @PromptServer.instance.routes.get("/videos/status")
 async def get_video_status(request: web.Request) -> web.Response:
+    return await _task_status_handler(request)
+
+
+@PromptServer.instance.routes.post("/music/create")
+async def create_music(request: web.Request) -> web.Response:
+    """Start a text-to-music generation task.
+
+    Required only when `/loovie/capabilities` advertises a `music` section.
+    Accepts a style prompt plus an optional lyric sheet; returns a
+    `taskId` the caller polls via `/music/status`.
+    """
+    return await _create_task_handler(
+        request,
+        default_workflow=_DEFAULT_MUSIC_WORKFLOW,
+        prompt_char_limit=MUSIC_PROMPT_CHAR_LIMIT,
+        resolve_name=_resolve_music_workflow_name,
+        inject=_inject_music_inputs,
+    )
+
+
+@PromptServer.instance.routes.get("/music/status")
+async def get_music_status(request: web.Request) -> web.Response:
     return await _task_status_handler(request)
 
 
@@ -544,6 +636,7 @@ logger.info(
     "comfyui-loovie routes registered: "
     "POST /images/create, GET /images/status, "
     "POST /videos/create, GET /videos/status, "
+    "POST /music/create, GET /music/status, "
     "POST /loovie/upload, "
     "GET /loovie/health, GET /loovie/capabilities"
 )

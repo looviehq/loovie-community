@@ -2,7 +2,7 @@
 
 This page lists every model the **reference implementation** ([`comfyui-loovie/`](../comfyui-loovie/)) ships with, along with its upstream source and licence. Loovie does **not** relicense these models. **You are responsible for accepting each upstream licence before downloading and for honouring its terms when using the model.**
 
-> **You are not required to use these models.** They are the ones we tested and currently ship workflows for. BYO is model-agnostic at the contract level: as long as your workflow's input shape matches what `/images/create` or `/videos/create` sends, and its output shape matches what `/{images,videos}/status` returns, you can run **any** image or video model you have rights to run. Examples people have used or asked about: WAN 2.x, HunyuanVideo, CogVideoX, Mochi, AnimateDiff variants for video; SDXL, SD3.5, Stable Cascade, Lumina, HiDream for image. We don't promise to test all of them, but the contract doesn't care which one you use.
+> **You are not required to use these models.** They are the ones we tested and currently ship workflows for. BYO is model-agnostic at the contract level: as long as your workflow's input shape matches what `/images/create`, `/videos/create`, or `/music/create` sends, and its output shape matches what `/{images,videos,music}/status` returns, you can run **any** image, video, or music model you have rights to run. Examples people have used or asked about: WAN 2.x, HunyuanVideo, CogVideoX, Mochi, AnimateDiff variants for video; SDXL, SD3.5, Stable Cascade, Lumina, HiDream for image; ACE-Step, YuE2, MusicGen for music. We don't promise to test all of them, but the contract doesn't care which one you use.
 
 The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](../docker/models.manifest) and pulls the files from the HuggingFace repos below. Some of these are **gated**, meaning HuggingFace requires you to accept the licence on the web UI while logged in before the download will succeed. See [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
 
@@ -58,6 +58,27 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 - **Licence:** BSD-3-Clause (academic-friendly, broad commercial reuse allowed).
 - **Approx size:** ~64 MB.
 
+## Music generation
+
+### YuE2 3B
+
+- **Purpose:** text-to-music for the `t2m` capability. Renders a full song
+  (vocals + accompaniment) from a style prompt and optional lyric sheet, or
+  instrumental, up to `maxDurationSeconds`.
+- **HuggingFace repo:** [`Comfy-Org/YuE2`](https://huggingface.co/Comfy-Org/YuE2)
+  (`checkpoints/yue2_3b_int8_convrot.safetensors` path in the manifest).
+- **Upstream:** [Multimodal Art Projection / YuE](https://github.com/multimodal-art-projection/YuE).
+- **Licence:** **CC BY-NC 4.0** with an additional individual-creator
+  permission. Read the [MODEL_LICENSE](https://github.com/multimodal-art-projection/YuE/blob/main/MODEL_LICENSE).
+  **This model is a deliberate exception to the "free for commercial use" bar
+  below.** The individual-creator permission lets a person generating on their
+  own machine use the model and monetise their own outputs; it does **not**
+  grant commercial use by a company. This is why YuE2 ships as a **reference
+  workflow for the user's own BYO server** and is not served from
+  Loovie-operated infrastructure.
+- **Files:** `yue2_3b_int8_convrot.safetensors`.
+- **Approx size:** ~3.7 GB.
+
 ## Disk budget
 
 These are **downloaded sizes**. Add roughly 5 to 10 GB of headroom for ComfyUI's cache, intermediate decoded outputs, swap files, and OS overhead. Plan a real disk budget that's higher than the downloaded total, especially on cloud-rented disks where you can't grow the volume on demand.
@@ -66,9 +87,10 @@ These are **downloaded sizes**. Add roughly 5 to 10 GB of headroom for ComfyUI's
 |---|---|---|
 | `images` (FLUX.2 Klein bundle) | ~24 GB | 30 GB |
 | `videos` (LTX-2.3 main + LoRA + Gemma encoder + upscaler + ESRGAN) | ~70 GB | 80 GB |
-| `all` (both of the above) | ~99 GB | 100 GB |
+| `music` (YuE2 3B int8) | ~4 GB | 8 GB |
+| `all` (all of the above) | ~103 GB | 110 GB |
 
-Per-file approximate sizes used above: FLUX.2 Klein bundle ~24 GB (main + VAE + Qwen encoder), LTX-2.3 22B main fp8 ~22 GB, LTX-2.3 22B distilled LoRA ~35 GB, Gemma-3 12B fp8 ~12 GB, LTX-2.3 spatial upscaler ~1 GB, RealESRGAN ~64 MB. These are rough figures from Comfy-Org's published builds; the exact bytes on disk depend on which point release of each repo you fetch. The truthful source of truth is what HuggingFace serves to your token; treat the numbers above as planning aids, not contracts.
+Per-file approximate sizes used above: FLUX.2 Klein bundle ~24 GB (main + VAE + Qwen encoder), LTX-2.3 22B main fp8 ~22 GB, LTX-2.3 22B distilled LoRA ~35 GB, Gemma-3 12B fp8 ~12 GB, LTX-2.3 spatial upscaler ~1 GB, RealESRGAN ~64 MB, YuE2 3B int8 ~3.7 GB. These are rough figures from Comfy-Org's published builds; the exact bytes on disk depend on which point release of each repo you fetch. The truthful source of truth is what HuggingFace serves to your token; treat the numbers above as planning aids, not contracts.
 
 ## Adding a new model in a PR
 
@@ -77,7 +99,7 @@ If your workflow contribution ([`80-adding-a-workflow.md`](80-adding-a-workflow.
 1. **Add a row to this file** with: purpose, HuggingFace repo, upstream link, licence name, gated yes/no, approx size.
 2. **Add the manifest entry** in [`docker/models.manifest`](../docker/models.manifest) so the downloader picks it up.
 3. **Update the disk budget table above.**
-4. **Read the upstream licence yourself** and confirm it is OK for inclusion. The bar is roughly: free for commercial use, no "research only" or "non-commercial" clauses, HuggingFace gating is OK as long as the model is publicly accessible after acceptance.
+4. **Read the upstream licence yourself** and confirm it is OK for inclusion. The bar is roughly: free for commercial use, no "research only" or "non-commercial" clauses, HuggingFace gating is OK as long as the model is publicly accessible after acceptance. YuE2 is the one sanctioned exception to that bar: it ships as a BYO reference workflow only, because the individual-creator permission does not authorise company-operated serving.
 5. **Open a [Workflow contribution](https://github.com/looviehq/loovie-community/issues/new?template=workflow_contribution.yml)** so a maintainer can sign off on the licence interpretation before you do the engineering.
 
 ## Common questions

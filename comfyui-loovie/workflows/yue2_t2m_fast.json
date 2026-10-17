@@ -1,0 +1,107 @@
+{
+  "1": {
+    "inputs": {
+      "ckpt_name": "yue2_3b_int8_convrot.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": { "title": "Load YuE2 3B" }
+  },
+  "2": {
+    "inputs": {
+      "prompt": "",
+      "lyrics": "",
+      "instrumental": false,
+      "seed": -1,
+      "duration": 120
+    },
+    "class_type": "LoovieMusicInput",
+    "_meta": { "title": "Loovie Music Input" }
+  },
+  "3": {
+    "inputs": {
+      "value": ""
+    },
+    "class_type": "PrimitiveString",
+    "_meta": { "title": "Text (Empty ABC)" }
+  },
+  "4": {
+    "inputs": {
+      "clip": ["1", 1],
+      "style": ["2", 0],
+      "lyrics": ["2", 1],
+      "mode": ["2", 5],
+      "seed": ["2", 3]
+    },
+    "class_type": "YuE2GenerateABC",
+    "_meta": { "title": "YuE2 ABC Plan" }
+  },
+  "5": {
+    "inputs": {
+      "on_false": ["3", 0],
+      "on_true": ["4", 0],
+      "switch": ["2", 2]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": { "title": "ABC Planning?" }
+  },
+  "6": {
+    "inputs": {
+      "seconds": ["7", 1]
+    },
+    "class_type": "EmptyYuE2LatentAudio",
+    "_meta": { "title": "Empty YuE2 Latent (seconds)" }
+  },
+  "7": {
+    "inputs": {
+      "clip": ["1", 1],
+      "style": ["2", 0],
+      "lyrics": ["2", 1],
+      "abc": ["5", 0],
+      "seed": ["2", 3],
+      "mode": ["2", 5],
+      "max_duration": ["2", 4]
+    },
+    "class_type": "YuE2GenerateMusic",
+    "_meta": { "title": "YuE2 Generate Music" }
+  },
+  "8": {
+    "inputs": {
+      "conditioning": ["7", 0]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": { "title": "Zero Out Negative" }
+  },
+  "9": {
+    "inputs": {
+      "model": ["1", 0],
+      "positive": ["7", 0],
+      "negative": ["8", 0],
+      "latent_image": ["6", 0],
+      "seed": ["2", 3],
+      "steps": 32,
+      "cfg": 1,
+      "sampler_name": "dpm_2",
+      "scheduler": "sgm_uniform",
+      "denoise": 1
+    },
+    "class_type": "KSampler",
+    "_meta": { "title": "Sample YuE2 Latent" }
+  },
+  "10": {
+    "inputs": {
+      "samples": ["9", 0],
+      "vae": ["1", 2]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": { "title": "VAE Decode Audio" }
+  },
+  "11": {
+    "inputs": {
+      "audio": ["10", 0],
+      "filename_prefix": "loovie",
+      "format": "flac"
+    },
+    "class_type": "SaveAudioAdvanced",
+    "_meta": { "title": "Save Audio" }
+  }
+}

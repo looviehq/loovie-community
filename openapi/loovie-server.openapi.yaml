@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: Loovie BYO Server Contract
-  version: 0.2.3-beta.1
+  version: 0.3.0-beta.1
   summary: >-
     The HTTP contract a third-party server implements to be drivable by the
     Loovie mobile app.
   description: |
     The HTTP API a "Bring Your Own" server must expose so the Loovie app
-    can drive image and single-shot video generation on it. The Loovie
+    can drive image, single-shot video, and music generation on it. The Loovie
     backend NEVER calls this server; only the Loovie mobile app (on the
     user's device) does. The app stores the server URL and bearer token
     on the user's device only - they are needed there so the app can
@@ -34,6 +34,8 @@ info:
     `/images/create` + `/images/status` are required only if your
     `/loovie/capabilities` advertises an `images` section. `/videos/create`
     + `/videos/status` are required only if it advertises `ss_videos`.
+    `/music/create` + `/music/status` are required only if it advertises
+    `music`.
     Servers MAY omit endpoints that match a section they don't advertise;
     the app will not call them. The capabilities manifest is the source
     of truth for what your server can do; this spec describes the maximum
@@ -67,6 +69,7 @@ externalDocs:
 x-loovie-conditional-endpoints:
   images: Required only when /loovie/capabilities advertises an `images` section.
   ss_videos: Required only when /loovie/capabilities advertises an `ss_videos` section.
+  music: Required only when /loovie/capabilities advertises a `music` section.
 servers:
   - url: '{base}'
     description: The base URL of your BYO server.
@@ -89,6 +92,11 @@ tags:
     description: >-
       Single-shot video generation. Required only if your /loovie/capabilities
       advertises an `ss_videos` section.
+  - name: Music
+    description: >-
+      Text-to-music generation (vocals + accompaniment, or instrumental).
+      Required only if your /loovie/capabilities advertises a `music`
+      section. The reference workflow is YuE2; the contract is model-agnostic.
   - name: Upload
     description: Operator-side helper for staging input references.
 components:
@@ -187,6 +195,8 @@ components:
           $ref: '#/components/schemas/ImageCapabilities'
         ss_videos:
           $ref: '#/components/schemas/VideoCapabilities'
+        music:
+          $ref: '#/components/schemas/MusicCapabilities'
     ImageCapabilities:
       type: object
       description: >-
@@ -286,6 +296,47 @@ components:
           type: integer
           minimum: 1
           default: 3000
+    MusicMode:
+      type: string
+      enum:
+        - t2m
+      description: '`t2m` = text-to-music (style prompt + optional lyrics).'
+    MusicCapabilities:
+      type: object
+      description: >-
+        Text-to-music generation capabilities. Omit this object entirely if
+        the server has no music workflows. The reference model is YuE2
+        (vocals + accompaniment from a style prompt and lyric sheet), but
+        the contract is model-agnostic: any backend that renders the
+        requested duration of audio is valid.
+      required:
+        - capabilities
+        - maxDurationSeconds
+        - supportsVocals
+        - supportsInstrumental
+      properties:
+        capabilities:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/MusicMode'
+        maxDurationSeconds:
+          type: integer
+          minimum: 1
+          description: >-
+            Longest single render the server accepts, in whole seconds
+            (YuE2 reference: full songs up to ~240s). The app clamps the
+            requested duration to this value.
+        supportsVocals:
+          type: boolean
+          description: Whether the server can render sung vocals from lyrics.
+        supportsInstrumental:
+          type: boolean
+          description: Whether the server can render instrumental (no-vocal) music.
+        promptCharLimit:
+          type: integer
+          minimum: 1
+          default: 2000
     Health:
       type: object
       required:
@@ -601,6 +652,44 @@ components:
         seed:
           type: integer
           default: -1
+    MusicCreateRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          maxLength: 2000
+          description: >-
+            Style prompt (genre, instruments, vocal character, tempo). The
+            YuE2 reference treats this as the `style` field.
+        mode:
+          $ref: '#/components/schemas/MusicMode'
+        lyrics:
+          type: string
+          description: >-
+            Lyric sheet with section tags (e.g. [Verse], [Chorus]).
+            Omit or empty for instrumental renders.
+        instrumental:
+          type: boolean
+          description: >-
+            Render instrumental music with no vocals. The YuE2 reference
+            moves the Vocal notes into the Ins voice in the score.
+        duration:
+          type: integer
+          minimum: 1
+          description: >-
+            Target duration in seconds. Must not exceed
+            `music.maxDurationSeconds`. The backend renders as close as its
+            model allows; the actual duration is returned in the output.
+        seed:
+          type: integer
+          default: -1
+        workflow:
+          type: string
+          description: >-
+            Override workflow selection. Server resolves names like
+            `yue2-t2m-fast`.
     UploadJsonRequest:
       type: object
       required:
@@ -754,6 +843,13 @@ paths:
                         - 8
                       supportsAudio: true
                       promptCharLimit: 3000
+                    music:
+                      capabilities:
+                        - t2m
+                      maxDurationSeconds: 240
+                      supportsVocals: true
+                      supportsInstrumental: true
+                      promptCharLimit: 2000
                 imageOnly:
                   summary: Server with no video workflows installed
                   value:
@@ -911,6 +1007,90 @@ paths:
         Required only when `/loovie/capabilities` advertises an `ss_videos`
         section.
       operationId: getVideoStatus
+      parameters:
+        - name: taskId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current task state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatus'
+        '400':
+          description: Malformed request (e.g. empty or non-ASCII `taskId`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '404':
+          description: Task not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /music/create:
+    post:
+      tags:
+        - Music
+      summary: Start a music generation
+      description: |
+        Required only when `/loovie/capabilities` advertises a `music`
+        section. Accepts a style prompt plus optional lyrics; returns a
+        `taskId` the caller polls via `/music/status`.
+      operationId: createMusic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MusicCreateRequest'
+      responses:
+        '200':
+          description: Task accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCreated'
+        '400':
+          description: >-
+            Malformed request (missing prompt, invalid enum, prompt >
+            promptCharLimit, duration > maxDurationSeconds, unknown
+            workflow, etc.).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '422':
+          description: Request body failed schema validation (e.g. wrong field types).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /music/status:
+    get:
+      tags:
+        - Music
+      summary: Poll a music task
+      description: >-
+        Required only when `/loovie/capabilities` advertises a `music`
+        section.
+      operationId: getMusicStatus
       parameters:
         - name: taskId
           in: query
