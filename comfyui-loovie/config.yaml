@@ -67,3 +67,8 @@ workflows:
     file: "workflows/ltx23_fl2v_pro.json"
     description: "LTX 2.3 first+last frame to video, two-stage with spatial upscaler (pro quality)."
     max_wait_seconds: 840
+
+  yue2-t2m-fast:
+    file: "workflows/yue2_t2m_fast.json"
+    description: "YuE2 text-to-music, full song with vocals from a style prompt and lyric sheet."
+    max_wait_seconds: 600

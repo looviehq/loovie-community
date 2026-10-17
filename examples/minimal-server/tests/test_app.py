@@ -46,6 +46,11 @@ def test_capabilities_matches_schema_v1() -> None:
     assert set(body["ss_videos"]["capabilities"]) <= {"t2v", "i2v", "fl2v"}
     assert body["ss_videos"]["supportsAudio"] is True
     assert body["ss_videos"]["durations"] == [1, 2, 3, 4, 5, 6, 7, 8]
+    assert "music" in body
+    assert set(body["music"]["capabilities"]) <= {"t2m"}
+    assert body["music"]["supportsVocals"] is True
+    assert body["music"]["supportsInstrumental"] is True
+    assert body["music"]["maxDurationSeconds"] >= 1
 
 
 # --- Auth: fail-closed when no token ----------------------------------
@@ -250,3 +255,54 @@ def test_upload_json_path() -> None:
         assert body["data"]["filename"].startswith("loovie_upload_")
     finally:
         os.environ.pop("LOOVIE_API_TOKEN", None)
+
+
+# --- Music ------------------------------------------------------------
+
+
+def test_music_create_and_status_reach_success() -> None:
+    """Round trip the music capability: create -> poll -> success with a
+    real WAV placeholder (magic bytes match)."""
+    os.environ["LOOVIE_API_TOKEN"] = "test-token"
+    headers = {"Authorization": "Bearer test-token"}
+    r = client.post(
+        "/music/create",
+        json={
+            "prompt": "English, warm female vocal, contemporary pop, 96 BPM",
+            "mode": "t2m",
+            "lyrics": "[Verse]\nMorning light across the window",
+            "instrumental": False,
+            "duration": 120,
+        },
+        headers=headers,
+    )
+    assert r.status_code == 200
+    task_id = r.json()["data"]["taskId"]
+
+    deadline = time.monotonic() + 5.0
+    body = None
+    while time.monotonic() < deadline:
+        s = client.get(f"/music/status?taskId={task_id}", headers=headers)
+        assert s.status_code == 200
+        body = s.json()["data"]
+        if body["state"] in {"success", "failed"}:
+            break
+        time.sleep(0.5)
+
+    assert body is not None and body["state"] == "success"
+    decoded = json.loads(body["resultJson"])
+    result_url = decoded["resultUrls"][0]
+    assert result_url.startswith("data:audio/wav;base64,")
+    wav = base64.b64decode(result_url.split(",", 1)[1])
+    assert wav[:4] == b"RIFF" and wav[8:12] == b"WAVE"
+    os.environ.pop("LOOVIE_API_TOKEN", None)
+
+
+def test_music_status_rejects_an_image_task_id() -> None:
+    os.environ["LOOVIE_API_TOKEN"] = "test-token"
+    headers = {"Authorization": "Bearer test-token"}
+    r = client.post("/images/create", json={"prompt": "x"}, headers=headers)
+    task_id = r.json()["data"]["taskId"]
+    s = client.get(f"/music/status?taskId={task_id}", headers=headers)
+    assert s.status_code == 404
+    os.environ.pop("LOOVIE_API_TOKEN", None)

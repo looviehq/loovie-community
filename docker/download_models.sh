@@ -9,7 +9,7 @@
 #
 #   kind hf_repo hf_path local_name target_subdir
 #
-#   kind         = "image" | "video", used to select via LOOVIE_KIND.
+#   kind         = "image" | "video" | "music", used to select via LOOVIE_KIND.
 #   hf_repo      = HuggingFace repo (e.g. Lightricks/LTX-2.3-fp8).
 #   hf_path      = path-in-repo (may include subdirs, e.g. split_files/...).
 #   local_name   = ComfyUI filename under target_subdir after download.
@@ -123,11 +123,12 @@ declare -a wanted_kinds=()
 case "${LOOVIE_KIND}" in
   images)     wanted_kinds=(image) ;;
   videos)     wanted_kinds=(video) ;;
-  all)        wanted_kinds=(image video) ;;
-  *)          fail "Unknown LOOVIE_KIND='${LOOVIE_KIND}' (expected: images, videos, all)" ;;
+  music)      wanted_kinds=(music) ;;
+  all)        wanted_kinds=(image video music) ;;
+  *)          fail "Unknown LOOVIE_KIND='${LOOVIE_KIND}' (expected: images, videos, music, all)" ;;
 esac
 
-log "LOOVIE_KIND=${LOOVIE_KIND} (override with export LOOVIE_KIND=images|videos|all)"
+log "LOOVIE_KIND=${LOOVIE_KIND} (override with export LOOVIE_KIND=images|videos|music|all)"
 log "Models root: ${MODELS_ROOT}"
 log "  source: ${MODELS_ROOT_SOURCE}"
 log "Manifest: ${MANIFEST}"
@@ -144,7 +145,8 @@ log ""
 log "Approximate disk requirements:"
 log "  images          ~24 GB (FLUX.2 Klein + Qwen text encoder + VAE)"
 log "  videos          ~70 GB (LTX-2.3 + Gemma text encoder + upscaler + LoRA)"
-log "  all             ~99 GB"
+log "  music            ~4 GB (YuE2 3B int8 checkpoint)"
+log "  all             ~103 GB"
 log ""
 
 # ----------------------------------------------------------------------------

@@ -12,6 +12,7 @@ from __future__ import annotations
 from .loovie_audio_gate import LoovieAudioGate
 from .loovie_image_input import LoovieImageInput
 from .loovie_lora_stack import LoovieLoraStack
+from .loovie_music_input import LoovieMusicInput
 from .loovie_settings import LoovieSettings
 from .loovie_text_input import LoovieTextInput
 from .loovie_video_input import LoovieVideoInput
@@ -25,6 +26,7 @@ NODE_CLASS_MAPPINGS: dict[str, type] = {
     "LoovieVideoSettings": LoovieVideoSettings,
     "LoovieVideoInput": LoovieVideoInput,
     "LoovieAudioGate": LoovieAudioGate,
+    "LoovieMusicInput": LoovieMusicInput,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS: dict[str, str] = {
@@ -35,6 +37,7 @@ NODE_DISPLAY_NAME_MAPPINGS: dict[str, str] = {
     "LoovieVideoSettings": "Loovie Video Settings",
     "LoovieVideoInput": "Loovie Video Input",
     "LoovieAudioGate": "Loovie Audio Gate",
+    "LoovieMusicInput": "Loovie Music Input",
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

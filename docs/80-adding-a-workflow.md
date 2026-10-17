@@ -1,6 +1,6 @@
 # Adding a workflow
 
-This is the contribution recipe for adding a new ComfyUI workflow to [`comfyui-loovie/`](../comfyui-loovie/). For example: a different sampler config, a new LoRA stack, or **a different model entirely** (WAN, HunyuanVideo, CogVideoX, SDXL, SD3.5, Stable Cascade, your own fine-tune, anything that runs in ComfyUI). The reference workflows we ship use FLUX.2 Klein and LTX-2.3 because that's what we've tested at launch, but the contract has no opinion on which model your workflow uses, only on the request/response shape.
+This is the contribution recipe for adding a new ComfyUI workflow to [`comfyui-loovie/`](../comfyui-loovie/). For example: a different sampler config, a new LoRA stack, or **a different model entirely** (WAN, HunyuanVideo, CogVideoX, SDXL, SD3.5, Stable Cascade, your own fine-tune, anything that runs in ComfyUI). The reference workflows we ship use FLUX.2 Klein, LTX-2.3, and YuE2 because that's what we've tested at launch, but the contract has no opinion on which model your workflow uses, only on the request/response shape.
 
 For implementing the contract in a stack other than ComfyUI (Wan2GP, a hand-rolled FastAPI / Express / Go server, etc.), see [`90-the-contract.md`](90-the-contract.md) instead.
 
@@ -11,6 +11,17 @@ The technical details of editing the workflow JSON live in [`85-editing-api-work
 - Read [`90-the-contract.md`](90-the-contract.md) so you know what the server must advertise + accept.
 - Read [`85-editing-api-workflows.md`](85-editing-api-workflows.md), short, covers exporting API-format JSON and the required Loovie node `class_type`s.
 - Read [`MODELS.md`](MODELS.md) for the model-licence rules. If your workflow introduces a new model, you are also adding a licence row.
+
+## Adding a new capability (not just a new workflow)
+
+A new *workflow* inside an existing capability (another LTX variant, a
+different image model) only needs the recipe below. A new *capability* — a
+different modality the app must gate on, the way music did — needs three more
+things: a section in `capabilities.py` (with its own closed-enum modes),
+`create`/`status` routes gated by that section, and a matching condition in
+the OpenAPI `Capabilities` schema. The YuE2 music capability is the worked
+example: `music` mode `t2m`, `/music/create` + `/music/status`, and the
+`LoovieMusicInput` injection node.
 
 ## Recipe
 

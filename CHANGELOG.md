@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 > **Beta API stability.** While we are on the `0.x` line, the BYO HTTP contract (`openapi/loovie-server.openapi.yaml`) may introduce breaking changes between minor versions. Every breaking change is logged below and reflected in a bump of `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). Pin to a specific tag or commit SHA if you depend on the contract; strict semver kicks in at `1.0.0`.
 
+## [Unreleased]
+
+### Features
+
+* **comfyui-loovie:** YuE2 text-to-music reference workflow + `music` capability section (`/music/create`, `/music/status`, `LoovieMusicInput` node, `LoovieMusicInput` injection), music model manifest entry, and `LOOVIE_KIND=music` download selection.
+
+### Documentation
+
+* **openapi:** add the `music` capability section, `MusicCapabilities`/`MusicCreateRequest` schemas, and `/music/create` + `/music/status` endpoints.
+* **docs:** note the YuE2 model-licence responsibility for company-operated servers.
+
 ## [0.2.3-beta.1](https://github.com/looviehq/loovie-community/compare/v0.2.2-beta.1...v0.2.3-beta.1) (2026-05-30)
 
 

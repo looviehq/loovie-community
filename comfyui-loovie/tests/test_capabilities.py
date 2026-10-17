@@ -53,12 +53,13 @@ def _validate(manifest: dict[str, Any], validator: Draft202012Validator) -> None
 
 
 def test_empty_workflow_set_yields_no_sections() -> None:
-    """Both `images` and `ss_videos` are omitted if nothing is registered."""
+    """All of `images`, `ss_videos`, `music` are omitted if nothing is registered."""
     manifest = build_capabilities_manifest([], version="test")
     assert manifest["schemaVersion"] == SCHEMA_VERSION
     assert manifest["version"] == "test"
     assert "images" not in manifest
     assert "ss_videos" not in manifest
+    assert "music" not in manifest
 
 
 def test_only_flux_yields_only_images_section() -> None:
@@ -89,7 +90,28 @@ def test_all_video_modes_are_detected() -> None:
     assert set(videos["variants"]) == {"fast", "pro"}
 
 
-def test_full_workflow_set_emits_both_sections() -> None:
+def test_only_yue2_yields_only_music_section() -> None:
+    manifest = build_capabilities_manifest(["yue2-t2m-fast"], version="test")
+    assert "images" not in manifest
+    assert "ss_videos" not in manifest
+    assert "music" in manifest
+    music = manifest["music"]
+    assert music["capabilities"] == ["t2m"]
+    assert music["supportsVocals"] is True
+    assert music["supportsInstrumental"] is True
+    assert music["maxDurationSeconds"] >= 1
+
+
+def test_music_section_uses_closed_enum_values() -> None:
+    """The music section only emits values inside the OpenAPI closed enums."""
+    manifest = build_capabilities_manifest(["yue2-t2m-fast"], version="x")
+    music = manifest["music"]
+    assert set(music["capabilities"]) <= {"t2m"}
+    assert isinstance(music["supportsVocals"], bool)
+    assert isinstance(music["supportsInstrumental"], bool)
+
+
+def test_full_workflow_set_emits_all_sections() -> None:
     manifest = build_capabilities_manifest(
         [
             "flux-2-klein",
@@ -99,10 +121,11 @@ def test_full_workflow_set_emits_both_sections() -> None:
             "ltx23-i2v-pro",
             "ltx23-fl2v-fast",
             "ltx23-fl2v-pro",
+            "yue2-t2m-fast",
         ],
         version="0.1.0",
     )
-    assert "images" in manifest and "ss_videos" in manifest
+    assert "images" in manifest and "ss_videos" in manifest and "music" in manifest
     assert manifest["version"] == "0.1.0"
 
 
@@ -161,6 +184,7 @@ def test_manifest_conforms_to_openapi_capabilities_schema(
             "ltx23-i2v-pro",
             "ltx23-fl2v-fast",
             "ltx23-fl2v-pro",
+            "yue2-t2m-fast",
         ],
         version="0.1.0",
     )
@@ -183,8 +207,10 @@ def test_empty_manifest_conforms_to_openapi_schema(
         ["ltx23-i2v-pro"],
         ["ltx23-fl2v-fast", "ltx23-fl2v-pro"],
         ["flux-2-klein", "ltx23-t2v-fast"],
+        ["yue2-t2m-fast"],
+        ["flux-2-klein", "yue2-t2m-fast"],
     ],
-    ids=["image-only", "t2v-fast", "i2v-pro", "fl2v-both", "image+video"],
+    ids=["image-only", "t2v-fast", "i2v-pro", "fl2v-both", "image+video", "music", "image+music"],
 )
 def test_various_workflow_subsets_all_conform(
     workflow_set: list[str], capabilities_validator: Draft202012Validator

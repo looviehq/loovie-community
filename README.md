@@ -24,8 +24,9 @@ Pick whichever path matches your hardware. Both produce a server that the Loovie
 open https://github.com/looviehq/loovie-community/blob/main/docs/30-runpod.md
 
 # B. Run on your own GPU using the reference workflows we ship.
-#    FLUX.2 Klein image works on 4090/5090; LTX-2.3 video on 5090. Swap in
-#    lighter models (or different ones entirely) and lighter GPUs work too.
+#    FLUX.2 Klein image works on 4090/5090; LTX-2.3 video on 5090; YuE2
+#    music on a 24 GB card. Swap in lighter models (or different ones
+#    entirely) and lighter GPUs work too.
 git clone --branch v0.21.1 --depth 1 https://github.com/comfyanonymous/ComfyUI.git
 cd ComfyUI && python3 -m venv .venv && source .venv/bin/activate
 pip install --extra-index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
@@ -38,7 +39,7 @@ bash loovie-community/docker/download_models.sh && python main.py --listen 0.0.0
 
 ## What you can do with it
 
-The Loovie app speaks five capability modes. The "Reference workflow" column shows what `comfyui-loovie/` ships out of the box for each mode; you can swap any of these for a different model (WAN, HunyuanVideo, CogVideoX, SDXL, anything else) or write your own workflow, as long as it produces the same input/output shape as the contract requires.
+The Loovie app speaks these capability modes. The "Reference workflow" column shows what `comfyui-loovie/` ships out of the box for each mode; you can swap any of these for a different model (WAN, HunyuanVideo, CogVideoX, SDXL, YuE2, anything else) or write your own workflow, as long as it produces the same input/output shape as the contract requires.
 
 | Capability | Mode | Reference workflow (one of many possible) |
 |---|---|---|
@@ -47,6 +48,16 @@ The Loovie app speaks five capability modes. The "Reference workflow" column sho
 | Text → single‑shot video | `t2v` | LTX‑2.3 fast / pro |
 | Image → single‑shot video | `i2v` | LTX‑2.3 fast / pro |
 | First‑and‑last‑frame → video | `fl2v` | LTX‑2.3 fast / pro |
+| Text → music | `t2m` | YuE2 |
+
+> **YuE2 model licensing.** The YuE2 *reference workflow* runs on the user's own
+> machine, and the YuE2 **model weights are CC BY‑NC 4.0** with an
+> individual‑creator permission that does **not** grant companies commercial
+> use. If you operate this server as a company, you are responsible for
+> clearing that licence (see
+> [MODEL_LICENSE](https://github.com/multimodal-art-projection/YuE/blob/main/MODEL_LICENSE)).
+> The contract itself is model-agnostic; swap in any music backend whose
+> licence you can honour.
 
 **You can also bring your own inference backend.** ComfyUI is the reference we publish (`comfyui-loovie/`), but anything that speaks the contract is valid: Wan2GP, a hand-rolled FastAPI / Express / Go server, a different node-graph engine, etc. We ship a minimal FastAPI example at [`examples/minimal-server/`](examples/minimal-server/) precisely so you can see how short the non-Comfy path can be. **The contract is the line, not the implementation.**
 
@@ -64,6 +75,7 @@ sequenceDiagram
     App->>Srv: GET /loovie/health  (no auth)
     App->>Srv: GET /loovie/capabilities  (no auth)
     Note over App: Caches manifest per-server.
+    App->>Srv: (music) POST /music/create (Bearer)
     App->>API: POST /v1/images/create (tier=byo)
     API-->>App: byoTask + byoCallbacks
     App->>Srv: POST /images/create (Bearer)

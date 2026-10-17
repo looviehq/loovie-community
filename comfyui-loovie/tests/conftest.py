@@ -181,3 +181,20 @@ def gif_bytes() -> bytes:
 def random_bytes() -> bytes:
     """Bytes that do NOT match any supported magic."""
     return b"NotARealImage" * 16
+
+
+@pytest.fixture
+def flac_bytes() -> bytes:
+    """Minimal byte sequence that satisfies the FLAC magic-bytes check."""
+    return b"fLaC" + b"\x00" * 64
+
+
+@pytest.fixture
+def wav_bytes() -> bytes:
+    # RIFF<4 bytes size>WAVEfmt ...
+    return b"RIFF" + b"\x00\x00\x00\x00" + b"WAVE" + b"fmt " + b"\x00" * 32
+
+
+@pytest.fixture
+def mp3_bytes() -> bytes:
+    return b"ID3\x04\x00\x00" + b"\x00" * 32
