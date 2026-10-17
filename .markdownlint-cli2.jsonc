@@ -16,7 +16,7 @@
     // don't control (asterisk vs dash list style, double blank lines
     // between version sections). Ignoring it so our style rules don't
     // keep losing fights with the generator.
-    "CHANGELOG.md",
+    "**/CHANGELOG.md",
     "node_modules/",
     ".venv/",
     "venv/",
