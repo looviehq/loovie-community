@@ -4,8 +4,8 @@ This guide walks through the **ComfyUI reference implementation** ([`comfyui-loo
 
 ## Prerequisites
 
-- **GPU.** NVIDIA, 24 GB VRAM or more (see [GPU compatibility in `30-runpod.md`](30-runpod.md#gpu-compatibility-tested-at-launch); image works on 4090/5090, video tested only on 5090).
-- **Disk.** Plan on **at least 100 GB free** for the full reference model set: image models are ~24 GB, video models are ~70 GB (~99 GB downloaded for `LOOVIE_KIND=all`), plus headroom for intermediate decoded outputs, swap files, and ComfyUI's own cache. If you only run `LOOVIE_KIND=images` plan on ~30 GB free, `LOOVIE_KIND=videos` plan on ~80 GB free. See [`MODELS.md`](MODELS.md) for the per-model breakdown.
+- **GPU.** NVIDIA, 24 GB VRAM or more (see [GPU compatibility in `30-runpod.md`](30-runpod.md#gpu-compatibility-tested-at-launch); image works on 4090/5090, LTX-2.5 int8 sized for 24 GB, not yet verified on 4090).
+- **Disk.** Plan on **at least 80 GB free** for the full reference model set: image models are ~24 GB (FLUX 3 Klein ~11 GB + MOSS-Image ~13 GB), video models are ~40 GB (~68 GB downloaded for `LOOVIE_KIND=all`), plus headroom for intermediate decoded outputs, swap files, and ComfyUI's own cache. If you only run `LOOVIE_KIND=images` plan on ~30 GB free, `LOOVIE_KIND=videos` plan on ~50 GB free. See [`MODELS.md`](MODELS.md) for the per-model breakdown.
 - **Python.** 3.10, 3.11, or 3.12.
 - **git.**
 - **A HuggingFace account and read token**: [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md). You will need to accept a gated licence for at least one model. Do this first; the download will fail loudly if you skip it.
@@ -14,10 +14,10 @@ This guide walks through the **ComfyUI reference implementation** ([`comfyui-loo
 
 ### 1. Install ComfyUI
 
-We pin to the same upstream ref the Docker image uses (currently `v0.21.1`).
+We pin to the same upstream ref the Docker image uses (currently `v0.41.3`).
 
 ```sh
-git clone --branch v0.21.1 --depth 1 https://github.com/comfyanonymous/ComfyUI.git
+git clone --branch v0.41.3 --depth 1 https://github.com/comfyanonymous/ComfyUI.git
 cd ComfyUI
 
 python3 -m venv .venv
@@ -60,20 +60,20 @@ ln -s ../loovie-community/comfyui-loovie custom_nodes/loovie
 pip install -r loovie-community/comfyui-loovie/requirements.txt
 ```
 
-You also need the ComfyUI-LTXVideo node pack for LTX-2.3 single-shot video:
+You also need the ComfyUI-LTXVideo node pack for LTX-2.5 single-shot video:
 
 ```sh
 cd custom_nodes
 git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git
 cd ComfyUI-LTXVideo
-git checkout 229437c6b65796d6a7a63ae34be2bd5ba31fa543
+git checkout 44c8a36b7c31ee00b4271daed11dc2a4aa481140
 pip install -r requirements.txt
 cd ..
 ```
 
 ### 3. Download the models
 
-Run the downloader from the **ComfyUI directory** (same place as steps 1–2). It reads [`docker/models.manifest`](../docker/models.manifest), which lists the FLUX.2 Klein and LTX 2.3 weights the reference workflows expect.
+Run the downloader from the **ComfyUI directory** (same place as steps 1–2). It reads [`docker/models.manifest`](../docker/models.manifest), which lists the FLUX 3 Klein and LTX 2.5 weights the reference workflows expect.
 
 #### Environment variables
 
@@ -106,9 +106,9 @@ The script prints the resolved path and source at startup, for example:
 
 `LOOVIE_KIND` selects which rows from the manifest to pull:
 
-- `images`: FLUX.2 Klein + text encoder + VAE (~24 GB).
-- `videos`: LTX-2.3 + Gemma text encoder + upscaler + LoRA + ESRGAN (~70 GB).
-- `all`: both (~99 GB).
+- `images`: FLUX 3 Klein + MOSS-Image, text encoders and VAEs (~24 GB).
+- `videos`: LTX-2.5 distilled + Gemma 4 text encoder + VAEs + upscaler + ESRGAN (~40 GB).
+- `all`: both (~64 GB).
 
 Pick the smallest set you need. `/loovie/capabilities` reflects what is actually on disk.
 
@@ -128,7 +128,7 @@ bash loovie-community/docker/download_models.sh
 
 Accept gated licences first: [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
 
-If downloads fail with `Repository not found` on repos like `Comfy-Org/flux2`, your checkout is on an **old manifest**. `git pull` in `loovie-community` (or re-clone) so `docker/models.manifest` lists the current HuggingFace repos.
+If downloads fail with `Repository not found` on repos like `Comfy-Org/flux2-dev`, your checkout is on an **old manifest**. `git pull` in `loovie-community` (or re-clone) so `docker/models.manifest` lists the current HuggingFace repos.
 
 If you see `401 Unauthorized`, you have not accepted a gated licence yet. Open the repo URL from the error while logged in, click *Agree and access repository*, and re-run.
 
@@ -174,14 +174,14 @@ Then follow [`60-configure-the-app.md`](60-configure-the-app.md) to paste URL an
 
 ## macOS or Apple Silicon
 
-ComfyUI runs on macOS, but LTX-2.3 and FLUX.2 are heavy. CPU and MPS are slow enough that video is impractical. For image generation on a high-end M-series Mac, expect roughly the speed of a low-end NVIDIA card. For video, use [RunPod](30-runpod.md).
+ComfyUI runs on macOS, but LTX-2.5 and FLUX 3 are heavy. CPU and MPS are slow enough that video is impractical. For image generation on a high-end M-series Mac, expect roughly the speed of a low-end NVIDIA card. For video, use [RunPod](30-runpod.md).
 
 ## Troubleshooting
 
 See [`70-troubleshooting.md`](70-troubleshooting.md). The most common stumbles:
 
 - `Models root: /runpod-volume/models` on a bare ComfyUI install → set `export LOOVIE_MODELS_ROOT="$PWD/../models"`, or pull the latest script (ComfyUI is preferred over `/runpod-volume` when both exist). Check the `source:` line in the log.
-- `Repository not found` for `Comfy-Org/flux2` → old `models.manifest`; `git pull` in `loovie-community`.
+- `Repository not found` for `Comfy-Org/flux2-dev` → old `models.manifest`; `git pull` in `loovie-community`.
 - `Manifest not found` from `download_models.sh` → run from the ComfyUI directory, or set `LOOVIE_MODELS_MANIFEST`.
 - `401` from `download_models.sh` → revisit [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
 - The Loovie app shows "Server reachable" but generation fails with `BYO server access denied` → your bearer token in the app does not match the `LOOVIE_API_TOKEN` you exported.

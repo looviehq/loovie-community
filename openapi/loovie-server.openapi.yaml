@@ -364,7 +364,7 @@ components:
         detail:
           type: string
           description: >-
-            Optional free-text detail (e.g. "downloading FLUX.2 Klein (3.2GB /
+            Optional free-text detail (e.g. "downloading FLUX 3 Klein (3.2GB /
             9.8GB)").
     TaskCreated:
       allOf:
@@ -610,7 +610,16 @@ components:
           type: string
           description: >-
             Override workflow selection. Server resolves names like
-            `flux-2-klein`.
+            `flux-3-klein`.
+        image_model:
+          type: string
+          enum:
+            - moss-image
+          description: >-
+            Optional image model override. With `mode: t2i` it selects the
+            `moss-image` workflow instead of FLUX 3. With `mode: t2v` it
+            renders the first frame with MOSS-Image and animates it with LTX
+            (`ltx25-t2v-moss-<variant>`). Ignored for other modes.
         loras:
           type: array
           items:
@@ -761,7 +770,7 @@ paths:
                       version: 0.1.0
                       status: ok
                       phase: downloading_models
-                      detail: FLUX.2 Klein 4.1GB / 9.8GB
+                      detail: FLUX 3 Klein 4.1GB / 9.8GB
         '429':
           description: >-
             Rate-limited. Operators may throttle anonymous probes; the app

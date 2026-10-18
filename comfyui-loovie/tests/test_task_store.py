@@ -15,7 +15,7 @@ from comfyui_loovie.task_store import TaskState, TaskStore
 
 def test_task_id_matches_documented_format() -> None:
     store = TaskStore.get_instance()
-    record = store.create_task(prompt="hi", aspect_ratio="1:1", workflow_name="flux-2-klein")
+    record = store.create_task(prompt="hi", aspect_ratio="1:1", workflow_name="flux-3-klein")
     assert re.match(r"^task_loovie_[0-9a-f]{12}$", record.task_id)
 
 
@@ -26,7 +26,7 @@ def test_task_id_matches_documented_format() -> None:
 
 def test_initial_state_is_pending() -> None:
     store = TaskStore.get_instance()
-    record = store.create_task(prompt="hi", aspect_ratio="1:1", workflow_name="flux-2-klein")
+    record = store.create_task(prompt="hi", aspect_ratio="1:1", workflow_name="flux-3-klein")
     assert record.state == TaskState.PENDING
 
 

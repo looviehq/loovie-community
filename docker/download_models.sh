@@ -10,7 +10,7 @@
 #   kind hf_repo hf_path local_name target_subdir
 #
 #   kind         = "image" | "video" | "music", used to select via LOOVIE_KIND.
-#   hf_repo      = HuggingFace repo (e.g. Lightricks/LTX-2.3-fp8).
+#   hf_repo      = HuggingFace repo (e.g. Lightricks/LTX-2.5).
 #   hf_path      = path-in-repo (may include subdirs, e.g. split_files/...).
 #   local_name   = ComfyUI filename under target_subdir after download.
 #   target_subdir= ComfyUI folder name (diffusion_models, checkpoints,
@@ -143,10 +143,10 @@ mkdir -p "${MODELS_ROOT}"
 # ----------------------------------------------------------------------------
 log ""
 log "Approximate disk requirements:"
-log "  images          ~24 GB (FLUX.2 Klein + Qwen text encoder + VAE)"
-log "  videos          ~70 GB (LTX-2.3 + Gemma text encoder + upscaler + LoRA)"
+log "  images          ~24 GB (FLUX 3 Klein + MOSS-Image + text encoders + VAEs)"
+log "  videos          ~40 GB (LTX-2.5 distilled + Gemma 4 text encoder + VAEs + upscaler)"
 log "  music            ~4 GB (YuE2 3B int8 checkpoint)"
-log "  all             ~103 GB"
+log "  all             ~68 GB"
 log ""
 
 # ----------------------------------------------------------------------------

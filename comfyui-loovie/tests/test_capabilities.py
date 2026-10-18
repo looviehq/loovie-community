@@ -63,7 +63,7 @@ def test_empty_workflow_set_yields_no_sections() -> None:
 
 
 def test_only_flux_yields_only_images_section() -> None:
-    manifest = build_capabilities_manifest(["flux-2-klein"], version="test")
+    manifest = build_capabilities_manifest(["flux-3-klein"], version="test")
     assert "images" in manifest
     assert "ss_videos" not in manifest
     images = manifest["images"]
@@ -72,7 +72,7 @@ def test_only_flux_yields_only_images_section() -> None:
 
 
 def test_only_ltx_t2v_fast_yields_video_section_with_t2v_fast() -> None:
-    manifest = build_capabilities_manifest(["ltx23-t2v-fast"], version="test")
+    manifest = build_capabilities_manifest(["ltx25-t2v-fast"], version="test")
     assert "images" not in manifest
     assert "ss_videos" in manifest
     videos = manifest["ss_videos"]
@@ -82,7 +82,7 @@ def test_only_ltx_t2v_fast_yields_video_section_with_t2v_fast() -> None:
 
 def test_all_video_modes_are_detected() -> None:
     manifest = build_capabilities_manifest(
-        ["ltx23-t2v-fast", "ltx23-i2v-fast", "ltx23-fl2v-pro"],
+        ["ltx25-t2v-fast", "ltx25-i2v-fast", "ltx25-fl2v-pro"],
         version="test",
     )
     videos = manifest["ss_videos"]
@@ -114,13 +114,13 @@ def test_music_section_uses_closed_enum_values() -> None:
 def test_full_workflow_set_emits_all_sections() -> None:
     manifest = build_capabilities_manifest(
         [
-            "flux-2-klein",
-            "ltx23-t2v-fast",
-            "ltx23-t2v-pro",
-            "ltx23-i2v-fast",
-            "ltx23-i2v-pro",
-            "ltx23-fl2v-fast",
-            "ltx23-fl2v-pro",
+            "flux-3-klein",
+            "ltx25-t2v-fast",
+            "ltx25-t2v-pro",
+            "ltx25-i2v-fast",
+            "ltx25-i2v-pro",
+            "ltx25-fl2v-fast",
+            "ltx25-fl2v-pro",
             "yue2-t2m-fast",
         ],
         version="0.1.0",
@@ -131,13 +131,13 @@ def test_full_workflow_set_emits_all_sections() -> None:
 
 def test_schema_version_is_one() -> None:
     """The schema version is pinned to 1 until the manifest shape changes."""
-    manifest = build_capabilities_manifest(["flux-2-klein"], version="x")
+    manifest = build_capabilities_manifest(["flux-3-klein"], version="x")
     assert manifest["schemaVersion"] == 1
 
 
 def test_image_section_uses_closed_enum_values() -> None:
     """The image section only emits values inside the OpenAPI closed enums."""
-    manifest = build_capabilities_manifest(["flux-2-klein"], version="x")
+    manifest = build_capabilities_manifest(["flux-3-klein"], version="x")
     images = manifest["images"]
     assert set(images["capabilities"]) <= {"t2i", "i2i"}
     assert set(images["resolution"]) <= {"720p", "1K", "2K"}
@@ -147,7 +147,7 @@ def test_image_section_uses_closed_enum_values() -> None:
 
 def test_video_section_uses_closed_enum_values() -> None:
     """The video section only emits values inside the OpenAPI closed enums."""
-    manifest = build_capabilities_manifest(["ltx23-t2v-fast", "ltx23-t2v-pro"], version="x")
+    manifest = build_capabilities_manifest(["ltx25-t2v-fast", "ltx25-t2v-pro"], version="x")
     videos = manifest["ss_videos"]
     assert set(videos["capabilities"]) <= {"t2v", "i2v", "fl2v"}
     assert set(videos["resolution"]) <= {"720p", "1080p"}
@@ -161,7 +161,7 @@ def test_video_section_has_no_variants_falls_back_to_fast_default() -> None:
     """An unconventional name without 'fast'/'pro' suffix still gets at least 'fast'."""
     # Only the unusual case where the matcher finds a mode but no
     # `-fast` / `-pro` suffix; defensive default kicks in.
-    manifest = build_capabilities_manifest(["ltx23-t2v-experimental"], version="x")
+    manifest = build_capabilities_manifest(["ltx25-t2v-experimental"], version="x")
     videos = manifest["ss_videos"]
     assert "fast" in videos["variants"]
 
@@ -177,13 +177,13 @@ def test_manifest_conforms_to_openapi_capabilities_schema(
     """The full manifest validates against the published `Capabilities` schema."""
     manifest = build_capabilities_manifest(
         [
-            "flux-2-klein",
-            "ltx23-t2v-fast",
-            "ltx23-t2v-pro",
-            "ltx23-i2v-fast",
-            "ltx23-i2v-pro",
-            "ltx23-fl2v-fast",
-            "ltx23-fl2v-pro",
+            "flux-3-klein",
+            "ltx25-t2v-fast",
+            "ltx25-t2v-pro",
+            "ltx25-i2v-fast",
+            "ltx25-i2v-pro",
+            "ltx25-fl2v-fast",
+            "ltx25-fl2v-pro",
             "yue2-t2m-fast",
         ],
         version="0.1.0",
@@ -202,13 +202,13 @@ def test_empty_manifest_conforms_to_openapi_schema(
 @pytest.mark.parametrize(
     "workflow_set",
     [
-        ["flux-2-klein"],
-        ["ltx23-t2v-fast"],
-        ["ltx23-i2v-pro"],
-        ["ltx23-fl2v-fast", "ltx23-fl2v-pro"],
-        ["flux-2-klein", "ltx23-t2v-fast"],
+        ["flux-3-klein"],
+        ["ltx25-t2v-fast"],
+        ["ltx25-i2v-pro"],
+        ["ltx25-fl2v-fast", "ltx25-fl2v-pro"],
+        ["flux-3-klein", "ltx25-t2v-fast"],
         ["yue2-t2m-fast"],
-        ["flux-2-klein", "yue2-t2m-fast"],
+        ["flux-3-klein", "yue2-t2m-fast"],
     ],
     ids=["image-only", "t2v-fast", "i2v-pro", "fl2v-both", "image+video", "music", "image+music"],
 )

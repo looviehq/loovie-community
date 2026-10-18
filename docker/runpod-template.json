@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/runpod/runpodctl/main/schemas/template.schema.json",
-  "name": "Loovie BYO Server (FLUX.2 Klein + LTX-2.3)",
-  "summary": "Reference Loovie BYO ComfyUI server. Generates images and single-shot video with FLUX.2 Klein and LTX-2.3 directly into the Loovie iOS app. Free at the Loovie layer (RunPod still bills for GPU time).",
+  "name": "Loovie BYO Server (FLUX 3 Klein + LTX-2.5)",
+  "summary": "Reference Loovie BYO ComfyUI server. Generates images and single-shot video with FLUX 3 Klein and LTX-2.5 directly into the Loovie iOS app. Free at the Loovie layer (RunPod still bills for GPU time).",
 
   "containerImage": "ghcr.io/looviehq/loovie-server:beta",
   "containerDiskInGb": 30,
@@ -24,7 +24,7 @@
       "key": "HF_TOKEN",
       "type": "secret",
       "required": true,
-      "description": "HuggingFace read token. Required to download gated models (Gemma text encoder, FLUX.2 weights). See docs/25-huggingface-and-gated-models.md."
+      "description": "HuggingFace read token. Required to download gated models (Gemma text encoder, FLUX 3 weights). See docs/25-huggingface-and-gated-models.md."
     },
     {
       "key": "DOWNLOAD_MODELS",

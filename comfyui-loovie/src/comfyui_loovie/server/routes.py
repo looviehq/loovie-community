@@ -169,7 +169,9 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
 
         if cls == "LoovieTextInput":
             inputs["prompt"] = body.get("prompt", "")
-            inputs["negative_prompt"] = body.get("negative_prompt", "")
+            # Keep the workflow's own default (e.g. MOSS-Image's quality
+            # negative) when the caller sends none.
+            inputs["negative_prompt"] = body.get("negative_prompt") or inputs.get("negative_prompt", "")
 
         elif cls == "LoovieSettings":
             inputs["aspect_ratio"] = body.get("aspect_ratio", "1:1")
@@ -270,20 +272,28 @@ def _resolve_workflow_name(body: dict[str, Any], default: str) -> str:
     """Pick the workflow id to run based on the request body.
 
     Honours an explicit `workflow` field, otherwise maps `mode + variant`
-    to a registered LTX 2.3 workflow, otherwise the image-mode mapping,
-    otherwise the caller-supplied default.
+    to a registered LTX 2.5 workflow, otherwise the image-mode mapping,
+    otherwise the caller-supplied default. `image_model: "moss-image"`
+    swaps FLUX 3 for MOSS-Image on t2i and as the first-frame stage of t2v.
     """
     explicit = str(body.get("workflow", "") or "").strip()
     if explicit:
         return explicit
     mode = str(body.get("mode", "") or "").strip()
     variant = str(body.get("variant", "") or "").strip()
+    image_model = str(body.get("image_model", "") or "").strip()
+    if image_model == "moss-image":
+        if mode == "t2i":
+            return "moss-image"
+        if mode == "t2v" and variant:
+            # Two-stage t2v: MOSS-Image renders the first frame, LTX animates it.
+            return f"ltx25-t2v-moss-{variant}"
     if mode and variant:
-        return f"ltx23-{mode}-{variant}"
-    if mode in ("t2i", "i2i"):
-        # Both image modes route through flux-2-klein; t2i simply skips
-        # the reference slots.
-        return "flux-2-klein"
+        return f"ltx25-{mode}-{variant}"
+    if mode == "t2i":
+        return "flux-3-klein"
+    if mode == "i2i":
+        return "flux-3-klein-edit"
     return default.strip()
 
 
@@ -475,7 +485,7 @@ async def _task_status_handler(request: web.Request) -> web.Response:
 @PromptServer.instance.routes.post("/images/create")
 async def create_image(request: web.Request) -> web.Response:
     """Start an image generation task."""
-    return await _create_task_handler(request, default_workflow="flux-2-klein")
+    return await _create_task_handler(request, default_workflow="flux-3-klein")
 
 
 @PromptServer.instance.routes.get("/images/status")
@@ -501,13 +511,13 @@ async def create_video(request: web.Request) -> web.Response:
 
     if not body.get("workflow"):
         if start_frame and end_frame:
-            body["workflow"] = "ltx23-fl2v-fast"
+            body["workflow"] = "ltx25-fl2v-fast"
         elif start_frame:
-            body["workflow"] = "ltx23-i2v-fast"
+            body["workflow"] = "ltx25-i2v-fast"
         else:
-            body["workflow"] = "ltx23-t2v-fast"
+            body["workflow"] = "ltx25-t2v-fast"
 
-    return await _create_task_handler(request, default_workflow="ltx23-t2v-fast", body=body)
+    return await _create_task_handler(request, default_workflow="ltx25-t2v-fast", body=body)
 
 
 @PromptServer.instance.routes.get("/videos/status")

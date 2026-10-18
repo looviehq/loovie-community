@@ -24,10 +24,10 @@ Pick whichever path matches your hardware. Both produce a server that the Loovie
 open https://github.com/looviehq/loovie-community/blob/main/docs/30-runpod.md
 
 # B. Run on your own GPU using the reference workflows we ship.
-#    FLUX.2 Klein image works on 4090/5090; LTX-2.3 video on 5090; YuE2
+#    FLUX 3 Klein image works on 4090/5090; LTX-2.5 video on 5090; YuE2
 #    music on a 24 GB card. Swap in lighter models (or different ones
 #    entirely) and lighter GPUs work too.
-git clone --branch v0.21.1 --depth 1 https://github.com/comfyanonymous/ComfyUI.git
+git clone --branch v0.41.3 --depth 1 https://github.com/comfyanonymous/ComfyUI.git
 cd ComfyUI && python3 -m venv .venv && source .venv/bin/activate
 pip install --extra-index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
 pip install -r requirements.txt
@@ -37,17 +37,27 @@ export HF_TOKEN=hf_xxx LOOVIE_API_TOKEN=$(bash loovie-community/scripts/new-toke
 bash loovie-community/docker/download_models.sh && python main.py --listen 0.0.0.0 --port 8188
 ```
 
+**`HF_TOKEN` is required for the downloads.** Create a [read token](https://huggingface.co/settings/tokens), then open each gated repo below while logged in and click *Agree and access repository*. A token alone returns `401` until the licence is accepted.
+
+| Repo | Used for | Gated |
+|---|---|---|
+| [`black-forest-labs/flux-3-image-klein-comfy`](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy) | FLUX 3 Klein image | Yes |
+| [`Lightricks/LTX-2.5`](https://huggingface.co/Lightricks/LTX-2.5) | LTX-2.5 video | Yes |
+| [`Comfy-Org/MOSS-Image`](https://huggingface.co/Comfy-Org/MOSS-Image) | MOSS-Image | No |
+
+Details and the full model list: [`docs/25-huggingface-and-gated-models.md`](docs/25-huggingface-and-gated-models.md).
+
 ## What you can do with it
 
 The Loovie app speaks these capability modes. The "Reference workflow" column shows what `comfyui-loovie/` ships out of the box for each mode; you can swap any of these for a different model (WAN, HunyuanVideo, CogVideoX, SDXL, YuE2, anything else) or write your own workflow, as long as it produces the same input/output shape as the contract requires.
 
 | Capability | Mode | Reference workflow (one of many possible) |
 |---|---|---|
-| Text → image | `t2i` | FLUX.2 Klein |
-| Image → image (refs + edit) | `i2i` | FLUX.2 Klein |
-| Text → single‑shot video | `t2v` | LTX‑2.3 fast / pro |
-| Image → single‑shot video | `i2v` | LTX‑2.3 fast / pro |
-| First‑and‑last‑frame → video | `fl2v` | LTX‑2.3 fast / pro |
+| Text → image | `t2i` | FLUX 3 Klein or MOSS-Image |
+| Image → image (refs + edit) | `i2i` | FLUX 3 Klein |
+| Text → single‑shot video | `t2v` | LTX‑2.5 fast / pro, optionally with a MOSS-Image first frame |
+| Image → single‑shot video | `i2v` | LTX‑2.5 fast / pro |
+| First‑and‑last‑frame → video | `fl2v` | LTX‑2.5 fast / pro |
 | Text → music | `t2m` | YuE2 |
 
 > **YuE2 model licensing.** The YuE2 *reference workflow* runs on the user's own
@@ -93,7 +103,7 @@ The Loovie backend **never** calls your server. The mobile app does. Direct devi
 | Path | What it is |
 |---|---|
 | [`openapi/`](openapi/) | The normative HTTP contract (OpenAPI 3.1). **Start here if you're writing your own server.** |
-| [`comfyui-loovie/`](comfyui-loovie/) | Reference ComfyUI implementation (FLUX.2 Klein + LTX‑2.3). 127 unit tests, 88% coverage on the in‑scope modules. |
+| [`comfyui-loovie/`](comfyui-loovie/) | Reference ComfyUI implementation (FLUX 3 Klein + LTX‑2.5). 127 unit tests, 88% coverage on the in‑scope modules. |
 | [`examples/minimal-server/`](examples/minimal-server/) | Framework‑agnostic FastAPI reference, runnable without a GPU. Used as the schemathesis target in CI. |
 | [`docker/`](docker/) | Dockerfile, RunPod template, model downloader (with HuggingFace + gated‑model handling). |
 | [`docs/`](docs/) | Account creation, hosting paths, Cloudflare tunnel, security, troubleshooting, contribution recipes, the contract human‑readable, model licences. |

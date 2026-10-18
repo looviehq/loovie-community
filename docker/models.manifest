@@ -12,22 +12,27 @@
 # UI while logged in before the download will succeed. See
 # docs/25-huggingface-and-gated-models.md.
 #
-# Repo paths mirror apps/comfy/scripts/install.sh (FLUX.2 Klein + LTX 2.3 subset).
+# Repo paths mirror apps/comfy/scripts/install.sh (image + LTX 2.5 subset).
 # RealESRGAN: install.sh lists ai-forever/Real-ESRGAN but that repo has no
 # RealESRGAN_x2plus.pth; 2kpr/Real-ESRGAN hosts the file the pro workflows expect.
 #
 # kind	hf_repo	hf_path	local_name	target_subdir
 
-# --- Image: FLUX.2 Klein (~24 GB) ------------------------------------------
-image	black-forest-labs/FLUX.2-klein-4B	flux-2-klein-4b.safetensors	flux-2-klein-4b.safetensors	diffusion_models
-image	Comfy-Org/flux2-dev	split_files/vae/flux2-vae.safetensors	flux2-vae.safetensors	vae
-image	Comfy-Org/flux2-klein-4B	split_files/text_encoders/qwen_3_4b.safetensors	qwen_3_4b_flux2.safetensors	text_encoders
+# --- Image: FLUX 3 Image Klein (~11 GB) + MOSS-Image (~13 GB) ---------------
+image	black-forest-labs/flux-3-image-klein-comfy	diffusion_models/flux3-image-klein-int8-convrot.safetensors	flux3-image-klein-int8-convrot.safetensors	diffusion_models
+image	black-forest-labs/flux-3-image-klein-comfy	text_encoders/qwen3vl_4b_int8_convrot.safetensors	qwen3vl_4b_int8_convrot.safetensors	text_encoders
+image	black-forest-labs/flux-3-image-klein-comfy	vae/flux2-vae.safetensors	flux2-vae.safetensors	vae
+image	Comfy-Org/MOSS-Image	diffusion_models/moss_image_sft_int8_convrot.safetensors	moss_image_sft_int8_convrot.safetensors	diffusion_models
+image	Comfy-Org/MOSS-Image	text_encoders/qwen3.5_9b_w4a8_gptq.safetensors	qwen3.5_9b_w4a8_gptq.safetensors	text_encoders
+image	Comfy-Org/MOSS-Image	vae/flux2-vae_small.safetensors	flux2-vae_small.safetensors	vae
 
-# --- Video: LTX-2.3 (~70 GB) ------------------------------------------------
-video	Comfy-Org/ltx-2	split_files/text_encoders/gemma_3_12B_it_fp8_scaled.safetensors	gemma_3_12B_it_fp8_scaled.safetensors	text_encoders
-video	Lightricks/LTX-2.3-fp8	ltx-2.3-22b-dev-fp8.safetensors	ltx-2.3-22b-dev-fp8.safetensors	checkpoints
-video	Lightricks/LTX-2.3	ltx-2.3-22b-distilled-lora-384.safetensors	ltx-2.3-22b-distilled-lora-384.safetensors	loras
-video	Lightricks/LTX-2.3	ltx-2.3-spatial-upscaler-x2-1.1.safetensors	ltx-2.3-spatial-upscaler-x2-1.1.safetensors	latent_upscale_models
+# --- Video: LTX-2.5 distilled, ComfyUI int8 (~40 GB) -------------------------
+# Lightricks/LTX-2.5 is GATED, accept the licence on the repo page first.
+video	Lightricks/LTX-2.5	diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors	ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors	diffusion_models
+video	Lightricks/LTX-2.5	text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors	gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors	text_encoders
+video	Lightricks/LTX-2.5	vae/ltx-2.5-video-vae-bf16.safetensors	ltx-2.5-video-vae-bf16.safetensors	vae
+video	Lightricks/LTX-2.5	vae/ltx-2.5-audio-vae-bf16.safetensors	ltx-2.5-audio-vae-bf16.safetensors	vae
+video	Lightricks/LTX-2.5	latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors	ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors	latent_upscale_models
 video	2kpr/Real-ESRGAN	RealESRGAN_x2plus.pth	RealESRGAN_x2plus.pth	upscale_models
 
 # --- Music: YuE2 (~3.7 GB) ---------------------------------------------------
