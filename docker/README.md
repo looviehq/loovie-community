@@ -117,7 +117,7 @@ docker buildx build \
   .
 ```
 
-amd64-only. There is no usable arm64 GPU compute path for FLUX.2 / LTX‑2.3 inference today: NVIDIA CUDA does not target arm64 desktop / server GPUs in a way these workloads can use, and Apple Silicon (MPS) is too slow for video. We deliberately do not publish an arm64 image rather than ship one that almost-works.
+amd64-only. There is no usable arm64 GPU compute path for FLUX 3 / LTX‑2.5 inference today: NVIDIA CUDA does not target arm64 desktop / server GPUs in a way these workloads can use, and Apple Silicon (MPS) is too slow for video. We deliberately do not publish an arm64 image rather than ship one that almost-works.
 
 ## What lives where
 

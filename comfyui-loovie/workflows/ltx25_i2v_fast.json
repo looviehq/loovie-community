@@ -24,47 +24,54 @@
       "title": "Loovie Video Settings"
     }
   },
-  "20": {
+  "12": {
     "inputs": {
-      "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors"
+      "width": 960,
+      "height": 544,
+      "latent_type": "sd3",
+      "mask_url": "",
+      "image_url_1": "",
+      "image_url_2": "",
+      "image_url_3": "",
+      "image_url_4": "",
+      "image_url_5": "",
+      "image_url_6": "",
+      "image_url_7": "",
+      "image_url_8": "",
+      "image_url_9": "",
+      "image_url_10": ""
     },
-    "class_type": "CheckpointLoaderSimple",
+    "class_type": "LoovieImageInput",
     "_meta": {
-      "title": "Load LTX 2.3 Checkpoint"
+      "title": "Loovie Image Input"
     }
   },
-  "21": {
+  "25": {
     "inputs": {
-      "lora_name": "ltx-2.3-22b-distilled-lora-384.safetensors",
-      "strength_model": 0.6,
-      "model": [
-        "20",
+      "input": [
+        "12",
+        5
+      ],
+      "resize_type": "scale shorter dimension",
+      "scale_method": "bicubic",
+      "resize_type.shorter_size": 544
+    },
+    "class_type": "ResizeImageMaskNode",
+    "_meta": {
+      "title": "Resize Input Image"
+    }
+  },
+  "26": {
+    "inputs": {
+      "image": [
+        "25",
         0
-      ]
+      ],
+      "img_compression": 18
     },
-    "class_type": "LoraLoaderModelOnly",
+    "class_type": "LTXVPreprocess",
     "_meta": {
-      "title": "Load Distilled LoRA"
-    }
-  },
-  "22": {
-    "inputs": {
-      "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors"
-    },
-    "class_type": "LTXVAudioVAELoader",
-    "_meta": {
-      "title": "Load Audio VAE"
-    }
-  },
-  "23": {
-    "inputs": {
-      "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors",
-      "text_encoder": "gemma_3_12B_it_fp8_scaled.safetensors",
-      "device": "default"
-    },
-    "class_type": "LTXAVTextEncoderLoader",
-    "_meta": {
-      "title": "Load LTX Text Encoder"
+      "title": "LTX Preprocess"
     }
   },
   "30": {
@@ -116,6 +123,27 @@
       "title": "LTX Conditioning"
     }
   },
+  "36": {
+    "inputs": {
+      "vae": [
+        "24",
+        0
+      ],
+      "image": [
+        "26",
+        0
+      ],
+      "latent": [
+        "40",
+        0
+      ],
+      "strength": 0.7
+    },
+    "class_type": "LTXVImgToVideoInplace",
+    "_meta": {
+      "title": "I2V Conditioning"
+    }
+  },
   "40": {
     "inputs": {
       "width": [
@@ -165,7 +193,7 @@
         0
       ],
       "video_latent": [
-        "40",
+        "36",
         0
       ]
     },
@@ -188,7 +216,7 @@
   },
   "51": {
     "inputs": {
-      "sampler_name": "euler_ancestral_cfg_pp"
+      "sampler_name": "euler_ancestral"
     },
     "class_type": "KSamplerSelect",
     "_meta": {
@@ -204,46 +232,10 @@
       "title": "Manual Sigmas (9 steps, gentle)"
     }
   },
-  "104": {
-    "inputs": {
-      "modality": "VIDEO",
-      "cfg": 1.0,
-      "stg": 1.0,
-      "perturb_attn": true,
-      "rescale": 0.7,
-      "modality_scale": 0.0,
-      "skip_step": 0,
-      "cross_attn": true
-    },
-    "class_type": "GuiderParameters",
-    "_meta": {
-      "title": "Video Params"
-    }
-  },
-  "105": {
-    "inputs": {
-      "modality": "AUDIO",
-      "cfg": 7.0,
-      "stg": 1.0,
-      "perturb_attn": true,
-      "rescale": 0.7,
-      "modality_scale": 0.0,
-      "skip_step": 0,
-      "cross_attn": true,
-      "parameters": [
-        "104",
-        0
-      ]
-    },
-    "class_type": "GuiderParameters",
-    "_meta": {
-      "title": "Audio Params"
-    }
-  },
   "53": {
     "inputs": {
       "model": [
-        "21",
+        "20",
         0
       ],
       "positive": [
@@ -254,15 +246,11 @@
         "35",
         1
       ],
-      "parameters": [
-        "105",
-        0
-      ],
-      "skip_blocks": "14, 19"
+      "cfg": 1.0
     },
-    "class_type": "MultimodalGuider",
+    "class_type": "CFGGuider",
     "_meta": {
-      "title": "Multimodal Guider"
+      "title": "CFG Guider (distilled)"
     }
   },
   "55": {
@@ -312,11 +300,15 @@
         0
       ],
       "vae": [
-        "20",
-        2
-      ]
+        "24",
+        0
+      ],
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 64,
+      "temporal_overlap": 8
     },
-    "class_type": "VAEDecode",
+    "class_type": "VAEDecodeTiled",
     "_meta": {
       "title": "VAE Decode (Video)"
     }
@@ -399,6 +391,45 @@
     },
     "_meta": {
       "title": "Loovie Audio Gate"
+    }
+  },
+  "20": {
+    "inputs": {
+      "unet_name": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load LTX 2.5 Distilled (int8)"
+    }
+  },
+  "24": {
+    "inputs": {
+      "vae_name": "ltx-2.5-video-vae-bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load LTX 2.5 Video VAE"
+    }
+  },
+  "22": {
+    "inputs": {
+      "vae_name": "ltx-2.5-audio-vae-bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load LTX 2.5 Audio VAE"
+    }
+  },
+  "23": {
+    "inputs": {
+      "clip_name": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+      "type": "ltxv",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load LTX 2.5 Text Encoder (Gemma 4)"
     }
   }
 }

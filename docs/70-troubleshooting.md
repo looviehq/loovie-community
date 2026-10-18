@@ -83,11 +83,11 @@ Your server failed the generation. This is on your server, not Loovie. The most 
 
 Same as `BYO_TIMEOUT` above. The Loovie API times out after 30 minutes of no terminal state. Most generations finish in well under that; long videos (8 second pro variants, large resolutions) and cold model loads on undersized GPUs are the usual culprits when you hit the cap.
 
-- For LTX-2.3 pro on a 24 GB GPU you may genuinely run out of time on first cold start. Switch to `fast` variant, or use a 48 GB GPU, or pre-warm.
+- For LTX-2.5 pro on a 24 GB GPU you may genuinely run out of time on first cold start. Switch to `fast` variant, or use a 48 GB GPU, or pre-warm.
 
 ### macOS / Apple Silicon is very slow or OOMs
 
-Expected for the reference workflows. LTX-2.3 and FLUX.2 are heavy and the Metal backend isn't competitive with CUDA for these workloads. Either swap in a lighter image / video model that runs comfortably on your hardware (the contract is model-agnostic; see [`80-adding-a-workflow.md`](80-adding-a-workflow.md)) or use a rented cloud GPU like [RunPod](30-runpod.md).
+Expected for the reference workflows. LTX-2.5 and FLUX 3 are heavy and the Metal backend isn't competitive with CUDA for these workloads. Either swap in a lighter image / video model that runs comfortably on your hardware (the contract is model-agnostic; see [`80-adding-a-workflow.md`](80-adding-a-workflow.md)) or use a rented cloud GPU like [RunPod](30-runpod.md).
 
 ## In the app
 

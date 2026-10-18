@@ -18,9 +18,9 @@ OpenAPI contract is valid. This one is provided as a working starting point.
 | --- | --- | --- |
 | `GET  /loovie/health` | public | Liveness + readiness phase. |
 | `GET  /loovie/capabilities` | public | Manifest derived from installed workflows. |
-| `POST /images/create` | bearer | FLUX.2 Klein. Returns a `taskId`. |
+| `POST /images/create` | bearer | FLUX 3 Klein. Returns a `taskId`. |
 | `GET  /images/status` | bearer | Polls a task by id. |
-| `POST /videos/create` | bearer | LTX-2.3 single-shot video. Returns a `taskId`. |
+| `POST /videos/create` | bearer | LTX-2.5 single-shot video. Returns a `taskId`. |
 | `GET  /videos/status` | bearer | Polls a task by id. |
 | `POST /loovie/upload` | bearer | Operator helper for staging reference files. |
 
@@ -28,10 +28,13 @@ Workflows shipped (one JSON per file under `workflows/`):
 
 | Family | Workflow | Modes |
 | --- | --- | --- |
-| Image | `flux-2-klein` | t2i, i2i (up to 4 reference images) |
-| Video | `ltx23-t2v-{fast,pro}` | text-to-video |
-| Video | `ltx23-i2v-{fast,pro}` | image-to-video |
-| Video | `ltx23-fl2v-{fast,pro}` | first+last frame to video |
+| Image | `flux-3-klein` | t2i |
+| Image | `flux-3-klein-edit` | i2i (reference images) |
+| Image | `moss-image` | t2i (send `image_model: "moss-image"`) |
+| Video | `ltx25-t2v-moss-{fast,pro}` | text-to-video with a MOSS-Image first frame (send `image_model: "moss-image"`) |
+| Video | `ltx25-t2v-{fast,pro}` | text-to-video |
+| Video | `ltx25-i2v-{fast,pro}` | image-to-video |
+| Video | `ltx25-fl2v-{fast,pro}` | first+last frame to video |
 
 The capabilities manifest is built dynamically from the workflows you
 register in `config.yaml`. Remove an entry to hide that capability from the
@@ -82,11 +85,18 @@ filename. The exact weight URLs are listed in
 [`docs/MODELS.md`](../docs/MODELS.md) (TBD) and `scripts/install.sh` can
 fetch a baseline set.
 
+Downloads need `HF_TOKEN` (a HuggingFace read token) set in the environment, and the
+licences for `black-forest-labs/flux-3-image-klein-comfy` and `Lightricks/LTX-2.5` accepted
+on HuggingFace first. See
+[`docs/25-huggingface-and-gated-models.md`](../docs/25-huggingface-and-gated-models.md).
+
 | Workflow | Required model files |
 | --- | --- |
-| `flux-2-klein` | FLUX.2 Klein UNet, T5-XXL + CLIP-L text encoders, FLUX VAE |
-| `ltx23-*-fast` | LTX 2.3 distilled checkpoint, Gemma-3-12B text encoder |
-| `ltx23-*-pro` | LTX 2.3 checkpoint + spatial upscaler, Gemma-3-12B text encoder |
+| `flux-3-klein`, `flux-3-klein-edit` | FLUX 3 Image Klein (distilled int8), Qwen3-VL 4B text encoder, FLUX.2 VAE |
+| `moss-image` | MOSS-Image SFT int8, Qwen3.5 9B text encoder, small FLUX.2 VAE |
+| `ltx25-t2v-moss-*` | MOSS-Image files above plus the matching `ltx25-*` files |
+| `ltx25-*-fast` | LTX 2.5 distilled int8 transformer, video + audio VAEs, Gemma 4 12B text encoder |
+| `ltx25-*-pro` | Same as fast, plus the LTX 2.5 spatial upscaler and RealESRGAN x2plus |
 
 ## Extending
 

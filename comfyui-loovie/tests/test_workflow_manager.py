@@ -54,19 +54,19 @@ def test_get_workflow_names_returns_registered_names() -> None:
     WorkflowManager.reset()
     names = WorkflowManager.get_instance().get_workflow_names()
     assert isinstance(names, list)
-    # Public ref impl ships at least the flux + ltx23 family.
-    assert "flux-2-klein" in names
-    assert any(n.startswith("ltx23-") for n in names)
+    # Public ref impl ships at least the flux + ltx25 family.
+    assert "flux-3-klein" in names
+    assert any(n.startswith("ltx25-") for n in names)
 
 
 def test_load_workflow_returns_deep_copy() -> None:
     """Mutating the returned template must not leak into the cache."""
     WorkflowManager.reset()
     wm = WorkflowManager.get_instance()
-    first = wm.load_workflow("flux-2-klein")
+    first = wm.load_workflow("flux-3-klein")
     # Add an arbitrary top-level key.
     first["_test_marker"] = "should-not-leak"
-    second = wm.load_workflow("flux-2-klein")
+    second = wm.load_workflow("flux-3-klein")
     assert "_test_marker" not in second
 
 
@@ -88,7 +88,7 @@ def test_get_max_wait_seconds_uses_per_workflow_override() -> None:
     default = wm.max_wait_seconds
     # Each shipped workflow either has an override or falls back to default;
     # this test just confirms the lookup path returns a positive int.
-    actual = wm.get_max_wait_seconds("flux-2-klein")
+    actual = wm.get_max_wait_seconds("flux-3-klein")
     assert actual > 0
     assert isinstance(actual, int)
     # And unknown workflows fall back to the default.

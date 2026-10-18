@@ -34,7 +34,7 @@ We will be transparent if we cannot meet these targets. Critical vulnerabilities
 
 - Issues that require the operator to misconfigure their own server (e.g. exposing port 8188 publicly with no `LOOVIE_API_TOKEN` set, the server fails closed by default, so disabling that is a configuration choice, not a vulnerability).
 - Denial of service achievable only by submitting unreasonable prompt sizes, abusing your own GPU, or running models you installed yourself.
-- Vulnerabilities in models you load (FLUX.2 Klein, LTX-2.3, etc.), those are governed by their own upstream projects.
+- Vulnerabilities in models you load (FLUX 3 Klein, LTX-2.5, etc.), those are governed by their own upstream projects.
 - Loovie's mobile app or commercial backend, report those to `security@loovie.app` separately; that is a different codebase.
 
 ## Threat model (operators)

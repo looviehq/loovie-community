@@ -24,12 +24,9 @@ While logged into HuggingFace, open each of the following pages and click **Agre
 
 | Model | HuggingFace repo | Why we need it | Status |
 |---|---|---|---|
-| **FLUX.2 Klein 4B** | [black-forest-labs/FLUX.2-klein-4B](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B) | Image diffusion weights. | Gated by Black Forest Labs. |
-| **FLUX.2 VAE** | [Comfy-Org/flux2-dev](https://huggingface.co/Comfy-Org/flux2-dev) | Image VAE. | Gated (Comfy-Org pack). |
-| **Qwen-3-4B text encoder (FLUX.2)** | [Comfy-Org/flux2-klein-4B](https://huggingface.co/Comfy-Org/flux2-klein-4B) | Image text encoder. | Gated (Comfy-Org pack). |
-| **Gemma-3 text encoder (fp8 scaled)** | [Comfy-Org/ltx-2](https://huggingface.co/Comfy-Org/ltx-2) | LTX-2.3 video text encoder. | Gated by Google. |
-| **LTX-2.3 22B fp8 checkpoint** | [Lightricks/LTX-2.3-fp8](https://huggingface.co/Lightricks/LTX-2.3-fp8) | Video generation. | Lightricks community licence. |
-| **LTX-2.3 distilled LoRA + spatial upscaler** | [Lightricks/LTX-2.3](https://huggingface.co/Lightricks/LTX-2.3) | Pro-tier video pipeline. | Lightricks community licence. |
+| **FLUX 3 Image Klein (diffusion model, Qwen3-VL encoder, VAE)** | [black-forest-labs/flux-3-image-klein-comfy](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy) | Image generation and editing. | Gated by Black Forest Labs (FLUX Kommunity License). |
+| **MOSS-Image (SFT, Qwen3.5 encoder, VAE)** | [Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image) | Alternative image model and t2v first frame. | Apache-2.0. |
+| **LTX-2.5 distilled int8 transformer, Gemma 4 encoder, VAEs, spatial upscaler** | [Lightricks/LTX-2.5](https://huggingface.co/Lightricks/LTX-2.5) | Video generation (all tiers). | Gated by Lightricks (LTX licence). |
 | **RealESRGAN 2x** | [2kpr/Real-ESRGAN](https://huggingface.co/2kpr/Real-ESRGAN) | Pro-tier pixel upscaling. | Public, no acceptance needed. |
 
 If a download fails with `HTTP 401`, the message points back to the exact repo URL. Open it, click *Agree*, re-run.

@@ -24,76 +24,11 @@
       "title": "Loovie Video Settings"
     }
   },
-  "12": {
-    "inputs": {
-      "width": 960,
-      "height": 544,
-      "latent_type": "sd3",
-      "mask_url": "",
-      "image_url_1": "",
-      "image_url_2": "",
-      "image_url_3": "",
-      "image_url_4": "",
-      "image_url_5": "",
-      "image_url_6": "",
-      "image_url_7": "",
-      "image_url_8": "",
-      "image_url_9": "",
-      "image_url_10": ""
-    },
-    "class_type": "LoovieImageInput",
-    "_meta": {
-      "title": "Loovie Image Input"
-    }
-  },
-  "20": {
-    "inputs": {
-      "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors"
-    },
-    "class_type": "CheckpointLoaderSimple",
-    "_meta": {
-      "title": "Load LTX 2.3 Checkpoint"
-    }
-  },
-  "21": {
-    "inputs": {
-      "lora_name": "ltx-2.3-22b-distilled-lora-384.safetensors",
-      "strength_model": 0.6,
-      "model": [
-        "20",
-        0
-      ]
-    },
-    "class_type": "LoraLoaderModelOnly",
-    "_meta": {
-      "title": "Load Distilled LoRA"
-    }
-  },
-  "22": {
-    "inputs": {
-      "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors"
-    },
-    "class_type": "LTXVAudioVAELoader",
-    "_meta": {
-      "title": "Load Audio VAE"
-    }
-  },
-  "23": {
-    "inputs": {
-      "text_encoder": "gemma_3_12B_it_fp8_scaled.safetensors",
-      "ckpt_name": "ltx-2.3-22b-dev-fp8.safetensors",
-      "device": "default"
-    },
-    "class_type": "LTXAVTextEncoderLoader",
-    "_meta": {
-      "title": "Load LTX Text Encoder"
-    }
-  },
   "25": {
     "inputs": {
       "input": [
-        "12",
-        5
+        "m54",
+        0
       ],
       "resize_type": "scale shorter dimension",
       "scale_method": "bicubic",
@@ -101,7 +36,7 @@
     },
     "class_type": "ResizeImageMaskNode",
     "_meta": {
-      "title": "Resize First Frame"
+      "title": "Resize Input Image"
     }
   },
   "26": {
@@ -114,35 +49,7 @@
     },
     "class_type": "LTXVPreprocess",
     "_meta": {
-      "title": "Preprocess First Frame"
-    }
-  },
-  "27": {
-    "inputs": {
-      "input": [
-        "12",
-        7
-      ],
-      "resize_type": "scale shorter dimension",
-      "scale_method": "bicubic",
-      "resize_type.shorter_size": 544
-    },
-    "class_type": "ResizeImageMaskNode",
-    "_meta": {
-      "title": "Resize Last Frame"
-    }
-  },
-  "28": {
-    "inputs": {
-      "image": [
-        "27",
-        0
-      ],
-      "img_compression": 18
-    },
-    "class_type": "LTXVPreprocess",
-    "_meta": {
-      "title": "Preprocess Last Frame"
+      "title": "LTX Preprocess"
     }
   },
   "30": {
@@ -194,6 +101,27 @@
       "title": "LTX Conditioning"
     }
   },
+  "36": {
+    "inputs": {
+      "vae": [
+        "24",
+        0
+      ],
+      "image": [
+        "26",
+        0
+      ],
+      "latent": [
+        "40",
+        0
+      ],
+      "strength": 0.7
+    },
+    "class_type": "LTXVImgToVideoInplace",
+    "_meta": {
+      "title": "I2V Conditioning"
+    }
+  },
   "40": {
     "inputs": {
       "width": [
@@ -238,78 +166,18 @@
   },
   "42": {
     "inputs": {
-      "video_latent": [
-        "37",
-        2
-      ],
       "audio_latent": [
         "41",
+        0
+      ],
+      "video_latent": [
+        "36",
         0
       ]
     },
     "class_type": "LTXVConcatAVLatent",
     "_meta": {
       "title": "Concat AV Latent"
-    }
-  },
-  "36": {
-    "inputs": {
-      "positive": [
-        "35",
-        0
-      ],
-      "negative": [
-        "35",
-        1
-      ],
-      "vae": [
-        "20",
-        2
-      ],
-      "latent": [
-        "40",
-        0
-      ],
-      "image": [
-        "26",
-        0
-      ],
-      "frame_idx": 0,
-      "strength": 1.0
-    },
-    "class_type": "LTXVAddGuide",
-    "_meta": {
-      "title": "Add First Frame Guide"
-    }
-  },
-  "37": {
-    "inputs": {
-      "positive": [
-        "36",
-        0
-      ],
-      "negative": [
-        "36",
-        1
-      ],
-      "vae": [
-        "20",
-        2
-      ],
-      "latent": [
-        "36",
-        2
-      ],
-      "image": [
-        "28",
-        0
-      ],
-      "frame_idx": -1,
-      "strength": 1.0
-    },
-    "class_type": "LTXVAddGuide",
-    "_meta": {
-      "title": "Add Last Frame Guide"
     }
   },
   "50": {
@@ -326,7 +194,7 @@
   },
   "51": {
     "inputs": {
-      "sampler_name": "euler_ancestral_cfg_pp"
+      "sampler_name": "euler_ancestral"
     },
     "class_type": "KSamplerSelect",
     "_meta": {
@@ -342,65 +210,25 @@
       "title": "Manual Sigmas (9 steps, gentle)"
     }
   },
-  "104": {
-    "inputs": {
-      "modality": "VIDEO",
-      "cfg": 1.0,
-      "stg": 1.0,
-      "perturb_attn": true,
-      "rescale": 0.7,
-      "modality_scale": 0.0,
-      "skip_step": 0,
-      "cross_attn": true
-    },
-    "class_type": "GuiderParameters",
-    "_meta": {
-      "title": "Video Params"
-    }
-  },
-  "105": {
-    "inputs": {
-      "modality": "AUDIO",
-      "cfg": 7.0,
-      "stg": 1.0,
-      "perturb_attn": true,
-      "rescale": 0.7,
-      "modality_scale": 0.0,
-      "skip_step": 0,
-      "cross_attn": true,
-      "parameters": [
-        "104",
-        0
-      ]
-    },
-    "class_type": "GuiderParameters",
-    "_meta": {
-      "title": "Audio Params"
-    }
-  },
   "53": {
     "inputs": {
       "model": [
-        "21",
+        "20",
         0
       ],
       "positive": [
-        "37",
+        "35",
         0
       ],
       "negative": [
-        "37",
+        "35",
         1
       ],
-      "parameters": [
-        "105",
-        0
-      ],
-      "skip_blocks": "14, 19"
+      "cfg": 1.0
     },
-    "class_type": "MultimodalGuider",
+    "class_type": "CFGGuider",
     "_meta": {
-      "title": "Multimodal Guider"
+      "title": "CFG Guider (distilled)"
     }
   },
   "55": {
@@ -446,15 +274,19 @@
   "61": {
     "inputs": {
       "samples": [
-        "106",
-        2
+        "60",
+        0
       ],
       "vae": [
-        "20",
-        2
-      ]
+        "24",
+        0
+      ],
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 64,
+      "temporal_overlap": 8
     },
-    "class_type": "VAEDecode",
+    "class_type": "VAEDecodeTiled",
     "_meta": {
       "title": "VAE Decode (Video)"
     }
@@ -539,24 +371,210 @@
       "title": "Loovie Audio Gate"
     }
   },
-  "106": {
+  "20": {
     "inputs": {
+      "unet_name": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load LTX 2.5 Distilled (int8)"
+    }
+  },
+  "24": {
+    "inputs": {
+      "vae_name": "ltx-2.5-video-vae-bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load LTX 2.5 Video VAE"
+    }
+  },
+  "22": {
+    "inputs": {
+      "vae_name": "ltx-2.5-audio-vae-bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load LTX 2.5 Audio VAE"
+    }
+  },
+  "23": {
+    "inputs": {
+      "clip_name": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+      "type": "ltxv",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load LTX 2.5 Text Encoder (Gemma 4)"
+    }
+  },
+  "m39": {
+    "inputs": {
+      "clip_name": "qwen3.5_9b_w4a8_gptq.safetensors",
+      "type": "moss_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP (Qwen3.5 for MOSS-Image)"
+    }
+  },
+  "m40": {
+    "inputs": {
+      "vae_name": "flux2-vae_small.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "m46": {
+    "inputs": {
+      "unet_name": "moss_image_sft_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load MOSS-Image SFT"
+    }
+  },
+  "m13": {
+    "inputs": {
+      "model": [
+        "m46",
+        0
+      ],
+      "clip": [
+        "m39",
+        0
+      ],
+      "lora_name_1": "",
+      "strength_1": 0.8,
+      "lora_name_2": "",
+      "strength_2": 0.8,
+      "lora_name_3": "",
+      "strength_3": 0.8,
+      "lora_name_4": "",
+      "strength_4": 0.8,
+      "lora_name_5": "",
+      "strength_5": 0.8
+    },
+    "class_type": "LoovieLoraStack",
+    "_meta": {
+      "title": "Loovie LoRA Stack"
+    }
+  },
+  "m14": {
+    "inputs": {
+      "model": [
+        "m13",
+        0
+      ],
+      "double_layers": "",
+      "single_layers": "22",
+      "start_percent": 0.0,
+      "end_percent": 0.5
+    },
+    "class_type": "SkipLayerGuidanceDiTSimple",
+    "_meta": {
+      "title": "Skip Layer Guidance (layer 22)"
+    }
+  },
+  "m53": {
+    "inputs": {
+      "text": [
+        "10",
+        0
+      ],
+      "clip": [
+        "m13",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Positive Prompt"
+    }
+  },
+  "m57": {
+    "inputs": {
+      "text": "nsfw, worst quality, bad anatomy, watermark, jpeg artifact",
+      "clip": [
+        "m13",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative Prompt"
+    }
+  },
+  "m80": {
+    "inputs": {
+      "width": [
+        "11",
+        0
+      ],
+      "height": [
+        "11",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": {
+      "title": "Empty Flux2 Latent"
+    }
+  },
+  "m85": {
+    "inputs": {
+      "model": [
+        "m14",
+        0
+      ],
+      "seed": [
+        "11",
+        7
+      ],
+      "steps": 25,
+      "cfg": 2.5,
+      "sampler_name": "er_sde",
+      "scheduler": "simple",
       "positive": [
-        "37",
+        "m53",
         0
       ],
       "negative": [
-        "37",
-        1
+        "m57",
+        0
       ],
-      "latent": [
-        "60",
+      "latent_image": [
+        "m80",
+        0
+      ],
+      "denoise": 1.0
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler (MOSS-Image)"
+    }
+  },
+  "m54": {
+    "inputs": {
+      "samples": [
+        "m85",
+        0
+      ],
+      "vae": [
+        "m40",
         0
       ]
     },
-    "class_type": "LTXVCropGuides",
+    "class_type": "VAEDecode",
     "_meta": {
-      "title": "Crop Guides"
+      "title": "VAE Decode"
     }
   }
 }

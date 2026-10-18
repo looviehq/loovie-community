@@ -51,7 +51,7 @@ def test_supported_image_ratios_match_the_dimension_table() -> None:
 def test_every_video_gen_pair_resolves(key: tuple[str, str]) -> None:
     aspect, resolution = key
     width, height = video_dimensions(aspect, resolution)
-    # LTX 2.3 requires multiples of 8 (latent stride; some shipped values
+    # LTX 2.5 requires multiples of 8 (latent stride; some shipped values
     # like (1280, 720) are mult-of-8 but not mult-of-32).
     assert width % 8 == 0
     assert height % 8 == 0

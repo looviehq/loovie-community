@@ -34,38 +34,56 @@ poll_interval_seconds: 2
 # `/images/create` or `/videos/create` endpoints; the capabilities manifest
 # is derived from this list.
 workflows:
-  flux-2-klein:
-    file: "workflows/flux_2_klein.json"
-    description: "FLUX.2 Klein, multi-reference image generation with optional LoRAs."
+  flux-3-klein:
+    file: "workflows/flux_3_klein.json"
+    description: "FLUX 3 Image Klein (distilled), text-to-image with optional LoRAs."
 
-  ltx23-t2v-fast:
-    file: "workflows/ltx23_t2v_fast.json"
-    description: "LTX 2.3 text-to-video, single-stage distilled (fast)."
+  flux-3-klein-edit:
+    file: "workflows/flux_3_klein_edit.json"
+    description: "FLUX 3 Image Klein (distilled), multi-reference image-to-image with optional LoRAs."
+
+  moss-image:
+    file: "workflows/moss_image.json"
+    description: "MOSS-Image SFT, text-to-image with optional LoRAs. Select with image_model: moss-image."
+
+  ltx25-t2v-fast:
+    file: "workflows/ltx25_t2v_fast.json"
+    description: "LTX 2.5 text-to-video, single-stage distilled (fast)."
     max_wait_seconds: 840
 
-  ltx23-t2v-pro:
-    file: "workflows/ltx23_t2v_pro.json"
-    description: "LTX 2.3 text-to-video, two-stage with spatial upscaler (pro quality)."
+  ltx25-t2v-pro:
+    file: "workflows/ltx25_t2v_pro.json"
+    description: "LTX 2.5 text-to-video, two-stage with spatial upscaler (pro quality)."
     max_wait_seconds: 840
 
-  ltx23-i2v-fast:
-    file: "workflows/ltx23_i2v_fast.json"
-    description: "LTX 2.3 image-to-video, single-stage distilled (fast)."
+  ltx25-t2v-moss-fast:
+    file: "workflows/ltx25_t2v_moss_fast.json"
+    description: "Two-stage text-to-video: MOSS-Image first frame, then LTX 2.5 image-to-video (fast)."
+    max_wait_seconds: 900
+
+  ltx25-t2v-moss-pro:
+    file: "workflows/ltx25_t2v_moss_pro.json"
+    description: "Two-stage text-to-video: MOSS-Image first frame, then LTX 2.5 two-stage upscaled image-to-video (pro)."
+    max_wait_seconds: 900
+
+  ltx25-i2v-fast:
+    file: "workflows/ltx25_i2v_fast.json"
+    description: "LTX 2.5 image-to-video, single-stage distilled (fast)."
     max_wait_seconds: 840
 
-  ltx23-i2v-pro:
-    file: "workflows/ltx23_i2v_pro.json"
-    description: "LTX 2.3 image-to-video, two-stage with spatial upscaler (pro quality)."
+  ltx25-i2v-pro:
+    file: "workflows/ltx25_i2v_pro.json"
+    description: "LTX 2.5 image-to-video, two-stage with spatial upscaler (pro quality)."
     max_wait_seconds: 840
 
-  ltx23-fl2v-fast:
-    file: "workflows/ltx23_fl2v_fast.json"
-    description: "LTX 2.3 first+last frame to video, single-stage distilled (fast)."
+  ltx25-fl2v-fast:
+    file: "workflows/ltx25_fl2v_fast.json"
+    description: "LTX 2.5 first+last frame to video, single-stage distilled (fast)."
     max_wait_seconds: 840
 
-  ltx23-fl2v-pro:
-    file: "workflows/ltx23_fl2v_pro.json"
-    description: "LTX 2.3 first+last frame to video, two-stage with spatial upscaler (pro quality)."
+  ltx25-fl2v-pro:
+    file: "workflows/ltx25_fl2v_pro.json"
+    description: "LTX 2.5 first+last frame to video, two-stage with spatial upscaler (pro quality)."
     max_wait_seconds: 840
 
   yue2-t2m-fast:

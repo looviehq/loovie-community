@@ -19,8 +19,8 @@ body:
     id: workflow-name
     attributes:
       label: Proposed workflow name
-      description: Follow the existing convention (`ltx23-<mode>-<variant>`, `flux-2-<variant>`, etc.).
-      placeholder: "ltx23-i2v-pro-experimental"
+      description: Follow the existing convention (`ltx25-<mode>-<variant>`, `flux-3-<variant>`, etc.).
+      placeholder: "ltx25-i2v-pro-experimental"
     validations:
       required: true
 
@@ -38,8 +38,8 @@ body:
       label: Models used
       description: One per line. For each model, name, HuggingFace repo, licence name, and whether it's gated.
       placeholder: |
-        - LTX-2.3 Pro upscaler, Comfy-Org/ltx-2, Lightricks community licence, not gated
-        - Gemma-3 12B text encoder, Comfy-Org/ltx-2, Google Gemma terms, gated
+        - LTX-2.5 spatial upscaler, Lightricks/LTX-2.5, LTX licence, gated
+        - Gemma 4 12B text encoder, Lightricks/LTX-2.5, Google Gemma terms, gated
     validations:
       required: true
 

@@ -16,8 +16,8 @@ ARG UBUNTU_VERSION=22.04
 # ---- Stage 1: builder ----------------------------------------------------
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn-runtime-ubuntu${UBUNTU_VERSION} AS builder
 
-ARG COMFYUI_REF=v0.21.1
-ARG COMFYUI_LTX_REF=229437c6b65796d6a7a63ae34be2bd5ba31fa543
+ARG COMFYUI_REF=v0.41.3
+ARG COMFYUI_LTX_REF=44c8a36b7c31ee00b4271daed11dc2a4aa481140
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -53,7 +53,7 @@ RUN pip install --extra-index-url https://download.pytorch.org/whl/cu124 \
 
 RUN pip install -r requirements.txt
 
-# Install the ComfyUI-LTXVideo custom-node pack (LTX-2.3 support).
+# Install the ComfyUI-LTXVideo custom-node pack (LTX-2.5 support).
 RUN git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git \
         /opt/comfyui/custom_nodes/ComfyUI-LTXVideo
 WORKDIR /opt/comfyui/custom_nodes/ComfyUI-LTXVideo
@@ -76,7 +76,7 @@ ARG GIT_SHA=unknown
 # OCI labels. `image.source` is what makes GHCR auto-link the image to the
 # repo and inherit visibility/license metadata. Required by Part J §J9.
 LABEL org.opencontainers.image.source="https://github.com/looviehq/loovie-community"
-LABEL org.opencontainers.image.description="Loovie BYO reference server (ComfyUI + FLUX.2 Klein + LTX-2.3 single-shot video)"
+LABEL org.opencontainers.image.description="Loovie BYO reference server (ComfyUI + FLUX 3 Klein + LTX-2.5 single-shot video)"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.title="loovie-server"
 LABEL org.opencontainers.image.version="${VERSION}"

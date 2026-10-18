@@ -10,46 +10,47 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 
 ## Image generation
 
-### FLUX.2 Klein (4B)
+### FLUX 3 Image Klein (distilled)
 
-- **Purpose:** primary text-to-image and image-to-image model for the `loovie-custom` image tier.
-- **HuggingFace repos:** [`black-forest-labs/FLUX.2-klein-4B`](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B) (UNet), [`Comfy-Org/flux2-dev`](https://huggingface.co/Comfy-Org/flux2-dev) (VAE), [`Comfy-Org/flux2-klein-4B`](https://huggingface.co/Comfy-Org/flux2-klein-4B) (Qwen text encoder).
+- **Purpose:** primary text-to-image and image-to-image model (`flux-3-klein`, `flux-3-klein-edit`). Needs ComfyUI 0.41.0 or newer.
+- **HuggingFace repo:** [`black-forest-labs/flux-3-image-klein-comfy`](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy) (diffusion model, Qwen3-VL text encoder, VAE).
 - **Upstream:** [Black Forest Labs / FLUX](https://github.com/black-forest-labs/flux).
-- **Licence:** Black Forest Labs FLUX.2 Klein licence. **Gated on HuggingFace**, accept on the repo page while logged in before downloading. Read the terms.
-- **Files:** `flux-2-klein-4b.safetensors`, `flux2-vae.safetensors`, `qwen_3_4b_flux2.safetensors`.
-- **Approx size:** ~24 GB combined (includes the VAE and the Qwen-3 text encoder listed below).
+- **Licence:** FLUX Kommunity License. **Gated on HuggingFace**, accept on the repo page while logged in before downloading. Read the terms, including the commercial-use limits.
+- **Files:** `flux3-image-klein-int8-convrot.safetensors` (5.8 GB), `qwen3vl_4b_int8_convrot.safetensors` (4.9 GB), `flux2-vae.safetensors` (0.3 GB).
+- **Approx size:** ~11 GB combined.
+- **Not included:** the BFL prompt upsampler (`qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors`, 6.7 GB). The shipped workflows send your prompt as written. Add the upsampler to the graph if you want short prompts expanded.
 
-### Qwen-3 text encoder for FLUX.2
+### MOSS-Image (SFT)
 
-- **Purpose:** text encoder used by FLUX.2 Klein.
-- **HuggingFace repo:** [`Comfy-Org/flux2-klein-4B`](https://huggingface.co/Comfy-Org/flux2-klein-4B) (packaged Qwen encoder for Klein 4B).
-- **Upstream:** [Alibaba Cloud Qwen](https://huggingface.co/Qwen).
-- **Licence:** Apache-2.0 (Qwen) **but redistributed via the FLUX.2 gated repo**, so you accept the FLUX.2 page in practice.
+- **Purpose:** alternative text-to-image model (`moss-image`) and the first-frame stage of two-stage text-to-video (`ltx23-t2v-moss-{fast,pro}`). Needs ComfyUI 0.41.3 or newer.
+- **HuggingFace repo:** [`Comfy-Org/MOSS-Image`](https://huggingface.co/Comfy-Org/MOSS-Image) (diffusion model, Qwen3.5 9B text encoder, small FLUX.2 VAE).
+- **Upstream:** [OpenMOSS / MOSS-Image](https://github.com/OpenMOSS/MOSS-Image).
+- **Licence:** Apache-2.0.
+- **Files:** `moss_image_sft_int8_convrot.safetensors` (5.4 GB), `qwen3.5_9b_w4a8_gptq.safetensors` (7.3 GB), `flux2-vae_small.safetensors` (0.2 GB).
+- **Approx size:** ~13 GB combined.
 
 ## Video generation (single-shot)
 
-### LTX-2.3 22B (fast + pro)
+### LTX-2.5 22B distilled (fast + pro)
 
-- **Purpose:** primary text-to-video / image-to-video / first-and-last-frame-to-video model for the `loovie-custom` video tier.
-- **HuggingFace repos:** [`Lightricks/LTX-2.3-fp8`](https://huggingface.co/Lightricks/LTX-2.3-fp8) (main fp8 checkpoint), [`Lightricks/LTX-2.3`](https://huggingface.co/Lightricks/LTX-2.3) (distilled LoRA and spatial upscaler).
-- **Licence:** Lightricks LTX community licence. Read the terms, there are restrictions on commercial use depending on the variant. Loovie's `comfyui-loovie/` repo only ships workflows; **your generations are your responsibility** under the LTX licence.
-- **Files:** `ltx-2.3-22b-dev-fp8.safetensors` (main fp8 checkpoint), `ltx-2.3-22b-distilled-lora-384.safetensors` (rank-384 distilled LoRA used by the `pro` variant).
-- **Approx size:** ~57 GB combined. The main fp8 checkpoint is roughly 22 GB on its own; the distilled LoRA at rank 384 is substantially larger than a typical LoRA because it carries enough capacity to materially change the model's output (closer to a model delta than a stylistic adapter).
+- **Purpose:** primary text-to-video / image-to-video / first-and-last-frame-to-video model. Needs ComfyUI 0.41 or newer.
+- **Why this build:** the ComfyUI int8 + convrot export of the distilled transformer. At 21.5 GB it is half the size of bf16 (42 GB), runs on 24 GB cards (4090) as well as 5090, and avoids the NVFP4 build (18.7 GB), which only pays off on Blackwell and costs quality. The distilled model needs 8 steps at cfg 1 and no separate LoRA.
+- **HuggingFace repo:** [`Lightricks/LTX-2.5`](https://huggingface.co/Lightricks/LTX-2.5). **Gated**, accept the licence while logged in before downloading.
+- **Licence:** Lightricks LTX licence. Read the terms, there are restrictions on commercial use depending on revenue. **Your generations are your responsibility** under the LTX licence.
+- **Files:** `ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors` (21.5 GB), `ltx-2.5-video-vae-bf16.safetensors` (1.5 GB), `ltx-2.5-audio-vae-bf16.safetensors` (0.4 GB).
 
-### Gemma-3 12B text encoder (fp8 scaled)
+### Gemma 4 12B text encoder (LTX-2.5, int8)
 
-- **Purpose:** text encoder used by LTX-2.3. Without it, the video model cannot tokenise prompts.
-- **HuggingFace repo:** [`Comfy-Org/ltx-2`](https://huggingface.co/Comfy-Org/ltx-2) (`split_files/text_encoders/...` path in the manifest).
-- **Upstream:** [Google Gemma](https://huggingface.co/google/gemma-3-12b-it).
-- **Licence:** Google [Gemma Terms of Use](https://ai.google.dev/gemma/terms). **Gated on HuggingFace**, accept on the upstream repo page while logged in before downloading. Read the terms; Gemma has its own acceptable-use policy.
-- **Approx size:** ~12 GB.
+- **Purpose:** text encoder for LTX-2.5 (includes the projection head LTX needs). Loaded with the `ltxv` CLIP type.
+- **HuggingFace repo:** [`Lightricks/LTX-2.5`](https://huggingface.co/Lightricks/LTX-2.5) (`text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors`).
+- **Licence:** Google Gemma Terms of Use apply to the underlying model.
+- **Approx size:** 15.4 GB.
 
-### LTX-2.3 spatial upscaler (pro tier)
+### LTX-2.5 spatial upscaler (pro tier)
 
-- **Purpose:** spatial upscaling stage used by the LTX-2.3 pro variants.
-- **HuggingFace repo:** [`Lightricks/LTX-2.3`](https://huggingface.co/Lightricks/LTX-2.3).
-- **Licence:** Lightricks LTX community licence (same as the main LTX checkpoint).
-- **Approx size:** ~1 GB.
+- **Purpose:** 2x latent upscaling stage used by the LTX-2.5 pro variants.
+- **File:** `ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors` from [`Lightricks/LTX-2.5`](https://huggingface.co/Lightricks/LTX-2.5).
+- **Approx size:** 1 GB.
 
 ### RealESRGAN x2plus
 
@@ -85,12 +86,12 @@ These are **downloaded sizes**. Add roughly 5 to 10 GB of headroom for ComfyUI's
 
 | `LOOVIE_KIND` | Downloaded | Plan for at least |
 |---|---|---|
-| `images` (FLUX.2 Klein bundle) | ~24 GB | 30 GB |
-| `videos` (LTX-2.3 main + LoRA + Gemma encoder + upscaler + ESRGAN) | ~70 GB | 80 GB |
+| `images` (FLUX 3 Klein + MOSS-Image bundles) | ~24 GB | 30 GB |
+| `videos` (LTX-2.5 distilled int8 + Gemma 4 encoder + VAEs + upscaler + ESRGAN) | ~40 GB | 50 GB |
 | `music` (YuE2 3B int8) | ~4 GB | 8 GB |
-| `all` (all of the above) | ~103 GB | 110 GB |
+| `all` (all of the above) | ~68 GB | 80 GB |
 
-Per-file approximate sizes used above: FLUX.2 Klein bundle ~24 GB (main + VAE + Qwen encoder), LTX-2.3 22B main fp8 ~22 GB, LTX-2.3 22B distilled LoRA ~35 GB, Gemma-3 12B fp8 ~12 GB, LTX-2.3 spatial upscaler ~1 GB, RealESRGAN ~64 MB, YuE2 3B int8 ~3.7 GB. These are rough figures from Comfy-Org's published builds; the exact bytes on disk depend on which point release of each repo you fetch. The truthful source of truth is what HuggingFace serves to your token; treat the numbers above as planning aids, not contracts.
+Per-file approximate sizes used above: FLUX 3 Klein bundle ~11 GB and MOSS-Image bundle ~13 GB (each main + VAE + text encoder), LTX-2.5 distilled int8 transformer ~21.5 GB, Gemma 4 12B int8 encoder ~15.4 GB, video + audio VAEs ~1.9 GB, LTX-2.5 spatial upscaler ~1 GB, RealESRGAN ~64 MB, YuE2 3B int8 ~3.7 GB. These are rough figures from Comfy-Org's published builds; the exact bytes on disk depend on which point release of each repo you fetch. The truthful source of truth is what HuggingFace serves to your token; treat the numbers above as planning aids, not contracts.
 
 ## Adding a new model in a PR
 

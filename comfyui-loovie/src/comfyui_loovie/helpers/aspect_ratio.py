@@ -1,10 +1,10 @@
 """Aspect-ratio to pixel-dimension lookups.
 
 The image table is tuned for the diffusion model checkpoints the
-reference workflows ship with (FLUX.2 Klein). The video table maps
+reference workflows ship with (FLUX 3 Klein). The video table maps
 `(aspect_ratio, resolution)` pairs to LTX-compatible dimensions
 (multiples of 32) and a separate post-decode crop target so the band
-artefacts LTX 2.3 leaves in the padded rows can be trimmed.
+artefacts LTX 2.5 leaves in the padded rows can be trimmed.
 """
 
 from __future__ import annotations

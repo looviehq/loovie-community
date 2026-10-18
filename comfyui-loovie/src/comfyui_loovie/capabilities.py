@@ -1,6 +1,6 @@
 """Build the `/loovie/capabilities` manifest from the registered workflows.
 
-The manifest is derived dynamically: if you register an `ltx23-fl2v-pro`
+The manifest is derived dynamically: if you register an `ltx25-fl2v-pro`
 workflow, `fl2v` and `pro` show up in the video section. Conversely if no
 image workflow is registered, the `images` section is omitted entirely so
 the app hides the unsupported BYO tier.
@@ -37,22 +37,22 @@ _PROMPT_CHAR_LIMIT = 3000
 
 
 def _video_section(workflow_names: list[str]) -> dict[str, Any] | None:
-    """Build the `ss_videos` section from installed LTX 2.3 workflows."""
+    """Build the `ss_videos` section from installed LTX 2.5 workflows."""
     names = set(workflow_names)
     modes: list[str] = []
-    if any(n.startswith("ltx23-t2v-") for n in names):
+    if any(n.startswith("ltx25-t2v-") for n in names):
         modes.append("t2v")
-    if any(n.startswith("ltx23-i2v-") for n in names):
+    if any(n.startswith("ltx25-i2v-") for n in names):
         modes.append("i2v")
-    if any(n.startswith("ltx23-fl2v-") for n in names):
+    if any(n.startswith("ltx25-fl2v-") for n in names):
         modes.append("fl2v")
     if not modes:
         return None
 
     variants: list[str] = []
-    if any(n.startswith("ltx23-") and n.endswith("-fast") for n in names):
+    if any(n.startswith("ltx25-") and n.endswith("-fast") for n in names):
         variants.append("fast")
-    if any(n.startswith("ltx23-") and n.endswith("-pro") for n in names):
+    if any(n.startswith("ltx25-") and n.endswith("-pro") for n in names):
         variants.append("pro")
     if not variants:
         variants = ["fast"]
@@ -71,7 +71,7 @@ def _video_section(workflow_names: list[str]) -> dict[str, Any] | None:
 
 # Workflow names that count as "image" capable. Extend this set if you
 # register additional image workflows.
-_IMAGE_WORKFLOW_NAMES = frozenset({"flux-2-klein"})
+_IMAGE_WORKFLOW_NAMES = frozenset({"flux-3-klein", "flux-3-klein-edit", "moss-image"})
 
 
 # Workflow names that count as "music" capable. Extend this set if you

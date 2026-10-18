@@ -1,0 +1,205 @@
+{
+  "39": {
+    "inputs": {
+      "clip_name": "qwen3.5_9b_w4a8_gptq.safetensors",
+      "type": "moss_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP (Qwen3.5 for MOSS-Image)"
+    }
+  },
+  "40": {
+    "inputs": {
+      "vae_name": "flux2-vae_small.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "46": {
+    "inputs": {
+      "unet_name": "moss_image_sft_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load MOSS-Image SFT"
+    }
+  },
+  "13": {
+    "inputs": {
+      "model": [
+        "46",
+        0
+      ],
+      "clip": [
+        "39",
+        0
+      ],
+      "lora_name_1": "",
+      "strength_1": 0.8,
+      "lora_name_2": "",
+      "strength_2": 0.8,
+      "lora_name_3": "",
+      "strength_3": 0.8,
+      "lora_name_4": "",
+      "strength_4": 0.8,
+      "lora_name_5": "",
+      "strength_5": 0.8
+    },
+    "class_type": "LoovieLoraStack",
+    "_meta": {
+      "title": "Loovie LoRA Stack"
+    }
+  },
+  "14": {
+    "inputs": {
+      "model": [
+        "13",
+        0
+      ],
+      "double_layers": "",
+      "single_layers": "22",
+      "start_percent": 0.0,
+      "end_percent": 0.5
+    },
+    "class_type": "SkipLayerGuidanceDiTSimple",
+    "_meta": {
+      "title": "Skip Layer Guidance (layer 22)"
+    }
+  },
+  "53": {
+    "inputs": {
+      "text": [
+        "11",
+        0
+      ],
+      "clip": [
+        "13",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Positive Prompt"
+    }
+  },
+  "57": {
+    "inputs": {
+      "text": [
+        "11",
+        1
+      ],
+      "clip": [
+        "13",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative Prompt"
+    }
+  },
+  "80": {
+    "inputs": {
+      "width": [
+        "10",
+        0
+      ],
+      "height": [
+        "10",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": {
+      "title": "Empty Flux2 Latent"
+    }
+  },
+  "85": {
+    "inputs": {
+      "model": [
+        "14",
+        0
+      ],
+      "seed": [
+        "10",
+        2
+      ],
+      "steps": 25,
+      "cfg": 2.5,
+      "sampler_name": "er_sde",
+      "scheduler": "simple",
+      "positive": [
+        "53",
+        0
+      ],
+      "negative": [
+        "57",
+        0
+      ],
+      "latent_image": [
+        "80",
+        0
+      ],
+      "denoise": 1.0
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler (MOSS-Image)"
+    }
+  },
+  "54": {
+    "inputs": {
+      "samples": [
+        "85",
+        0
+      ],
+      "vae": [
+        "40",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "10": {
+    "inputs": {
+      "aspect_ratio": "1:1",
+      "seed": -1
+    },
+    "class_type": "LoovieSettings",
+    "_meta": {
+      "title": "Loovie Settings"
+    }
+  },
+  "11": {
+    "inputs": {
+      "prompt": "",
+      "negative_prompt": "nsfw, worst quality, bad anatomy, watermark, jpeg artifact"
+    },
+    "class_type": "LoovieTextInput",
+    "_meta": {
+      "title": "Loovie Text Input"
+    }
+  },
+  "48": {
+    "inputs": {
+      "filename_prefix": "loovie",
+      "images": [
+        "54",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  }
+}

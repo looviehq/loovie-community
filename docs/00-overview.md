@@ -20,10 +20,10 @@ The decision rule is simple: can the Loovie app reach a URL that speaks the cont
 
 ## GPU compatibility (applies to the reference workflows)
 
-The numbers below describe the **reference workflows we ship** (FLUX.2 Klein for image, LTX-2.3 for video). If you swap in lighter models, smaller GPUs work too. If you swap in heavier models, you'll need more VRAM. **The contract has nothing to say about GPU class**; that's a property of whichever model and workflow you choose to run.
+The numbers below describe the **reference workflows we ship** (FLUX 3 Klein for image, LTX-2.5 for video). If you swap in lighter models, smaller GPUs work too. If you swap in heavier models, you'll need more VRAM. **The contract has nothing to say about GPU class**; that's a property of whichever model and workflow you choose to run.
 
-- **Image (FLUX.2 Klein reference):** verified on **RTX 4090** and **RTX 5090**.
-- **Video (LTX-2.3 reference):** verified **only on RTX 5090** at launch. Other GPUs may work but are unverified.
+- **Image (FLUX 3 Klein reference):** verified on **RTX 4090** and **RTX 5090**.
+- **Video (LTX-2.5 reference):** the int8 distilled build (21.5 GB) is sized for 24 GB cards and up; not yet verified on a 4090. Previously verified only on RTX 5090 (LTX-2.3). Other GPUs may work but are unverified.
 
 We expect the 4090 to handle the `fast` video variant once we have more time on it; we are not promising that yet.
 

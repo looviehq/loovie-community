@@ -110,7 +110,7 @@ If you only use the server intermittently, stopping and restarting is cheap; res
 
 - **HTTP 401 from the downloader** → revisit [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md). The downloader prints which repo needs acceptance.
 - **Pod refuses to start with "LOOVIE_API_TOKEN is not set"** → you forgot the secret. Edit the pod, add it, restart.
-- **`/loovie/capabilities` missing `ss_videos`** → the video model download didn't finish. Check pod logs for errors during the LTX-2.3 downloads. Often a transient HuggingFace timeout, restart the pod and the downloader will resume.
+- **`/loovie/capabilities` missing `ss_videos`** → the video model download didn't finish. Check pod logs for errors during the LTX-2.5 downloads. Often a transient HuggingFace timeout, restart the pod and the downloader will resume.
 - **`Your server (BYO)` not visible in the app** → you have not joined the beta yet (see [`10-create-a-loovie-account.md`](10-create-a-loovie-account.md)) or the server is unreachable.
 
 For a fuller table, see [`70-troubleshooting.md`](70-troubleshooting.md).
