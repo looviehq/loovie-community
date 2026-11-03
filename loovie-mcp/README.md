@@ -148,13 +148,13 @@ The endpoint is a standard Streamable HTTP MCP server with OAuth 2.0 + DCR. Any 
 
 ## What it does
 
-The Loovie MCP server exposes 100+ tools and 20+ resources covering the creative core of Loovie. Story-mode flows, sketches, keyframe animation, and LUTs aren't in MCP yet — they still live in the mobile app. What's in:
+The Loovie MCP server exposes 100+ tools and 20+ resources covering the creative core of Loovie. Story-mode flows, the app's sketch canvas, keyframe animation, and applying LUTs aren't in MCP yet (first and last-frame generation do accept a sketch or layered composition as an input image). What's in:
 
-- **Characters** — create from a photo or a prompt, generate optional character sheets, manage variations.
-- **Generation** — text-to-image, image-to-video, first/last frame, swap (face/character), motion control, AI VFX.
-- **Editing** — clips, captions, picture-in-picture, transitions, music, color grading, speed curves.
-- **Library** — backgrounds, music, sound effects, style presets, transitions, starter characters.
-- **Lifecycle** — projects, exports, generation history, credits, spend approvals.
+- **Characters** — create from a photo or a prompt, generate optional character sheets, edit the primary image, manage and reorder variations.
+- **Generation** — text-to-image, image-to-video, first and last frame, swap (face/character), motion control, AI VFX, storyboard grids, and reference-driven video with `@tag` handles.
+- **Editing** — clips, trims, captions, picture-in-picture, transitions, music, color grading, speed curves, clip extension, subject cutouts, alternate takes.
+- **Library** — backgrounds, music, sound effects, style presets, transitions, caption presets, the LUT catalogue, motion references, prompts, starter characters, and saved assets.
+- **Lifecycle** — projects, exports and export history, generation history, credits, spend approvals.
 
 All spend tools follow a two-step pattern: `estimate_*` returns a credit cost and an approval token; `execute_*` consumes the token and starts the job. Your client confirms with you before each spend.
 

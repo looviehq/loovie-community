@@ -1,6 +1,6 @@
 ---
 name: making-a-loovie-video
-description: "Use when the user wants to create a new Loovie video from a brief, story idea, or prompt. Covers the full happy path: new project, characters and reference material, generating the video (single-shot or multi-shot, with @tag references), assembling clips, adding music, export."
+description: "Use when the user wants to create a new Loovie video from a brief, story idea, or prompt. Covers the full happy path: new project, characters and reference material, generating the video (single-shot or multi-shot, with @tag references), extending a clip, assembling clips, adding music, export."
 ---
 
 # Making a Loovie video
@@ -14,10 +14,11 @@ You are working with the user to produce a finished video on Loovie. The Loovie 
 3. **One approval per spend.** If your client can show MCP confirmation prompts, tell the user the credit cost in your reply and call `execute_*` straight away: the confirmation prompt Loovie shows is the approval, so do not also ask for a "yes" in chat. Only when your client cannot show those prompts do you wait for an explicit "yes" in chat before calling `execute_*`. Holding an `approvalToken` is never approval by itself.
 4. **Declined means stop.** If `execute_*` comes back declined, do not retry. Never change spend limits (`set_mcp_spend_preferences`) to get past a refusal or a limit: those are the user's to raise in the Loovie app.
 5. **Escalated approvals.** If no prompt could be shown, the result names a `pendingApprovalId`. Tell the user they can tap the push notification in the Loovie app, or say "approve in chat" (then call `approve_pending_spend({ pendingApprovalId })`). Keep calling `wait_for_spend_approval({ pendingApprovalId })` until it returns `approved` (a `timeout` with `stillPending` is not an error, call it again). Then run the matching `execute_*` with the returned `originalParams` exactly as given, or pass `execute: true` to let the wait tool run it. Any drift in params fails server-side verification.
-6. **Poll, don't block.** Generation tools return a `jobId`. Poll `get_job(jobId)` (2s for the first 20s, then 5s) until `status` is terminal (`completed` / `failed` / `cancelled` / `timeout`). For video, poll the top-level `jobId`, never `video.id`, which 404s. For N parallel jobs, fire all `execute_*` calls in one turn to collect jobIds, then poll each.
-7. **Show your work, and never leave the user with a blank.** When a job completes, call `get_asset_preview` on the resulting asset so the user sees it inline. If the client can't render it inline or you can't fetch the bytes (for example the asset host isn't on your runtime's network allowlist), don't loop on the preview tool: paste the asset URL as a plain clickable markdown link (`[Stella's first frame](https://…)`). Every completed job ends with either an inline preview or a working link. If the preview failed because of the allowlist, mention that the user can add `api.loovie.app` to their client's allowlist for inline previews.
+6. **Poll with `waitMs`, never sleep.** Generation tools return a `jobId`. Call `get_job(jobId)` with `waitMs` (default 25 s, max 45 s) and call it again the moment it returns: the server long-polls and hands back as soon as the job is terminal (`completed` / `failed` / `cancelled` / `timeout`) or its progress moves. Do not add client-side sleeps between polls. For video, poll the top-level `jobId`, never `video.id`, which 404s. A storyboard grid is polled with `get_storyboard_grid` (or `get_job`, which accepts its id): both long-poll via `waitMs`. For N parallel jobs, fire all `execute_*` calls in one turn to collect jobIds, then poll each in the same turn.
+7. **Show your work, and never leave the user with a blank.** A terminal `get_job` already carries what to show: image jobs inline a thumbnail, video jobs a fresh 24-hour signed `videoUrl`. Surface that. Call `get_asset_preview` only to re-surface an asset the user asks to see again. If the client can't render it inline or you can't fetch the bytes (for example the asset host isn't on your runtime's network allowlist), don't loop on the preview tool: paste the asset URL as a plain clickable markdown link (`[Stella's first frame](https://…)`). Every completed job ends with either an inline preview or a working link. If the preview failed because of the allowlist, mention that the user can add `api.loovie.app` to their client's allowlist for inline previews.
 8. **Never surface internal model or provider names.** Talk in tier, variant, duration, resolution and audio terms only.
 9. **Uploads take storage keys, never URLs.** Anywhere a tool asks for a `storageKey`, it must come from an upload or the library. If the user supplies a reference image or clip, upload the **original** (presigned PUT, see `creating-a-character-from-photo`). Only downsize when forced onto the `dataBase64` fallback.
+10. **Retries carry an `idempotencyKey`.** Every `execute_*` accepts one. When you retry a submit (for example after a network blip), pass the same key so the server collapses it to one job and one credit deduction.
 
 ## Playbook
 
@@ -36,7 +37,7 @@ You are working with the user to produce a finished video on Loovie. The Loovie 
 
 References are how you keep people, products, places and looks consistent through a clip. Collect them before writing the prompt, because the prompt has to point at them.
 
-If the user wants a new character from a prompt rather than a photo or a starter: `estimate_generate_character_image` → `execute_generate_character_image` → poll `get_job`. Optionally follow with `estimate_generate_character_sheet` → `execute_generate_character_sheet` for a multi-pose sheet, which strengthens consistency downstream. Skip it when the user doesn't want to spend the extra credits, since downstream tools work without it. Starter characters: read `loovie://library/starter-characters` and `clone_character`.
+If the user wants a new character from a prompt rather than a photo or a starter: `estimate_generate_character_image` → `execute_generate_character_image` → poll `get_job`. Optionally follow with `estimate_generate_character_sheet` → `execute_generate_character_sheet` for a multi-pose sheet, which strengthens consistency downstream. The sheet call needs a `prompt` of at least 20 characters describing wardrobe, identity and style; a character's first sheet is saved automatically, and only a replacement sheet needs `confirm_character_variation`. Skip it when the user doesn't want to spend the extra credits, since downstream tools work without it. Starter characters: read `loovie://library/starter-characters` and `clone_character`.
 
 | Reference kind | What it is | Where it comes from |
 |---|---|---|
@@ -51,6 +52,7 @@ If the user wants a new character from a prompt rather than a photo or a starter
 Rules for `references[]` on `estimate_generate_video` / `execute_generate_video`:
 
 - **Up to 7 references.** Each one needs a unique `tag` of 1 to 32 letters, digits or underscores (for example `Maya`, `Sneaker`, `Alley`). Never use `Image1` / `Element1` style names.
+- **Reserved handles are not tags.** `@source` and `@reference` are reserved role mentions on a few tools (character image, first and last frame, image edit, background regenerate) and bind to that tool's own inputs. Never use either as a `references[]` tag.
 - **Point at each reference from the prompt with `@tag`**: `@Maya walks into @Alley holding @Sneaker`. A reference nobody mentions in the prompt is wasted. In multi-shot, mention it in the shot prompt where it appears.
 - **Not available on the `basic` tier.** Each tier caps how many references it accepts, and some engines fold a first frame into the same slots. The estimate rejects an over-limit request and names the field. It never silently drops one, so if you get a rejection, trim the list or change tier rather than retrying the same request.
 - **A last frame cannot be combined with references on `loovie-spark` / `loovie-spark-max`.** Choose between a start-to-end morph and reference-driven generation.
@@ -63,36 +65,37 @@ Rules for `references[]` on `estimate_generate_video` / `execute_generate_video`
 Pick the `generationMode` from what the user actually has:
 
 - `text_to_video`: prompt only, plus `references[]` if they have any. The most common path now: references carry consistency, so a separate first-frame step is optional.
-- `image_to_video`: the user wants to start from a specific image. Needs `firstFrameStorageKey`. Use `estimate_generate_first_frame` / `execute_generate_first_frame` to make one from a prompt and characters, then pass its storage key.
-- `start_end_frames`: a morph between two images. Needs first and last frame keys. If the user wants the shot to land on a specific closing image, make one first with `estimate_generate_last_frame` → `execute_generate_last_frame`. Cannot be combined with references on the Spark tiers.
+- `image_to_video`: the user wants to start from a specific image. Needs `firstFrameStorageKey`. Use `estimate_generate_first_frame` / `execute_generate_first_frame` to make one from a prompt and characters (`aspectRatio` is required), then pass its storage key.
+- `start_end_frames`: a morph between two images. Needs first and last frame keys. If the user wants the shot to land on a specific closing image, make one first with `estimate_generate_last_frame` → `execute_generate_last_frame` (`aspectRatio` is required here too). Cannot be combined with references on the Spark tiers.
 - `multi_shot`: several shots in one clip (see step 6).
 
 Only set `hasFirstFrame` / `hasLastFrame` on discovery tools when those frames really exist, since setting them speculatively reroutes the options.
 
 ### 5. Generate a single-shot video
 
-1. **Pick the tier and settings.** `loovie-spark-max` is the default. With no tier named, estimate on it straight away: no tier menu, and don't default to `high` or `ultra`. The one exception is a high-action scene (fights, stunts, chases, crashes, dancing, crowds in motion, very fast movement). For those, recommend Ultra and show its cost beside the Spark Max cost (the estimate returns it under `alternatives`), then let the user pick. Never switch tiers on your own. Calm, character-driven scenes (talking, walking, reacting) stay on the default. When the user names a constraint ("12 seconds with audio", "1080p"), call `recommend_generation_options` with `surface: video` and surface every row, including `nearMatches` (for example "that tier would work if you turn audio off"). For plain "what are my options" questions use `list_quality_tiers`. Durations and resolutions differ per tier and with audio, so call `get_generation_capabilities` before quoting them.
+1. **Pick the tier and settings.** `loovie-spark-max` is the default. With no tier named, estimate on it straight away: no tier menu, and don't default to `high` or `ultra`. The one exception is a high-action scene (fights, stunts, chases, crashes, dancing, crowds in motion, very fast movement). For those, recommend Ultra and show its cost beside the Spark Max cost (the estimate returns it under `alternatives`), then let the user pick. Never switch tiers on your own; if they do pick Ultra, follow `tierRecommendation.promptNote` when you rewrite the prompt. Calm, character-driven scenes (talking, walking, reacting) stay on the default. When the user names a constraint ("12 seconds with audio", "1080p"), call `get_generation_capabilities` with `surface: "single_shot_video"` (or `multi_shot_video`), `tier: "loovie-spark-max"` and only the flags that really apply (`withAudio`, `hasFirstFrame`, `hasLastFrame`, `hasMultiShot`) before quoting anything. Use `recommend_generation_options` with `surface: "video"` only when Spark Max cannot meet the named constraint; it returns every row plus `nearMatches` (for example "that tier would work if you turn audio off"), which you must surface. For plain "what are my options" questions use `list_quality_tiers`. Durations and resolutions differ per tier and with audio, so call `get_generation_capabilities` before quoting them.
 2. **Write the prompt.** Unless the user said "use my prompt as-is" (then set `promptVerbatim: true`), direct subject motion, camera motion, lighting, camera angle and style, with `@tag` mentions for each reference. When a first or last frame is supplied, direct only motion and camera motion, because the frame already locks style and lighting.
 3. **Estimate.** `estimate_generate_video` with `generationMode`, `prompt`, `aspectRatio`, `duration`, `videoQualityTier`, `references`, `withAudio` and the projectId. Read `promptQuality`: if `promptShouldBeRicher` is true, rewrite using `suggestions` and estimate again. No separate `score_prompt` call is needed. Quote `estimatedCredits`.
-4. **Execute** with the same params plus `approvalToken`, following the spend rules above, then poll `get_job` and `get_asset_preview`.
+4. **Execute** with the same params plus `approvalToken`, following the spend rules above, then poll `get_job` until terminal (its result already carries the preview and signed URL).
 
 Do not set `maxSpeed` unless the user wants a faster render. It is not cheaper, only available on `loovie-spark-max`, and the estimate rejects ineligible combinations with the reason.
 
 ### 6. Generate a multi-shot video
 
 - `generationMode: multi_shot`, with the tier in `multiShotQualityTier` (not `videoQualityTier`). The top-level `prompt` is a one or two sentence overview.
-- `multiShot.shots[]` takes 2 to 8 shots. Each shot has its own `prompt` (its own subject motion, camera direction and lighting, max 500 characters), `durationSeconds` (1 to 12), and optional `dialogue` and `transitionDescription`. Total length is the sum of the shots.
+- `multiShot.shots[]` takes 2 to 8 shots. Each shot has its own `prompt` (its own subject motion, camera direction and lighting, max 500 characters), `durationSeconds` (1 to 12), and optional `transitionDescription`. Total length is the sum of the shots. There is no per-shot `dialogue` field: lines cannot be scripted, and `dialogue` is stripped if sent.
 - Put `@tag` mentions in the shot prompts where each reference appears. Declare the references once in the top-level `references[]`.
 - To pin a shot's look, give it a `referenceImageStorageKey`. Shot images are combined into one panel reference for the clip.
-- For tighter planning, make a storyboard grid first: `estimate_create_storyboard_grid` → `execute_create_storyboard_grid` → `get_storyboard_grid`, then pass the finished grid as `storyboardGridStorageKey`. **Don't set per-shot `referenceImageStorageKey` together with a storyboard grid.** The grid isn't available on `basic`, and on `high` only with `multiShot.shots[]`.
+- For tighter planning, make a storyboard grid first: `estimate_create_storyboard_grid` → `execute_create_storyboard_grid` → `get_storyboard_grid` (long-polls with `waitMs`; progress rises while it renders), then pass the finished grid as `storyboardGridStorageKey`. The grid call needs the same plan as the video: `mode` (`detailed` drives each panel from its shot prompt, `simple` splits one `storyPrompt`), `shots` (1 to 5, same order and durations), `aspectRatio`, `multiShotQualityTier`, and the same `references[]`. **Don't set per-shot `referenceImageStorageKey` together with a storyboard grid.** The grid isn't available on `basic`, and on `high` only in `detailed` mode with `multiShot.shots[]`.
 - Prefer `multiShot.shots[]` over the legacy `simpleMultiShot` flag.
 
 ### 7. Assemble the timeline
 
 - Generated clips are appended to the project you passed. If you need to place one manually, use `add_clip`.
-- For multi-clip videos, add transitions with `add_transition` (read `loovie://library/transitions` for options).
+- To make a clip keep going, extend it rather than generating a new shot: `estimate_extend_clip` → `execute_extend_clip`. The continuation lands as a new clip right after the source; extend the returned `clipId` to go further. It takes no image or character references — the source clip is the visual reference. Full rules in `editing-an-existing-project`.
+- For multi-clip videos, add transitions with `add_transition` (read `loovie://library/transitions` for options; transitions are free).
 - For captions, use `add_caption`. For auto-captions from an audio track, run `estimate_transcribe_audio` → `execute_transcribe_audio` first.
-- For background music, browse `loovie://library/music` (or `list_music_tracks` / `browse_library`) and call `set_music_track`, or generate one with `estimate_generate_music` → `execute_generate_music`.
+- For background music, browse `loovie://library/music` (or `browse_library` / `search_library`; `list_music_tracks` lists the user's own saved tracks) and call `set_music_track`, or generate one with `estimate_generate_music` → `execute_generate_music`.
 - For anything beyond this, hand off to the `editing-an-existing-project` skill.
 
 ### 8. Export
@@ -102,7 +105,7 @@ Do not set `maxSpeed` unless the user wants a faster render. It is not cheaper, 
 ## When something fails
 
 - A tool call rejecting a tier (a `Forbidden` or unavailable error) means that tier isn't enabled for this user or flow. Fall back to the default tier and say so.
-- A `get_job` poll returning `status: 'failed'` should be retried once with the same input. If it fails again, surface the error message to the user and stop. Do not silently keep spending credits.
+- A `get_job` poll returning `status: 'failed'` should be retried once with the same input and the same `idempotencyKey`. If it fails again, surface the error message to the user and stop. Do not silently keep spending credits.
 - A `get_job` poll returning `status: 'timeout'` is terminal, not retryable in place: surface the job's `error` block and ask the user before starting a new job.
 - A `get_job` poll returning `status: 'pending_approval'`, or an `execute_*` result with a `pendingApprovalId`, means the spend is waiting on approval. Follow hard rule 5.
 - If the user's balance won't cover the estimate, stop and tell them. Do not start the job.

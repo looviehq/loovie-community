@@ -51,6 +51,34 @@
         "The agent offers both approval paths: mobile push notification and in-chat via approve_pending_spend",
         "The agent continues polling after approval"
       ]
+    },
+    {
+      "id": "output-long-poll",
+      "type": "output",
+      "prompt": "Simulate: get_job returns status 'processing' with progress 40",
+      "assertions": [
+        "The agent calls get_job again with waitMs instead of sleeping in the client",
+        "No artificial 2s/5s client-side delay is introduced between polls"
+      ]
+    },
+    {
+      "id": "output-no-retired-video-fields",
+      "type": "output",
+      "prompt": "Make a two-shot video where the characters talk to each other",
+      "assertions": [
+        "multiShot.shots[] entries carry prompt, durationSeconds and only the optional transitionDescription/referenceImageStorageKey fields",
+        "No dialogue, negativePrompt, noSpeech or noBackgroundMusic fields are sent",
+        "Any spoken content is expressed inside the shot prompt rather than a dialogue field"
+      ]
+    },
+    {
+      "id": "output-extend-continuation",
+      "type": "output",
+      "prompt": "That clip is a bit short - can it just keep going?",
+      "assertions": [
+        "The agent uses estimate_extend_clip then execute_extend_clip instead of generating a new video",
+        "The agent explains that the continuation becomes a new clip after the source clip"
+      ]
     }
   ]
 }

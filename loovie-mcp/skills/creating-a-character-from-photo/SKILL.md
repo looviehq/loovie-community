@@ -1,6 +1,6 @@
 ---
 name: creating-a-character-from-photo
-description: Use when the user wants to turn a reference image (a photo, an artwork, a screenshot) into a reusable Loovie character. Walks through upload, character creation, and (optionally) character sheet generation so the character can be used in subsequent video and image jobs.
+description: Use when the user wants to turn a reference image (a photo, an artwork, a screenshot) into a reusable Loovie character, edit a character's image, or manage its looks. Walks through upload, character creation, (optionally) character sheet generation, and variations so the character can be used in subsequent video and image jobs.
 ---
 
 # Creating a character from a photo
@@ -66,25 +66,31 @@ Then base64-encode `/tmp/loovie-ref.jpg` and pass to `upload_image_for_reference
 ### 2. Create the character shell
 
 - Ask for a name and a one-line description if not given.
-- `create_character` with the name, description, and the uploaded image as the initial `original` variation.
+- `create_character` with `name`, `description`, and the `storageKey` from `finalize_image_upload` (or `imageBase64` on the fallback path). That image becomes the character's `original` variation and its primary image.
 
 ### 3. (Optional) Generate a character sheet
 
 - Skip this step entirely if the user doesn't ask for it, or if the credit cost isn't justified for their use case. Downstream tools work without it.
 - If you do generate one:
   - `estimate_generate_character_sheet` with the `characterId`. Show the credit cost.
-  - Then `execute_generate_character_sheet` → poll `get_job` until terminal.
-  - The result is a draft variation. Call `confirm_character_variation` to persist it as the canonical character sheet, or `discard_character_variation` if the user doesn't like it.
-  - `get_asset_preview` on the sheet URL so the user sees it inline. If it can't render inline (or the asset host isn't reachable from your runtime), give the user the sheet URL as a clickable link instead — don't loop on the preview tool and don't leave them with nothing.
+  - `execute_generate_character_sheet` needs the `characterId` **and a `prompt`** (20–8000 characters) describing wardrobe, identity and style — the sheet locks those in for every future shot.
+  - Poll `get_job` until terminal. The character's **first** sheet is persisted automatically. A replacement sheet (the character already has one) is deferred: show the preview, then call `confirm_character_variation({ characterId, jobId })` to keep it or `discard_character_variation({ characterId, jobId })` to throw it away.
+  - The terminal `get_job` result already carries the sheet image; use `get_asset_preview` only to re-surface it. If it can't render inline (or the asset host isn't reachable from your runtime), give the user the sheet URL as a clickable link instead — don't loop on the preview tool and don't leave them with nothing.
 
 ### 4. (Optional) More variations
 
-- If the user wants extra looks (different outfit, different age, etc.): `estimate_add_character_variation` → `execute_add_character_variation` → `confirm_character_variation`.
+- If the user wants extra looks (different outfit, different age, etc.): `estimate_add_character_variation` needs `characterId`, a `category` (`outfit`, `age`, `expression`, `pose`, `setting`, `custom`) and a `prompt`; then `execute_add_character_variation` → poll `get_job` → `confirm_character_variation({ characterId, jobId })` to keep it or `discard_character_variation({ characterId, jobId })` to drop it.
+- If the user supplies another photo of the same character, `upload_character_variation` saves it as a variation for free — no generation, no credits.
 - If a character sheet exists, prefer it as the reference for clothes/hair consistency; otherwise reference the original variation image.
 
-### 5. Use the character in a video
+### 5. (Optional) Edit the character's image
 
-- Pass the character as a reference on video generation: `{ kind: "character", sourceId: <characterId>, tag: "<Name>" }`, plus `variationId` (from `get_character`) to pin a specific outfit or look. Then mention `@<Name>` in the prompt. This keeps the character consistent through the whole clip and is preferred over the legacy `characterIds` field. See `making-a-loovie-video`, step 3, for the full reference rules.
+- To change the character itself (new jacket, different hair), use `estimate_edit_character_image` → `execute_edit_character_image` → poll `get_job`.
+- The edit is **not** applied automatically. Keep it with `update_character({ characterId, editedImageUri: <result image URL> })`, or throw it away with `discard_character_edit({ characterId, editStorageKey: <result storageKey> })`. Show the preview and ask before choosing.
+
+### 6. Use the character in a video
+
+- Pass the character as a reference on video generation: `{ kind: "character", sourceId: <characterId>, tag: "<Name>" }`, plus `variationId` (from `get_character`) to pin a specific outfit or look. Then mention `@<Name>` in the prompt. This keeps the character consistent through the whole clip and is preferred over the legacy `characterIds` field. See `making-a-loovie-video`, step 3, for the full reference rules. For image edits and remixes (`estimate_edit_image`) the character goes in `characterIds` instead, since that tool takes no `references[]` — and `@source` / `@reference` there are reserved handles, not reference tags.
 
 ## When something fails
 
