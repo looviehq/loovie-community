@@ -21,7 +21,8 @@ You are turning a Loovie project into a deliverable MP4. All tools and `loovie:/
 
 ### 2. Start the export
 
-- `start_export` with the `projectId` and any quality/resolution options the user gave you. Returns a `jobId`.
+- First run `inspect_project_layout` and tell the user about anything it flags: overlays hidden behind others, overlays that end before the main track, off-frame overlays, captions after the end, a video playing twice.
+- `start_export` with the `projectId` and an optional `format` (`mp4` default, or `mov` / `webm` / `gif`). Returns a `jobId`. Resolution and quality are **not** parameters — they come from the project settings, so say that rather than promising a different render size.
 - If the response includes `cached: true`, the project hasn't changed since its last successful export — skip polling entirely and go straight to `get_export_download_url`.
 - Quote any credit cost up front if the export carries one (check the response; most exports are free at the Loovie layer).
 
@@ -36,11 +37,13 @@ You are turning a Loovie project into a deliverable MP4. All tools and `loovie:/
 
 ### 5. Optional: list past exports
 
-- `list_exports` for the project shows past renders. Useful for "show me my last export" or "redownload yesterday's render".
+- `list_exports` for the project shows past renders. Useful for "show me my last export" or "redownload yesterday's render". It pages with `limit` / `offset`; `pagination.hasMore` says whether there is another page.
+- `cancel_export` deletes an export job — an in-flight one is cancelled, a completed one also loses its rendered file. Confirm with the user before calling it.
 
 ## When something fails
 
 - `status: 'failed'` with a retryable error: call `retry_export` once.
 - `status: 'timeout'`: the render exceeded its window. Call `retry_export` once; if it times out again, surface the error and stop.
 - `status: 'failed'` with a non-retryable error: surface the error and stop. Do not start a new export silently.
+- If the user wants to abandon a render rather than retry it, `cancel_export` removes the job (and the file, for a completed export). Ask first.
 - If the user has no exportable clips on the project, tell them and stop — exports of empty timelines fail.

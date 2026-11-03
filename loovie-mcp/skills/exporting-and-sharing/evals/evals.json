@@ -9,6 +9,7 @@
       "assertions": [
         "The exporting-and-sharing skill activates",
         "The agent summarises the project timeline before starting the export",
+        "inspect_project_layout is called before start_export and its findings are described",
         "start_export is called and get_export_status is polled until a terminal status"
       ]
     },
@@ -41,6 +42,16 @@
       "prompt": "Simulate: the selected project has no clips",
       "assertions": [
         "The agent tells the user the timeline is empty and does not call start_export"
+      ]
+    },
+    {
+      "id": "output-format-only",
+      "type": "output",
+      "prompt": "Export my project in 4K",
+      "assertions": [
+        "The agent explains that resolution and quality come from the project settings and that start_export only accepts a format",
+        "The agent does not pass quality or resolution parameters to start_export",
+        "The agent still offers the supported formats (mp4, mov, webm, gif)"
       ]
     }
   ]

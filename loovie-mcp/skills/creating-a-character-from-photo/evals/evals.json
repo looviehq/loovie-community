@@ -10,7 +10,7 @@
         "The creating-a-character-from-photo skill activates",
         "With shell access, the upload uses request_image_upload_url, a curl PUT, then finalize_image_upload",
         "The original image is uploaded without downsizing on the presigned-PUT path",
-        "create_character is called with the uploaded image as the original variation"
+        "create_character is called with the uploaded storageKey as the original variation"
       ]
     },
     {
@@ -44,6 +44,26 @@
       "assertions": [
         "The agent skips character sheet generation",
         "The agent does not present the sheet as required for downstream generation"
+      ]
+    },
+    {
+      "id": "output-sheet-requires-prompt",
+      "type": "output",
+      "prompt": "Generate a character sheet for Stella",
+      "assertions": [
+        "execute_generate_character_sheet includes a prompt of at least 20 characters describing wardrobe, identity and style",
+        "On the character's first sheet, confirm_character_variation is not called because the sheet is persisted automatically",
+        "On a replacement sheet, the agent calls confirm_character_variation or discard_character_variation with the jobId"
+      ]
+    },
+    {
+      "id": "output-edit-character-image",
+      "type": "output",
+      "prompt": "Give Stella a leather jacket",
+      "assertions": [
+        "The agent uses estimate_edit_character_image then execute_edit_character_image",
+        "The agent does not claim the character changed until update_character is called with editedImageUri",
+        "The agent offers discard_character_edit with the editStorageKey when the user rejects the result"
       ]
     }
   ]

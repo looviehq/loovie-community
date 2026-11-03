@@ -45,6 +45,34 @@
         "The agent re-reads the project, recomputes the edit, and retries once",
         "The agent does not delete clips to make the error go away"
       ]
+    },
+    {
+      "id": "output-trim-uses-source-offsets",
+      "type": "output",
+      "prompt": "Trim 2 seconds off the start of clip 1",
+      "assertions": [
+        "trim_clip is called with startTimeMs/endTimeMs as source in/out points into the clip's video",
+        "The agent does not describe trim_clip as moving the clip on the timeline"
+      ]
+    },
+    {
+      "id": "output-extend-clip",
+      "type": "output",
+      "prompt": "Make the last clip keep going for a few more seconds",
+      "assertions": [
+        "The agent uses estimate_extend_clip then execute_extend_clip instead of generating a new video",
+        "The agent explains that the continuation lands as a new clip after the source and extends the returned clipId for further extension",
+        "The agent reports the named refusal code if the estimate rejects the source (for example SOURCE_TOO_SHORT or SOURCE_NOT_VIDEO)"
+      ]
+    },
+    {
+      "id": "output-transition-is-free",
+      "type": "output",
+      "prompt": "Add a dissolve between the first two clips",
+      "assertions": [
+        "add_transition is called with type dissolve",
+        "The agent does not quote credits for the transition or mention an ai-morph transition"
+      ]
     }
   ]
 }
