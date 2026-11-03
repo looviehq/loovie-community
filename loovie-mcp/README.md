@@ -3,7 +3,6 @@
 Create AI characters, generate images and videos, and edit Loovie projects from your AI agent — Claude Code, Cursor, Claude Desktop, VS Code, Continue, Cline, OpenCode, or any spec-compliant MCP client.
 
 [![npm](https://img.shields.io/npm/v/@loovie/mcp?label=%40loovie%2Fmcp&color=brightgreen)](https://www.npmjs.com/package/@loovie/mcp)
-[![Smithery](https://smithery.ai/badge/looviehq/loovie-mcp)](https://smithery.ai/server/looviehq/loovie-mcp)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../LICENSE)
 
 The plugin connects your client to the hosted Loovie MCP server at `https://api.loovie.app/v1/mcp`. Auth is OAuth — the first time you call a tool, your browser opens to sign you in and your client remembers the token.
