@@ -4,6 +4,19 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 > **Beta API stability.** While we are on the `0.x` line, the BYO HTTP contract (`openapi/loovie-server.openapi.yaml`) may introduce breaking changes between minor versions. Every breaking change is logged below and reflected in a bump of `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). Pin to a specific tag or commit SHA if you depend on the contract; strict semver kicks in at `1.0.0`.
 
+## [0.4.0-beta.1](https://github.com/looviehq/loovie-community/compare/v0.3.0-beta.1...v0.4.0-beta.1) (2026-11-07)
+
+
+### Features
+
+* **comfyui-loovie:** multi-model BYO contract and Stable Audio 3 SFX ([#92](https://github.com/looviehq/loovie-community/issues/92)) ([761297b](https://github.com/looviehq/loovie-community/commit/761297ba3b107c8d7468765d899ab5739867c17c))
+* **comfyui-loovie:** runnable Pika H3 Flex graphs ([#93](https://github.com/looviehq/loovie-community/issues/93)) ([5f9df45](https://github.com/looviehq/loovie-community/commit/5f9df4535614a28600d626464062f96c70c07722))
+
+
+### Documentation
+
+* **mcp:** align bundled skills with the current MCP tool surface ([#90](https://github.com/looviehq/loovie-community/issues/90)) ([a699c53](https://github.com/looviehq/loovie-community/commit/a699c531b7dbfa342e449cbbba768bedf592b554))
+
 ## [0.3.0-beta.1](https://github.com/looviehq/loovie-community/compare/v0.2.3-beta.1...v0.3.0-beta.1) (2026-10-17)
 
 

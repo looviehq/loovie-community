@@ -1,66 +1,113 @@
 openapi: 3.1.0
 info:
   title: Loovie BYO Server Contract
-  version: 0.5.0-beta.1
+  version: 0.4.0-beta.1
   summary: >-
     The HTTP contract a third-party server implements to be drivable by the
     Loovie mobile app.
-  description: |
+  description: >
     The HTTP API a "Bring Your Own" server must expose so the Loovie app
-    can drive image, single-shot video, music and sound-effect generation on it. The Loovie
+
+    can drive image, single-shot video, music and sound-effect generation on it.
+    The Loovie
+
     backend NEVER calls this server; only the Loovie mobile app (on the
+
     user's device) does. The app stores the server URL and bearer token
+
     on the user's device only - they are needed there so the app can
+
     reach the server - and they are never sent to Loovie's backend
+
     servers or accessible to Loovie staff.
 
+
     Any HTTP server implementing this contract is valid - language and
+
     framework are your choice. We ship a ComfyUI reference implementation
+
     in `comfyui-loovie/` and a minimal FastAPI reference in
+
     `examples/minimal-server/`, but those are examples, not requirements.
+
 
     ## Auth
 
+
     A static bearer token chosen by the operator (`LOOVIE_API_TOKEN`).
+
     Required for all remote callers; localhost (`127.0.0.1`, `::1`) may
+
     bypass. If no token is configured the server MUST refuse remote
+
     requests (fail closed: deny by default rather than letting requests
+
     through unauthenticated). The endpoints `/loovie/health` and
+
     `/loovie/capabilities` are intentionally unauthenticated so the app
+
     can probe them.
+
 
     ## Conditional endpoints
 
+
     `/images/create` + `/images/status` are required only if your
+
     `/loovie/capabilities` advertises an `images` section. `/videos/create`
+
     + `/videos/status` are required only if it advertises `ss_videos`.
+
     `/music/create` + `/music/status` are required only if it advertises
+
     `music`.
+
     Servers MAY omit endpoints that match a section they don't advertise;
+
     the app will not call them. The capabilities manifest is the source
+
     of truth for what your server can do; this spec describes the maximum
+
     surface.
+
 
     `/loovie/health` and `/loovie/capabilities` are ALWAYS required.
 
+
     ## Versioning
 
+
     **Beta API stability.** While we are on the `0.x` line, breaking
+
     changes MAY land in minor bumps - renaming or removing endpoints,
+
     narrowing or replacing enum values, changing field requiredness,
+
     reshaping responses. Every break is documented in CHANGELOG.md and
+
     reflected in `info.version` here (and in `schemaVersion` on the
+
     capabilities manifest when the shape changes). If you depend on
+
     this contract, pin to a specific tag or commit SHA rather than
+
     tracking `main`. Strict semver applies once we reach `1.0.0`.
 
+
     `info.version` follows semver and is independent of any individual
+
     implementation's version. The capabilities manifest's `schemaVersion`
+
     is currently `2`; it bumps only when the manifest SHAPE changes.
+
     Version 2 adds the per-model `models` map (`images`, `ss_videos`) with
+
     model-level capabilities, variants, VRAM hints and `ref2v`. The flat
+
     `images` / `ss_videos` blocks remain as a v1 compatibility view for
+
     released app builds and may be omitted when the default model cannot be
+
     expressed with the v1 closed enums.
   contact:
     name: Loovie HQ
@@ -72,8 +119,12 @@ externalDocs:
   description: Step-by-step setup, security, and troubleshooting guides.
   url: https://github.com/looviehq/loovie-community/tree/main/docs
 x-loovie-conditional-endpoints:
-  images: Required when /loovie/capabilities advertises image models (`models.images` and/or the legacy `images`).
-  ss_videos: Required when /loovie/capabilities advertises single-shot video models (`models.ss_videos` and/or the legacy `ss_videos`).
+  images: >-
+    Required when /loovie/capabilities advertises image models (`models.images`
+    and/or the legacy `images`).
+  ss_videos: >-
+    Required when /loovie/capabilities advertises single-shot video models
+    (`models.ss_videos` and/or the legacy `ss_videos`).
   music: Required only when /loovie/capabilities advertises a `music` section.
 servers:
   - url: '{base}'
@@ -149,7 +200,8 @@ components:
       description: >-
         `t2v` = text-to-video; `i2v` = image-to-video; `fl2v` =
         first+last-frame-to-video; `ref2v` = reference-image-to-video (adds
-        `reference_image_urls`, excludes first/last frames on models that say so).
+        `reference_image_urls`, excludes first/last frames on models that say
+        so).
     Variant:
       type: string
       enum:
@@ -208,13 +260,13 @@ components:
         - always
       description: >-
         `none` = silent model; `optional` = the request's `with_audio` is
-        honoured; `always` = the model always produces synchronized audio and the
-        app should not offer a toggle.
+        honoured; `always` = the model always produces synchronized audio and
+        the app should not offer a toggle.
     Hardware:
       type: object
       description: >-
-        Optional hardware description so the app can show which models fit.
-        Omit it (or set `models.report_hardware: false`) when you do not want to
+        Optional hardware description so the app can show which models fit. Omit
+        it (or set `models.report_hardware: false`) when you do not want to
         advertise the GPU.
       properties:
         gpuName:
@@ -230,7 +282,7 @@ components:
       properties:
         id:
           type: string
-          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          pattern: ^[a-z0-9][a-z0-9._-]{0,63}$
         label:
           type: string
         description:
@@ -265,7 +317,7 @@ components:
       properties:
         id:
           type: string
-          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          pattern: ^[a-z0-9][a-z0-9._-]{0,63}$
         label:
           type: string
         description:
@@ -323,7 +375,7 @@ components:
       properties:
         id:
           type: string
-          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          pattern: ^[a-z0-9][a-z0-9._-]{0,63}$
         label:
           type: string
         description:
@@ -395,7 +447,7 @@ components:
       properties:
         id:
           type: string
-          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          pattern: ^[a-z0-9][a-z0-9._-]{0,63}$
         label:
           type: string
         description:
@@ -441,7 +493,7 @@ components:
       properties:
         id:
           type: string
-          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          pattern: ^[a-z0-9][a-z0-9._-]{0,63}$
         label:
           type: string
         description:
@@ -701,8 +753,8 @@ components:
           minimum: 1
           description: >-
             Longest single render the server accepts, in whole seconds (Stable
-            Audio 3 reference: up to 60s). The app clamps the requested
-            duration to this value.
+            Audio 3 reference: up to 60s). The app clamps the requested duration
+            to this value.
         supportsNegativePrompt:
           type: boolean
           default: true
@@ -960,7 +1012,7 @@ components:
           maxLength: 3000
         model:
           type: string
-          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          pattern: ^[a-z0-9][a-z0-9._-]{0,63}$
           description: >-
             Model id from `models.images`. Omit to use the server's default
             model (legacy app builds).
@@ -1009,7 +1061,7 @@ components:
           maxLength: 3000
         model:
           type: string
-          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          pattern: ^[a-z0-9][a-z0-9._-]{0,63}$
           description: >-
             Model id from `models.ss_videos`. Omit to use the server's default
             model (legacy app builds).
@@ -1050,8 +1102,8 @@ components:
         with_audio:
           type: boolean
           description: >-
-            Opt-in to synced audio for models with `audio: optional`. Models with
-            `audio: always` ignore it and always produce audio.
+            Opt-in to synced audio for models with `audio: optional`. Models
+            with `audio: always` ignore it and always produce audio.
         seed:
           type: integer
           default: -1
@@ -1068,10 +1120,10 @@ components:
             reference treats this as the `style` field.
         model:
           type: string
-          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          pattern: ^[a-z0-9][a-z0-9._-]{0,63}$
           description: >-
-            Model id from `models.music`. Omit to use the server's default
-            music model (legacy app builds).
+            Model id from `models.music`. Omit to use the server's default music
+            model (legacy app builds).
         mode:
           $ref: '#/components/schemas/MusicMode'
         variant:
@@ -1117,7 +1169,7 @@ components:
           description: Characteristics to steer away from.
         model:
           type: string
-          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          pattern: ^[a-z0-9][a-z0-9._-]{0,63}$
           description: >-
             Model id from `models.sfx`. Omit to use the server's default SFX
             model (legacy app builds).
