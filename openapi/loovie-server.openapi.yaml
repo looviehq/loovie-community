@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: Loovie BYO Server Contract
-  version: 0.3.0-beta.1
+  version: 0.5.0-beta.1
   summary: >-
     The HTTP contract a third-party server implements to be drivable by the
     Loovie mobile app.
   description: |
     The HTTP API a "Bring Your Own" server must expose so the Loovie app
-    can drive image, single-shot video, and music generation on it. The Loovie
+    can drive image, single-shot video, music and sound-effect generation on it. The Loovie
     backend NEVER calls this server; only the Loovie mobile app (on the
     user's device) does. The app stores the server URL and bearer token
     on the user's device only - they are needed there so the app can
@@ -56,7 +56,12 @@ info:
 
     `info.version` follows semver and is independent of any individual
     implementation's version. The capabilities manifest's `schemaVersion`
-    is currently `1`; it bumps only when the manifest SHAPE changes.
+    is currently `2`; it bumps only when the manifest SHAPE changes.
+    Version 2 adds the per-model `models` map (`images`, `ss_videos`) with
+    model-level capabilities, variants, VRAM hints and `ref2v`. The flat
+    `images` / `ss_videos` blocks remain as a v1 compatibility view for
+    released app builds and may be omitted when the default model cannot be
+    expressed with the v1 closed enums.
   contact:
     name: Loovie HQ
     url: https://github.com/looviehq/loovie-community
@@ -67,8 +72,8 @@ externalDocs:
   description: Step-by-step setup, security, and troubleshooting guides.
   url: https://github.com/looviehq/loovie-community/tree/main/docs
 x-loovie-conditional-endpoints:
-  images: Required only when /loovie/capabilities advertises an `images` section.
-  ss_videos: Required only when /loovie/capabilities advertises an `ss_videos` section.
+  images: Required when /loovie/capabilities advertises image models (`models.images` and/or the legacy `images`).
+  ss_videos: Required when /loovie/capabilities advertises single-shot video models (`models.ss_videos` and/or the legacy `ss_videos`).
   music: Required only when /loovie/capabilities advertises a `music` section.
 servers:
   - url: '{base}'
@@ -140,34 +145,52 @@ components:
         - t2v
         - i2v
         - fl2v
+        - ref2v
       description: >-
         `t2v` = text-to-video; `i2v` = image-to-video; `fl2v` =
-        first+last-frame-to-video.
+        first+last-frame-to-video; `ref2v` = reference-image-to-video (adds
+        `reference_image_urls`, excludes first/last frames on models that say so).
     Variant:
       type: string
       enum:
         - fast
         - pro
-      description: Quality/speed trade-off; `fast` for previews, `pro` for finals.
+      description: >-
+        Legacy v1 quality/speed trade-off. Model variants in v2 are named by the
+        server (`official`, `turbo`, `hd`, `fast`, `pro`, …) and described by
+        `ModelVariant`.
     ImageResolution:
       type: string
       enum:
+        - '512'
         - 720p
         - 1K
         - 2K
+        - 4K
     VideoResolution:
       type: string
       enum:
+        - 360p
+        - 384p
+        - 480p
+        - 540p
+        - 580p
         - 720p
+        - 768p
         - 1080p
+        - 2K
+        - 4K
     ImageAspectRatio:
       type: string
       enum:
         - auto
         - '1:1'
+        - '4:3'
+        - '3:4'
+        - '2:3'
+        - '3:2'
         - '16:9'
         - '9:16'
-        - '4:3'
     VideoAspectRatio:
       type: string
       enum:
@@ -175,28 +198,343 @@ components:
         - '16:9'
         - '9:16'
         - '1:1'
+        - '4:3'
+        - '3:4'
+    AudioPolicy:
+      type: string
+      enum:
+        - none
+        - optional
+        - always
+      description: >-
+        `none` = silent model; `optional` = the request's `with_audio` is
+        honoured; `always` = the model always produces synchronized audio and the
+        app should not offer a toggle.
+    Hardware:
+      type: object
+      description: >-
+        Optional hardware description so the app can show which models fit.
+        Omit it (or set `models.report_hardware: false`) when you do not want to
+        advertise the GPU.
+      properties:
+        gpuName:
+          type: string
+        vramGb:
+          type: number
+          minimum: 0
+    ModelVariant:
+      type: object
+      required:
+        - id
+        - label
+      properties:
+        id:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+        label:
+          type: string
+        description:
+          type: string
+        default:
+          type: boolean
+        draft:
+          type: boolean
+          description: >-
+            Draft-grade recipe (for example Pika's 4-step turbo). Safe for
+            previews; may ghost limbs on reference jobs.
+        capabilities:
+          type: array
+          items:
+            type: string
+          description: >-
+            Optional narrowing for this variant only. When absent the model's
+            capabilities apply.
+        maxReferenceImages:
+          type: integer
+          minimum: 0
+    ImageModel:
+      type: object
+      required:
+        - id
+        - label
+        - capabilities
+        - referenceCount
+        - resolution
+        - variants
+        - aspectRatios
+      properties:
+        id:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+        label:
+          type: string
+        description:
+          type: string
+        default:
+          type: boolean
+        recommended:
+          type: boolean
+        vramGb:
+          type: number
+          minimum: 0
+        recommendedVramGb:
+          type: number
+          minimum: 0
+        capabilities:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ImageMode'
+        referenceCount:
+          type: integer
+          minimum: 0
+        resolution:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ImageResolution'
+        variants:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ModelVariant'
+        aspectRatios:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ImageAspectRatio'
+        promptCharLimit:
+          type: integer
+          minimum: 1
+          default: 3000
+    VideoModel:
+      type: object
+      required:
+        - id
+        - label
+        - capabilities
+        - referenceCount
+        - maxReferenceImages
+        - resolution
+        - variants
+        - aspectRatios
+        - durations
+        - audio
+      properties:
+        id:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+        label:
+          type: string
+        description:
+          type: string
+        default:
+          type: boolean
+        recommended:
+          type: boolean
+        vramGb:
+          type: number
+          minimum: 0
+        recommendedVramGb:
+          type: number
+          minimum: 0
+        capabilities:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/VideoMode'
+        referenceCount:
+          type: integer
+          minimum: 0
+          description: Frames accepted by i2v (normally 1).
+        maxReferenceImages:
+          type: integer
+          minimum: 0
+          description: Images accepted by ref2v (0 when the model has no ref2v).
+        referencesExcludeFrames:
+          type: boolean
+          description: >-
+            When true, reference images and first/last frames cannot be combined
+            in one request (H3 Ref2VA is a separate checkpoint from FL2VA).
+        resolution:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/VideoResolution'
+        variants:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ModelVariant'
+        aspectRatios:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/VideoAspectRatio'
+        durations:
+          type: array
+          minItems: 1
+          items:
+            type: integer
+            minimum: 1
+        audio:
+          $ref: '#/components/schemas/AudioPolicy'
+        promptCharLimit:
+          type: integer
+          minimum: 1
+          default: 3000
+    MusicModel:
+      type: object
+      required:
+        - id
+        - label
+        - capabilities
+        - maxDurationSeconds
+        - supportsVocals
+        - supportsInstrumental
+      properties:
+        id:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+        label:
+          type: string
+        description:
+          type: string
+        default:
+          type: boolean
+        recommended:
+          type: boolean
+        vramGb:
+          type: number
+          minimum: 0
+        recommendedVramGb:
+          type: number
+          minimum: 0
+        capabilities:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/MusicMode'
+        variants:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ModelVariant'
+        maxDurationSeconds:
+          type: integer
+          minimum: 1
+        supportsVocals:
+          type: boolean
+        supportsInstrumental:
+          type: boolean
+        promptCharLimit:
+          type: integer
+          minimum: 1
+          default: 2000
+    SfxModel:
+      type: object
+      required:
+        - id
+        - label
+        - capabilities
+        - maxDurationSeconds
+      properties:
+        id:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+        label:
+          type: string
+        description:
+          type: string
+        default:
+          type: boolean
+        recommended:
+          type: boolean
+        vramGb:
+          type: number
+          minimum: 0
+        recommendedVramGb:
+          type: number
+          minimum: 0
+        capabilities:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SfxMode'
+        variants:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ModelVariant'
+        maxDurationSeconds:
+          type: integer
+          minimum: 1
+        supportsNegativePrompt:
+          type: boolean
+          default: true
+        promptCharLimit:
+          type: integer
+          minimum: 1
+          default: 2000
+    Models:
+      type: object
+      description: >-
+        The v2 source of truth: every model this server can serve, grouped by
+        modality. Omit a group when the server has no models for it.
+      properties:
+        images:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ImageModel'
+        ss_videos:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/VideoModel'
+        music:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/MusicModel'
+        sfx:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SfxModel'
     Capabilities:
       type: object
       description: |
         What this server can do. The app probes this at save and at startup,
         caches the manifest per server, and uses it to gate the BYO picker
         tiers and constrain the BYO generation UI.
+
+        `models` is the v2 source of truth. The flat `images` / `ss_videos`
+        blocks are an optional v1 compatibility view describing the default
+        model; released app builds read only those, while current builds read
+        `models` first.
       required:
         - schemaVersion
       properties:
         schemaVersion:
           type: integer
-          const: 1
+          const: 2
           description: Contract version. Bumps only when the manifest SHAPE changes.
         version:
           type: string
           description: Build semver of your implementation. Telemetry only.
+        hardware:
+          $ref: '#/components/schemas/Hardware'
+        models:
+          $ref: '#/components/schemas/Models'
         images:
           $ref: '#/components/schemas/ImageCapabilities'
         ss_videos:
           $ref: '#/components/schemas/VideoCapabilities'
         music:
           $ref: '#/components/schemas/MusicCapabilities'
+        sfx:
+          $ref: '#/components/schemas/SfxCapabilities'
     ImageCapabilities:
       type: object
       description: >-
@@ -296,6 +634,11 @@ components:
           type: integer
           minimum: 1
           default: 3000
+    SfxMode:
+      type: string
+      enum:
+        - t2s
+      description: '`t2s` = text-to-sound (short sound-effect description).'
     MusicMode:
       type: string
       enum:
@@ -333,6 +676,37 @@ components:
         supportsInstrumental:
           type: boolean
           description: Whether the server can render instrumental (no-vocal) music.
+        promptCharLimit:
+          type: integer
+          minimum: 1
+          default: 2000
+    SfxCapabilities:
+      type: object
+      description: >-
+        Sound-effect capabilities. Omit this object entirely if the server has
+        no SFX workflows. The reference model is Stable Audio 3 Small SFX, but
+        the contract is model-agnostic: any backend that renders the requested
+        short audio clip is valid.
+      required:
+        - capabilities
+        - maxDurationSeconds
+      properties:
+        capabilities:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SfxMode'
+        maxDurationSeconds:
+          type: integer
+          minimum: 1
+          description: >-
+            Longest single render the server accepts, in whole seconds (Stable
+            Audio 3 reference: up to 60s). The app clamps the requested
+            duration to this value.
+        supportsNegativePrompt:
+          type: boolean
+          default: true
+          description: Whether the server honours a negative prompt.
         promptCharLimit:
           type: integer
           minimum: 1
@@ -584,10 +958,19 @@ components:
         prompt:
           type: string
           maxLength: 3000
+        model:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          description: >-
+            Model id from `models.images`. Omit to use the server's default
+            model (legacy app builds).
         mode:
           $ref: '#/components/schemas/ImageMode'
         variant:
-          $ref: '#/components/schemas/Variant'
+          type: string
+          description: >-
+            Variant id from the selected model. The legacy `fast`/`pro` values
+            map to the default model's legacy variants.
         aspect_ratio:
           $ref: '#/components/schemas/ImageAspectRatio'
         image_urls:
@@ -624,10 +1007,19 @@ components:
         prompt:
           type: string
           maxLength: 3000
+        model:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          description: >-
+            Model id from `models.ss_videos`. Omit to use the server's default
+            model (legacy app builds).
         mode:
           $ref: '#/components/schemas/VideoMode'
         variant:
-          $ref: '#/components/schemas/Variant'
+          type: string
+          description: >-
+            Variant id from the selected model. The legacy `fast`/`pro` values
+            map to the default model's legacy variants.
         aspect_ratio:
           $ref: '#/components/schemas/VideoAspectRatio'
         resolution:
@@ -636,8 +1028,8 @@ components:
           type: integer
           minimum: 1
           description: >-
-            Clip duration in seconds. Must be one of the values in
-            `ss_videos.durations`.
+            Clip duration in seconds. Must be one of the selected model's
+            `durations`.
         start_frame_url:
           type: string
           format: uri
@@ -646,9 +1038,20 @@ components:
           type: string
           format: uri
           description: Required for fl2v. Requires `start_frame_url`.
+        reference_image_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: >-
+            Images for `ref2v`. Capped by `maxReferenceImages`. Mutually
+            exclusive with first/last frames when `referencesExcludeFrames` is
+            true (H3).
         with_audio:
           type: boolean
-          description: 'Opt-in to synced audio. Only valid if `supportsAudio: true`.'
+          description: >-
+            Opt-in to synced audio for models with `audio: optional`. Models with
+            `audio: always` ignore it and always produce audio.
         seed:
           type: integer
           default: -1
@@ -663,8 +1066,17 @@ components:
           description: >-
             Style prompt (genre, instruments, vocal character, tempo). The YuE2
             reference treats this as the `style` field.
+        model:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          description: >-
+            Model id from `models.music`. Omit to use the server's default
+            music model (legacy app builds).
         mode:
           $ref: '#/components/schemas/MusicMode'
+        variant:
+          type: string
+          description: Variant id from the selected music model.
         lyrics:
           type: string
           description: >-
@@ -690,6 +1102,45 @@ components:
           description: >-
             Override workflow selection. Server resolves names like
             `yue2-t2m-fast`.
+    SfxCreateRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          maxLength: 2000
+          description: Short description of the sound effect.
+        negative_prompt:
+          type: string
+          maxLength: 2000
+          description: Characteristics to steer away from.
+        model:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,63}$'
+          description: >-
+            Model id from `models.sfx`. Omit to use the server's default SFX
+            model (legacy app builds).
+        mode:
+          $ref: '#/components/schemas/SfxMode'
+        variant:
+          type: string
+          description: Variant id from the selected SFX model.
+        duration:
+          type: integer
+          minimum: 1
+          maximum: 60
+          description: >-
+            Target duration in seconds. Must not exceed
+            `sfx.maxDurationSeconds`.
+        seed:
+          type: integer
+          default: -1
+        workflow:
+          type: string
+          description: >-
+            Override workflow selection. Server resolves names like
+            `stable-audio-3-t2s-small`.
     UploadJsonRequest:
       type: object
       required:
@@ -794,7 +1245,7 @@ paths:
                 imageAndVideo:
                   summary: Image + single-shot video
                   value:
-                    schemaVersion: 1
+                    schemaVersion: 2
                     version: 0.1.0
                     images:
                       capabilities:
@@ -853,7 +1304,7 @@ paths:
                 imageOnly:
                   summary: Server with no video workflows installed
                   value:
-                    schemaVersion: 1
+                    schemaVersion: 2
                     version: 0.1.0
                     images:
                       capabilities:
@@ -1089,6 +1540,88 @@ paths:
       summary: Poll a music task
       description: Required only when `/loovie/capabilities` advertises a `music` section.
       operationId: getMusicStatus
+      parameters:
+        - name: taskId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current task state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatus'
+        '400':
+          description: Malformed request (e.g. empty or non-ASCII `taskId`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '404':
+          description: Task not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /sfx/create:
+    post:
+      tags:
+        - SFX
+      summary: Start a sound-effect generation
+      description: |
+        Required only when `/loovie/capabilities` advertises an `sfx`
+        section. Accepts a short sound description plus an optional negative
+        prompt; returns a `taskId` the caller polls via `/sfx/status`.
+      operationId: createSfx
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SfxCreateRequest'
+      responses:
+        '200':
+          description: Task accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCreated'
+        '400':
+          description: >-
+            Malformed request (missing prompt, invalid enum, prompt >
+            promptCharLimit, duration outside the model's range, unknown
+            workflow, etc.).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '422':
+          description: Request body failed schema validation (e.g. wrong field types).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+  /sfx/status:
+    get:
+      tags:
+        - SFX
+      summary: Poll a sound-effect task
+      description: Required only when `/loovie/capabilities` advertises an `sfx` section.
+      operationId: getSfxStatus
       parameters:
         - name: taskId
           in: query

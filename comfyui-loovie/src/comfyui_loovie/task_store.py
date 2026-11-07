@@ -97,6 +97,20 @@ class _InMemoryTaskStore:
         with self._lock:
             return self._cleanup_locked(max_age_seconds=max_age_seconds)
 
+    def count_active(self) -> int:
+        """Tasks still pending or processing (used by the model-switch guard).
+
+        A model switch must never unload weights another task is using. The
+        extension calls this before asking ComfyUI's model manager to unload.
+        """
+
+        with self._lock:
+            return sum(
+                1
+                for task in self._tasks.values()
+                if task.state in (TaskState.PENDING, TaskState.PROCESSING)
+            )
+
     def _cleanup_locked(self, *, max_age_seconds: float) -> int:
         cutoff = time.time() - max_age_seconds
         expired = [

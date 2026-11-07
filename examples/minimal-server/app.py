@@ -39,13 +39,14 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Any, Literal
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 # --- Constants ---------------------------------------------------------
 
 VERSION = "0.1.0"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 PROMPT_CHAR_LIMIT = 3000
 # Tiny, content-addressable placeholders that the device will still
 # treat as valid PNG / MP4 (magic bytes are correct).
@@ -95,6 +96,43 @@ async def require_bearer(request: Request) -> None:
 CAPABILITIES: dict[str, Any] = {
     "schemaVersion": SCHEMA_VERSION,
     "version": VERSION,
+    "models": {
+        "images": [
+            {
+                "id": "placeholder-image",
+                "label": "Placeholder Image",
+                "default": True,
+                "capabilities": ["t2i", "i2i"],
+                "referenceCount": 4,
+                "resolution": ["720p", "1K", "2K"],
+                "variants": [
+                    {"id": "default", "label": "Default", "default": True},
+                ],
+                "aspectRatios": ["auto", "1:1", "16:9", "9:16", "4:3"],
+                "promptCharLimit": PROMPT_CHAR_LIMIT,
+            }
+        ],
+        "ss_videos": [
+            {
+                "id": "placeholder-video",
+                "label": "Placeholder Video",
+                "default": True,
+                "capabilities": ["t2v", "i2v", "fl2v"],
+                "referenceCount": 1,
+                "maxReferenceImages": 0,
+                "resolution": ["720p", "1080p"],
+                "variants": [
+                    {"id": "fast", "label": "Fast", "default": True},
+                    {"id": "pro", "label": "Pro"},
+                ],
+                "aspectRatios": ["auto", "16:9", "9:16", "1:1"],
+                "durations": [1, 2, 3, 4, 5, 6, 7, 8],
+                "audio": "optional",
+                "promptCharLimit": PROMPT_CHAR_LIMIT,
+            }
+        ],
+    },
+    # v1 compatibility view: released app builds read these.
     "images": {
         "capabilities": ["t2i", "i2i"],
         "referenceCount": 4,
@@ -120,6 +158,12 @@ CAPABILITIES: dict[str, Any] = {
         "supportsInstrumental": True,
         "promptCharLimit": 2000,
     },
+    "sfx": {
+        "capabilities": ["t2s"],
+        "maxDurationSeconds": 60,
+        "supportsNegativePrompt": True,
+        "promptCharLimit": 2000,
+    },
 }
 
 
@@ -128,7 +172,7 @@ CAPABILITIES: dict[str, Any] = {
 
 class _Task(BaseModel):
     task_id: str
-    kind: Literal["image", "video", "music"]
+    kind: Literal["image", "video", "music", "sfx"]
     state: Literal["pending", "processing", "success", "failed"] = "pending"
     created_at: float
     elapsed_seconds: float = 0.0
@@ -167,7 +211,7 @@ def _advance(task: _Task) -> None:
             if task.kind == "image"
             else (
                 "data:audio/wav;base64," + base64.b64encode(_WAV_MINIMAL).decode("ascii")
-                if task.kind == "music"
+                if task.kind in {"music", "sfx"}
                 else "data:video/mp4;base64," + base64.b64encode(_MP4_MINIMAL).decode("ascii")
             )
         )
@@ -193,6 +237,15 @@ app = FastAPI(
     ),
     lifespan=_lifespan,
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
+    """Mirror the contract's Envelope on 422 instead of FastAPI's `detail`."""
+    return JSONResponse(
+        {"code": 422, "msg": "Validation failed", "details": exc.errors()},
+        status_code=422,
+    )
 
 
 # Treat unhandled ValueError (incl. binascii.Error) as a 400.
@@ -259,7 +312,7 @@ class ImageCreateRequest(BaseModel):
     prompt: str = Field(..., max_length=PROMPT_CHAR_LIMIT)
     mode: Literal["t2i", "i2i"] | None = None
     variant: Literal["fast", "pro"] | None = None
-    aspect_ratio: Literal["auto", "1:1", "16:9", "9:16", "4:3"] | None = None
+    aspect_ratio: Literal["auto", "1:1", "4:3", "3:4", "2:3", "3:2", "16:9", "9:16"] | None = None
     image_urls: list[str] | None = None
     mask_url: str | None = None
     seed: int = -1
@@ -289,13 +342,16 @@ async def get_image_status(taskId: str) -> JSONResponse:
 
 class VideoCreateRequest(BaseModel):
     prompt: str = Field(..., max_length=PROMPT_CHAR_LIMIT)
-    mode: Literal["t2v", "i2v", "fl2v"] | None = None
+    mode: Literal["t2v", "i2v", "fl2v", "ref2v"] | None = None
     variant: Literal["fast", "pro"] | None = None
-    aspect_ratio: Literal["auto", "16:9", "9:16", "1:1"] | None = None
-    resolution: Literal["720p", "1080p"] | None = None
+    aspect_ratio: Literal["auto", "16:9", "9:16", "1:1", "4:3", "3:4"] | None = None
+    resolution: (
+        Literal["360p", "384p", "480p", "540p", "580p", "720p", "768p", "1080p", "2K", "4K"] | None
+    ) = None
     duration: int | None = Field(default=None, ge=1)
     start_frame_url: str | None = None
     end_frame_url: str | None = None
+    reference_image_urls: list[str] | None = None
     with_audio: bool | None = None
     seed: int = -1
 
@@ -344,6 +400,36 @@ async def create_music(body: MusicCreateRequest) -> JSONResponse:
 async def get_music_status(taskId: str) -> JSONResponse:
     task = TASKS.get(taskId)
     if not task or task.kind != "music":
+        return JSONResponse({"code": 404, "msg": "Task not found"}, status_code=404)
+    _advance(task)
+    return JSONResponse({"code": 200, "data": _task_to_payload(task)})
+
+
+# --- Sound effects ----------------------------------------------------
+
+
+class SfxCreateRequest(BaseModel):
+    prompt: str = Field(..., max_length=2000)
+    negative_prompt: str | None = None
+    model: str | None = None
+    mode: Literal["t2s"] | None = None
+    variant: str | None = None
+    duration: int | None = Field(default=None, ge=1, le=60)
+    seed: int = -1
+    workflow: str | None = None
+
+
+@app.post("/sfx/create", tags=["SFX"], dependencies=[Depends(require_bearer)])
+async def create_sfx(body: SfxCreateRequest) -> JSONResponse:
+    task_id = _make_task_id()
+    TASKS[task_id] = _Task(task_id=task_id, kind="sfx", created_at=time.monotonic())
+    return JSONResponse({"code": 200, "data": {"taskId": task_id}})
+
+
+@app.get("/sfx/status", tags=["SFX"], dependencies=[Depends(require_bearer)])
+async def get_sfx_status(taskId: str) -> JSONResponse:
+    task = TASKS.get(taskId)
+    if not task or task.kind != "sfx":
         return JSONResponse({"code": 404, "msg": "Task not found"}, status_code=404)
     _advance(task)
     return JSONResponse({"code": 200, "data": _task_to_payload(task)})

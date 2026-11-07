@@ -72,40 +72,162 @@ The single most important endpoint. Tells the app what your server can do.
 
 ```jsonc
 {
-  "schemaVersion": 1,        // int, REQUIRED. Currently 1.
-  "version": "0.1.0",        // optional string, telemetry only.
-  "images": {                // OMIT entire object if no image workflows.
-    "capabilities": ["t2i", "i2i"],   // closed enum t2i|i2i
-    "referenceCount": 4,              // int, max image_urls for i2i
-    "resolution": ["720p", "1K", "2K"],   // closed enum
-    "variants": ["fast", "pro"],          // closed enum
-    "aspectRatios": ["auto", "1:1", "16:9", "9:16", "4:3"],  // closed enum
-    "promptCharLimit": 3000               // optional, default 3000
+  "schemaVersion": 2,        // int, REQUIRED. Currently 2.
+  "version": "0.4.0",        // optional string, telemetry only.
+  "hardware": {              // optional; lets the app show which models fit
+    "gpuName": "RTX 5090",
+    "vramGb": 32
   },
-  "ss_videos": {             // OMIT if no video workflows. NOTE: not `videos`.
-    "capabilities": ["t2v", "i2v", "fl2v"],   // closed enum
-    "referenceCount": 1,
-    "resolution": ["720p", "1080p"],          // closed enum (different from image)
+  "models": {                // v2 source of truth. Omit a group if empty.
+    "images": [
+      {
+        "id": "qwen-image-2.1",
+        "label": "Qwen-Image 2.1",
+        "default": true,
+        "recommended": true,
+        "vramGb": 12,
+        "recommendedVramGb": 24,
+        "capabilities": ["t2i", "i2i"],
+        "referenceCount": 10,
+        "resolution": ["1K", "2K"],
+        "aspectRatios": ["auto", "1:1", "4:3", "3:4", "16:9", "9:16"],
+        "variants": [
+          { "id": "turbo", "label": "Turbo", "default": true },
+          { "id": "base", "label": "Base" }
+        ],
+        "promptCharLimit": 3000
+      }
+    ],
+    "ss_videos": [
+      {
+        "id": "pika-flex",
+        "label": "Pika H3 Flex",
+        "default": true,
+        "vramGb": 24,
+        "recommendedVramGb": 32,
+        "capabilities": ["t2v", "i2v", "fl2v", "ref2v"],
+        "referenceCount": 1,          // frames for i2v
+        "maxReferenceImages": 9,      // images for ref2v
+        "referencesExcludeFrames": true,
+        "resolution": ["480p", "768p"],
+        "aspectRatios": ["auto", "16:9", "9:16", "1:1"],
+        "durations": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "audio": "always",            // none | optional | always
+        "variants": [
+          { "id": "official", "label": "Official", "default": true },
+          { "id": "turbo", "label": "Turbo", "draft": true },
+          {
+            "id": "hd",
+            "label": "HD",
+            "capabilities": ["t2v", "i2v", "fl2v"],
+            "maxReferenceImages": 0
+          }
+        ],
+        "promptCharLimit": 3000
+      },
+      {
+        "id": "ltx-2.5",
+        "label": "LTX 2.5",
+        "capabilities": ["t2v", "i2v", "fl2v"],
+        "resolution": ["540p", "720p", "1080p", "2K"],
+        "durations": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "audio": "optional",
+        "variants": [{ "id": "fast", "default": true }, { "id": "pro" }]
+      }
+    ],
+    "music": [
+      {
+        "id": "yue2",
+        "label": "YuE2",
+        "default": true,
+        "capabilities": ["t2m"],
+        "variants": [{ "id": "fast", "label": "Fast", "default": true }],
+        "maxDurationSeconds": 240,
+        "supportsVocals": true,
+        "supportsInstrumental": true,
+        "promptCharLimit": 2000
+      }
+    ],
+    "sfx": [
+      {
+        "id": "stable-audio-3",
+        "label": "Stable Audio 3",
+        "default": true,
+        "capabilities": ["t2s"],
+        "variants": [{ "id": "small", "label": "Small", "default": true }],
+        "maxDurationSeconds": 60,
+        "supportsNegativePrompt": true,
+        "promptCharLimit": 2000
+      }
+    ]
+  },
+
+  // OPTIONAL v1 compatibility view for released app builds. It describes the
+  // DEFAULT model only, and MUST stay inside the v1 closed enums. Omit it when
+  // the default model cannot be expressed that way (e.g. H3's 480p/768p).
+  "images": {
+    "capabilities": ["t2i", "i2i"],
+    "referenceCount": 10,
+    "resolution": ["1K", "2K"],
     "variants": ["fast", "pro"],
-    "aspectRatios": ["auto", "16:9", "9:16", "1:1"],   // closed enum (no 4:3 for video)
-    "durations": [1, 2, 3, 4, 5, 6, 7, 8],             // explicit list, may be non-contiguous
-    "supportsAudio": true,                              // bool
+    "aspectRatios": ["auto", "1:1", "16:9", "9:16", "4:3"],
+    "promptCharLimit": 3000
+  },
+  "ss_videos": {
+    "capabilities": ["t2v", "i2v", "fl2v"],
+    "referenceCount": 1,
+    "resolution": ["720p", "1080p"],
+    "variants": ["fast", "pro"],
+    "aspectRatios": ["auto", "16:9", "9:16", "1:1"],
+    "durations": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "supportsAudio": true,
     "promptCharLimit": 3000
   }
 }
 ```
 
-**Hard rules.** Unknown enum values fail the entire parse, the app falls back to bundled defaults and fires `byo_caps_schema_unsupported` analytics. `schemaVersion` is currently `1`; bump only when the shape changes. Omit sections you can't serve. `promptCharLimit` `3000` is the server's real hard cap.
+**Hard rules.**
+
+- `models` is the v2 source of truth. The app reads it first.
+- The flat `images` / `ss_videos` blocks are a **compatibility view** for app
+  builds from before multi-model BYO. Keep them inside the v1 closed enums or
+  omit them; an old app fails the whole parse on an unknown value. Omitting a
+  block hides that BYO tier on old builds, which is the safe failure.
+- `schemaVersion` is `2`; bump only when the shape changes.
+- `id` is a stable slug (`^[a-z0-9][a-z0-9._-]{0,63}$`). The app never names a
+  workflow; it sends `model` + `variant`, and the server maps them.
+- `variant` is **model-scoped**. `turbo` on Pika and `pro` on LTX are unrelated;
+  a server must reject a variant that does not belong to the chosen model.
+- A model is only advertised when its workflow exists. A partial install
+  advertises only the modes/variants it can actually run.
+- `vramGb` / `recommendedVramGb` are planning hints, not gates. `hardware` is
+  optional; omit it if you do not want to advertise the GPU.
+
+### Model switching
+
+The server owns which models are loaded. A correct policy is:
+
+- Keep the last-used model resident; never unload after every generation.
+- Switch on a **new job**, not when the user browses the app's model list.
+- Group variants that share weights (Pika official/turbo/HD share the H3
+  FL2VA checkpoint; Pika `ref2v` uses the separate Ref2VA checkpoint).
+- Unload the previous group only when the new one does not fit alongside it,
+  and only when no other task is processing. On a large card, keeping two
+  models resident is a feature.
+
+`comfyui-loovie` implements this through `models.switch_policy: auto|always|never`
+and the registry's `residency_group`.
 
 ### `POST /images/create` (Bearer, conditional on `images`)
 
 ```jsonc
 {
   "prompt": "a red bicycle in front of a Parisian café",
-  "mode": "t2i",             // or "i2i"
-  "variant": "fast",         // or "pro"
+  "model": "qwen-image-2.1",       // from models.images; omit = default model
+  "mode": "t2i",                   // or "i2i"
+  "variant": "turbo",              // model-scoped; fast/pro still accepted
   "aspect_ratio": "16:9",
-  "image_urls": ["https://..."],   // for i2i; up to capabilities.referenceCount
+  "image_urls": ["https://..."],   // for i2i; up to referenceCount
   "mask_url": "https://...",       // optional
   "seed": -1                       // -1 = random
 }
@@ -122,21 +244,71 @@ Response (taskId is opaque):
 ```jsonc
 {
   "prompt": "a slow zoom into a sunflower",
-  "mode": "t2v",             // or "i2v" or "fl2v"
-  "variant": "fast",
-  "resolution": "720p",
+  "model": "pika-flex",            // from models.ss_videos
+  "mode": "t2v",                   // or "i2v", "fl2v", "ref2v"
+  "variant": "official",
+  "resolution": "768p",
   "aspect_ratio": "16:9",
-  "duration": 3,             // seconds; must be in capabilities.durations
+  "duration": 8,                   // must be in the model's durations
   "start_frame_url": "https://...",   // required for i2v and fl2v
   "end_frame_url": "https://...",     // fl2v only; requires start_frame_url
-  "with_audio": true,                 // only when supportsAudio
+  "reference_image_urls": ["https://..."],  // ref2v; up to maxReferenceImages
+  "with_audio": true,              // only meaningful for audio: optional
   "seed": -1
 }
 ```
 
+`ref2v` and first/last frames are mutually exclusive on models that declare
+`referencesExcludeFrames: true` (H3's Ref2VA is a different checkpoint from
+FL2VA). A server MUST reject the combination with a `400` and a stable
+`fail_code`.
+
 Same response envelope: `{ "code": 200, "data": { "taskId": "..." } }`.
 
-### `GET /{images,videos}/status?taskId=...` (Bearer)
+Model-level rejections use `{ "code": 400, "msg": "...", "fail_code": "..." }`
+with one of `MODEL_NOT_ENABLED`, `MODE_UNSUPPORTED`, `VARIANT_UNSUPPORTED`,
+`RESOLUTION_UNSUPPORTED`, `ASPECT_RATIO_UNSUPPORTED`, `DURATION_UNSUPPORTED`,
+`REFERENCES_UNSUPPORTED`, `REFERENCES_REQUIRED`, `AUDIO_UNSUPPORTED`,
+`START_FRAME_REQUIRED`, `END_FRAME_REQUIRED`.
+
+### `POST /music/create` (Bearer, conditional on `music`)
+
+```jsonc
+{
+  "prompt": "warm indie folk, fingerpicked guitar, close female vocal",
+  "model": "yue2",              // from models.music; omit = default
+  "mode": "t2m",
+  "variant": "fast",
+  "lyrics": "[Verse]\n...",     // omit or empty for instrumental
+  "instrumental": false,
+  "duration": 180,              // seconds, <= maxDurationSeconds
+  "seed": -1
+}
+```
+
+Same response envelope and status poll as the other modalities
+(`/music/status?taskId=...`). Music model selection is model-scoped exactly
+like image/video: the server maps `model` + `variant` to its own workflow.
+
+### `POST /sfx/create` (Bearer, conditional on `sfx`)
+
+```jsonc
+{
+  "prompt": "heavy rain on a metal roof, distant thunder, stereo ambience",
+  "negative_prompt": "music, speech, vocals",
+  "model": "stable-audio-3",    // from models.sfx; omit = default
+  "mode": "t2s",
+  "variant": "small",
+  "duration": 5,                // seconds, 1..maxDurationSeconds
+  "seed": -1
+}
+```
+
+Same response envelope and status poll as the other modalities
+(`/sfx/status?taskId=...`). SFX model selection is model-scoped exactly like
+image/video/music.
+
+### `GET /{images,videos,music,sfx}/status?taskId=...` (Bearer)
 
 ```jsonc
 {

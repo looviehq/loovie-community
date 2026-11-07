@@ -40,7 +40,7 @@ pytest
 The tests cover:
 
 - `/loovie/health` returns `ready`.
-- `/loovie/capabilities` returns `schemaVersion: 1` with image + video sections that match the OpenAPI enums.
+- `/loovie/capabilities` returns `schemaVersion: 2` with per-model `models.images` / `models.ss_videos` descriptors plus the v1 compatibility sections that match the OpenAPI enums.
 - Remote requests with no `LOOVIE_API_TOKEN` configured are refused with `401` (fail-closed per `[D11]`).
 - Authenticated `POST /images/create` and `POST /videos/create` advance through the lifecycle and resolve to placeholder media whose magic bytes are valid PNG / MP4.
 - `end_frame_url` requires `start_frame_url` (per the contract).

@@ -23,7 +23,7 @@ You will need a [HuggingFace account and read token](../docs/25-huggingface-and-
 
    Copy the output.
 3. **Deploy the template.** Import `docker/runpod-template.json` in the RunPod console (Settings → Templates → New). A one-click "Deploy to RunPod" button will appear in the docs once the template is published to RunPod's public catalogue.
-4. **Pick a GPU.** Per the compat note above: 4090 or 5090 for images; 5090 for video.
+4. **Pick a GPU.** Per the compat note above: 4090 or 5090 for images; 5090 for video; a 24 GB card is enough for YuE2 music and Stable Audio 3 SFX. Pika H3 Flex and LTX 2.5 want 24–32 GB; run one large video model at a time.
 5. **Set the two required secrets** when launching:
    - `LOOVIE_API_TOKEN`: the token from step 2.
    - `HF_TOKEN`: your HuggingFace read token.
@@ -74,7 +74,7 @@ For phone-to-LAN-server use, see [`docs/20-quickstart-your-own-machine.md`](../d
 | `LOOVIE_API_TOKEN` | **yes** for non-loopback binds |, | Static bearer token the app sends. Entrypoint refuses to start if unset and the bind is remote-reachable. |
 | `HF_TOKEN` | for gated model downloads |, | HuggingFace read token. See [`docs/25`](../docs/25-huggingface-and-gated-models.md). |
 | `DOWNLOAD_MODELS` | no | `0` | Set to `1` to run `loovie-download-models` on container start. |
-| `LOOVIE_KIND` | no | `images` | Which model sets to download (`images`, `videos`, `all`). |
+| `LOOVIE_KIND` | no | `images` | Which model sets to download (`images`, `videos`, `music`, `all`). |
 | `LOOVIE_MODELS_ROOT` | no | `/runpod-volume/models` | Where models live on disk in the **container image** (RunPod volume mount). |
 | `COMFYUI_HOST` | no | `0.0.0.0` | Bind interface. Set to `127.0.0.1` for a loopback-only instance with no token. |
 | `COMFYUI_PORT` | no | `8188` | Bind port. |
@@ -87,7 +87,8 @@ Used on bare-metal ComfyUI installs and inside the container when `DOWNLOAD_MODE
 |---|---|---|---|
 | `HF_TOKEN` | for gated models | none | `export HF_TOKEN=hf_...` |
 | `LOOVIE_MODELS_ROOT` | no | auto-detected (see below) | `export LOOVIE_MODELS_ROOT=/path/to/models` |
-| `LOOVIE_KIND` | no | `images` | `export LOOVIE_KIND=all` |
+| `LOOVIE_KIND` | no | `images` | `export LOOVIE_KIND=all` (or `music`) |
+| `LOOVIE_MODELS` | no | all rows for the selected kind | `export LOOVIE_MODELS=ltx-2.3,yue2` (filters manifest rows by model id) |
 | `LOOVIE_MODELS_MANIFEST` | no | `models.manifest` next to script, or `/opt/comfyui/loovie-models.manifest` in Docker | full path to manifest |
 
 **`LOOVIE_MODELS_ROOT` auto-detection** (when unset):

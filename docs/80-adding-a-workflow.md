@@ -23,6 +23,64 @@ the OpenAPI `Capabilities` schema. The YuE2 music capability is the worked
 example: `music` mode `t2m`, `/music/create` + `/music/status`, and the
 `LoovieMusicInput` injection node.
 
+## Model catalogue and variants
+
+A server advertises **models**, not workflows. The built-in catalogue lives in
+[`src/comfyui_loovie/models.py`](../comfyui-loovie/src/comfyui_loovie/models.py)
+and already describes the models we have validated in ComfyUI:
+
+| Model | Modality | Modes | Variants | Planning VRAM |
+|---|---|---|---|---|
+| `flux-2-klein` | image | t2i, i2i | default | 16 / 24 GB |
+| `qwen-image-2.1` | image | t2i, i2i | turbo, base | 12 / 24 GB |
+| `flux-3-klein` | image | t2i, i2i | distilled, base | 12 / 16 GB |
+| `krea-2` | image | t2i | turbo, raw | 16 / 24 GB |
+| `moss-image` | image | t2i, i2i | sft, base | 8 / 16 GB |
+| `ltx-2.3` (legacy) | video | t2v, i2v, fl2v | fast, pro | 24 / 32 GB |
+| `stable-audio-3` | sfx | t2s | small | 4 / 8 GB |
+| `ltx-2.5` (**default**) | video | t2v, i2v, fl2v | fast | 24 / 32 GB |
+| `pika-flex` | video | t2v, i2v, fl2v, ref2v | official, turbo, hd | 24 / 32 GB |
+| `pika-flex-hd` | video | t2v, i2v, fl2v | hd | 24 / 32 GB |
+| `yue2` | music | t2m | fast | 4 / 8 GB |
+
+A model is advertised only when **its workflows are registered and it is
+enabled**:
+
+```yaml
+models:
+  enabled:
+    image: [flux-2-klein, qwen-image-2.1]
+    video: [ltx-2.5]
+    music: [yue2]
+  defaults:
+    image: qwen-image-2.1
+    video: ltx-2.5
+    music: yue2
+  switch_policy: auto
+```
+
+The registry resolves `(model, mode, variant)` to a workflow through the
+catalogue's `workflows` map. The conventional names are
+`<model-id>-<mode>-<variant>` (for example `pika-flex-t2v-official`,
+`qwen-image-2-1-i2i-turbo`, `ltx25-fl2v-pro`). You can override individual
+mappings under `models.workflows` in `config.yaml` without patching Python:
+
+```yaml
+models:
+  workflows:
+    pika-flex:
+      t2v-official: my-pika-t2v-graph
+```
+
+Partial installs are safe: register only `ltx25-t2v-fast` and the model
+advertises only `t2v` + `fast`. The app never offers the missing pieces.
+
+When you add a model to the catalogue, also add its weights, licence and VRAM
+notes to [`MODELS.md`](MODELS.md), and add the workflow files + downloader
+entries. Do **not** advertise a model whose weights or required nodes are
+missing; the server's startup check and the workflow-fixture tests exist to
+catch that before a user taps Generate.
+
 ## Recipe
 
 ### 1. Author the workflow in ComfyUI

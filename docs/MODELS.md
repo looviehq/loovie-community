@@ -2,7 +2,7 @@
 
 This page lists every model the **reference implementation** ([`comfyui-loovie/`](../comfyui-loovie/)) ships with, along with its upstream source and licence. Loovie does **not** relicense these models. **You are responsible for accepting each upstream licence before downloading and for honouring its terms when using the model.**
 
-> **You are not required to use these models.** They are the ones we tested and currently ship workflows for. BYO is model-agnostic at the contract level: as long as your workflow's input shape matches what `/images/create`, `/videos/create`, or `/music/create` sends, and its output shape matches what `/{images,videos,music}/status` returns, you can run **any** image, video, or music model you have rights to run. Examples people have used or asked about: WAN 2.x, HunyuanVideo, CogVideoX, Mochi, AnimateDiff variants for video; SDXL, SD3.5, Stable Cascade, Lumina, HiDream for image; ACE-Step, YuE2, MusicGen for music. We don't promise to test all of them, but the contract doesn't care which one you use.
+> **You are not required to use these models.** They are the ones we tested and currently ship workflows for. BYO is model-agnostic at the contract level: as long as your workflow's input shape matches what `/images/create`, `/videos/create`, or `/music/create` sends, and its output shape matches what `/{images,videos,music}/status` returns, you can run **any** image, video, or music model you have rights to run. Examples people have used or asked about: WAN 2.x, HunyuanVideo, CogVideoX, Mochi, AnimateDiff variants for video; SDXL, SD3.5, Stable Cascade, Lumina, HiDream for image; ACE-Step, YuE2, MusicGen for music; Stable Audio 3, AudioGen for sound effects. We don't promise to test all of them, but the contract doesn't care which one you use.
 
 The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](../docker/models.manifest) and pulls the files from the HuggingFace repos below. Some of these are **gated**, meaning HuggingFace requires you to accept the licence on the web UI while logged in before the download will succeed. See [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
 
@@ -26,15 +26,85 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 - **Upstream:** [Alibaba Cloud Qwen](https://huggingface.co/Qwen).
 - **Licence:** Apache-2.0 (Qwen) **but redistributed via the FLUX.2 gated repo**, so you accept the FLUX.2 page in practice.
 
+### Qwen-Image 2.1 (7B)
+
+- **HuggingFace:** `Comfy-Org/Qwen-Image-2.1` (ComfyUI repack).
+- **Licence:** Apache-2.0 (Qwen).
+- **Modes:** t2i, i2i, up to 10 references.
+- **Planning VRAM:** 12 GB minimum, 24 GB recommended for 2K/reference work.
+- **ComfyUI:** native since 0.37.0.
+
+### FLUX 3 Image Klein (5.6B)
+
+- **HuggingFace:** `black-forest-labs/flux-3-image-klein-comfy` (gated).
+- **Licence:** FLUX Kommunity License. Accept it on that exact HF repo.
+- **Modes:** t2i, i2i, up to 4 references in the ComfyUI template (10 in the model card).
+- **Planning VRAM:** int8 fits an 8–12 GB card; 16 GB recommended.
+- **ComfyUI:** native since 0.41.0.
+
+### Krea 2 (12B)
+
+- **HuggingFace:** `Comfy-Org/Krea-2` (ComfyUI repack).
+- **Licence:** Krea AI Community License (gated).
+- **Modes:** t2i (+ style reference). **No general i2i/edit path.**
+- **Planning VRAM:** 16 GB minimum, 24 GB recommended.
+- **ComfyUI:** native.
+
+### MOSS-Image (5B)
+
+- **HuggingFace:** OpenMOSS MOSS-Image / Comfy-Org repack.
+- **Licence:** Apache-2.0.
+- **Modes:** t2i, i2i, layout control, strong text rendering.
+- **Planning VRAM:** 8–12 GB minimum, 16 GB recommended.
+- **ComfyUI:** native.
+
 ## Video generation (single-shot)
 
-### LTX-2.3 22B (fast + pro)
+### LTX-2.3 22B (legacy, fast + pro)
 
 - **Purpose:** primary text-to-video / image-to-video / first-and-last-frame-to-video model for the `loovie-custom` video tier.
 - **HuggingFace repos:** [`Lightricks/LTX-2.3-fp8`](https://huggingface.co/Lightricks/LTX-2.3-fp8) (main fp8 checkpoint), [`Lightricks/LTX-2.3`](https://huggingface.co/Lightricks/LTX-2.3) (distilled LoRA and spatial upscaler).
 - **Licence:** Lightricks LTX community licence. Read the terms, there are restrictions on commercial use depending on the variant. Loovie's `comfyui-loovie/` repo only ships workflows; **your generations are your responsibility** under the LTX licence.
 - **Files:** `ltx-2.3-22b-dev-fp8.safetensors` (main fp8 checkpoint), `ltx-2.3-22b-distilled-lora-384.safetensors` (rank-384 distilled LoRA used by the `pro` variant).
 - **Approx size:** ~57 GB combined. The main fp8 checkpoint is roughly 22 GB on its own; the distilled LoRA at rank 384 is substantially larger than a typical LoRA because it carries enough capacity to materially change the model's output (closer to a model delta than a stylistic adapter).
+
+### LTX-2.5 22B (default, fast)
+
+- **HuggingFace:** `Lightricks/LTX-2.5` (gated; split pack).
+- **Licence:** LTX-2.x Community License. Free for commercial use under $10M
+  annual revenue; a paid licence is required above that. Read the terms.
+- **Files:** `diffusion_models/ltx-2.5-22b-distilled-transformer-nvfp4.safetensors`,
+  `text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors`, the conv video
+  VAE and audio VAE, and `latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors`.
+  These are the exact names in `comfyui-loovie/workflows/ltx25_*.json` and
+  `docker/models.manifest`.
+- **Modes:** t2v, i2v, fl2v fast; synchronized audio. No ref2v, and pro is
+  still served by the LTX 2.3 legacy workflows until a 2.5 pro graph lands.
+- **Planning VRAM:** 24 GB minimum, 32 GB recommended.
+- **ComfyUI:** native LTX 2.5 templates; the shipped `ltx25_*` graphs are
+  API-format with the Loovie node injection and were validated on a GB10.
+
+### Pika H3 Flex (MiniMax H3)
+
+- **HuggingFace:** `Pika-Labs/Pika-H3-Flex` adapters + `Comfy-Org/MiniMax-H3`
+  base files. Gated/community licence applies to the adapters.
+- **Licence:** MiniMax H3 Community License. It has territorial and
+  commercial-use conditions; read it before selling outputs.
+- **Files:** `minimax_h3_fl2va_pruned_int8_convrot.safetensors` and
+  `minimax_h3_ref2va_pruned_int8_convrot.safetensors` (21 GB each),
+  `qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors` (15.7 GB), video + audio VAEs,
+  and the `pika_h3_flex_*_v1_bf16.safetensors` adapters (~2 GB each).
+- **Modes:** t2v, i2v, fl2v, ref2v (up to 9 images, 3 videos, 3 audio clips).
+  Local output is 384p / 480p / 540p / 768p (16:9, 9:16, 4:3, 3:4, 1:1),
+  5–15 s, 24 fps, `17n + 5` frames, with audio.
+- **Variants:** Pika's official 6-step (LCM + `ManualSigmas`), a 4-step turbo
+  distill (draft quality), and an 8-step HD recipe (FL2VA only).
+- **Planning VRAM:** 24 GB minimum with the low-VRAM attention nodes, 32 GB
+  recommended; Pika's own reference run used ~66–69 GB on an H100 for a 5 s
+  480p clip, and 9 references add several GB.
+- **ComfyUI:** official `video_pika_h3_flex_t2v` / `_flf2v` / `_ref2v`
+  templates. The turbo/HD adapters are community LoRAs; verify their ComfyUI
+  format before enabling those variants.
 
 ### Gemma-3 12B text encoder (fp8 scaled)
 
@@ -57,6 +127,18 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 - **HuggingFace repo:** [`2kpr/Real-ESRGAN`](https://huggingface.co/2kpr/Real-ESRGAN).
 - **Licence:** BSD-3-Clause (academic-friendly, broad commercial reuse allowed).
 - **Approx size:** ~64 MB.
+
+## Sound effects
+
+### Stable Audio 3 Small SFX
+
+- **Role:** short text-to-sound-effect and ambience renders (`t2s`, 1–60
+  seconds) from a single prompt and optional negative prompt.
+- **Files:** `checkpoints/stable_audio_3_small_sfx.safetensors` plus
+  `text_encoders/t5gemma_b_b_ul2.safetensors`.
+- **Workflow:** `workflows/stable_audio_3_sfx_small.json` (8-step LCM, MP3
+  320 kbps output).
+- **Planning VRAM:** 4 GB minimum, 8 GB recommended.
 
 ## Music generation
 
@@ -88,6 +170,7 @@ These are **downloaded sizes**. Add roughly 5 to 10 GB of headroom for ComfyUI's
 | `images` (FLUX.2 Klein bundle) | ~24 GB | 30 GB |
 | `videos` (LTX-2.3 main + LoRA + Gemma encoder + upscaler + ESRGAN) | ~70 GB | 80 GB |
 | `music` (YuE2 3B int8) | ~4 GB | 8 GB |
+| `sfx` (Stable Audio 3 Small SFX + T5Gemma) | ~3.4 GB | 8 GB |
 | `all` (all of the above) | ~103 GB | 110 GB |
 
 Per-file approximate sizes used above: FLUX.2 Klein bundle ~24 GB (main + VAE + Qwen encoder), LTX-2.3 22B main fp8 ~22 GB, LTX-2.3 22B distilled LoRA ~35 GB, Gemma-3 12B fp8 ~12 GB, LTX-2.3 spatial upscaler ~1 GB, RealESRGAN ~64 MB, YuE2 3B int8 ~3.7 GB. These are rough figures from Comfy-Org's published builds; the exact bytes on disk depend on which point release of each repo you fetch. The truthful source of truth is what HuggingFace serves to your token; treat the numbers above as planning aids, not contracts.

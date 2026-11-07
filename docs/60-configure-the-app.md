@@ -56,13 +56,13 @@ Tap **Save**. The app probes `GET <url>/loovie/capabilities`. Expected results:
 | **Server reachable** (green) | The server responded with a valid capabilities manifest. You are ready to generate. |
 | **Could not reach server: \<reason\>** | Network error, tunnel down, wrong URL, server not running. See [`70-troubleshooting.md`](70-troubleshooting.md). |
 | **not a Loovie-compatible server** | The server responded but the body isn't a valid capabilities manifest. Check the `comfyui-loovie` install and that `/loovie/capabilities` returns what `90-the-contract.md` describes. |
-| **Server is reachable but has no Loovie image or video workflows** | `comfyui-loovie/config.yaml` doesn't list any image or video workflows, or the model downloader hasn't finished. Check pod logs and `docs/30-runpod.md`. |
+| **Server is reachable but has no Loovie image, video, music or SFX workflows** | `comfyui-loovie/config.yaml` doesn't list any image, video, music or SFX workflows, or the model downloader hasn't finished. Check pod logs and `docs/30-runpod.md`. |
 
 > **Important.** *Server reachable* does **not** verify your bearer token, the `/loovie/capabilities` probe is unauthenticated by design. A wrong token only shows up at first generation as **BYO server access denied**. If you see that, come back to this sheet and fix the token.
 
 ## Generate
 
-Once saved, go to image or video generation, open the quality picker, and tap **Your server (BYO)**:
+Once saved, go to image, video, music or sound-effect generation, open the quality picker, and tap **Your server (BYO)**:
 
 - The image picker shows a **Free** badge.
 - The video picker shows the same option without a credit badge (BYO video is always free at the Loovie layer).
@@ -72,7 +72,7 @@ Once saved, go to image or video generation, open the quality picker, and tap **
 Three possibilities, in order of likelihood:
 
 1. **You're not in the beta.** Go back to Preferences and tap *Local Compute (BYO), join the beta*. Restart the app.
-2. **The server didn't advertise that section in `/loovie/capabilities`.** If your server has no image workflows installed, it omits the `images` section and the app hides the image BYO tier. Same for video. Check pod logs.
+2. **The server didn't advertise that section in `/loovie/capabilities`.** If your server has no image workflows installed, it omits the `images` / `models.images` entry and the app hides the image BYO tier. Same for video, music and SFX. Check pod logs.
 3. **The server is unreachable.** Reopen the BYO sheet, if it shows red, fix the URL.
 
 ## Clear saved server

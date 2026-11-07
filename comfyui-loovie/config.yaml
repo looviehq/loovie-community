@@ -26,6 +26,41 @@ output_base_url: "http://127.0.0.1:8188"
 # Global cap on a single generation. Per-workflow overrides below.
 max_wait_seconds: 300
 
+# Model catalogue selection.
+#
+# The extension ships a built-in catalogue (see src/comfyui_loovie/models.py)
+# covering FLUX.2 Klein, Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MOSS-Image,
+# LTX 2.3, LTX 2.5, Pika H3 Flex, Pika H3 Flex HD and YuE2 music. A model is only advertised
+# when its workflow files are registered in `workflows:` below AND it is listed
+# (or no enabled list is given for its modality). Add the workflow JSONs first,
+# then enable the model here.
+#
+# switch_policy:
+#   auto   unload the previous model group only when it does not fit alongside
+#          the new one (recommended; keeps two small models resident on a big card)
+#   always unload on every model-group change (predictable, slower)
+#   never  let ComfyUI manage memory (single-model servers, or very large GPUs)
+#
+# report_hardware exposes the GPU name + VRAM in /loovie/capabilities so the app
+# can show which models fit. Set false if you do not want to advertise it.
+models:
+  enabled:
+    image:
+      - flux-2-klein
+    video:
+      - ltx-2.5
+    music:
+      - yue2
+    sfx:
+      - stable-audio-3
+  defaults:
+    image: flux-2-klein
+    video: ltx-2.5
+    music: yue2
+    sfx: stable-audio-3
+  switch_policy: auto
+  report_hardware: true
+
 # How often the monitor thread polls /history when the WebSocket fallback path
 # is in use.
 poll_interval_seconds: 2
@@ -41,6 +76,21 @@ workflows:
   ltx23-t2v-fast:
     file: "workflows/ltx23_t2v_fast.json"
     description: "LTX 2.3 text-to-video, single-stage distilled (fast)."
+    max_wait_seconds: 840
+
+  ltx25-t2v-fast:
+    file: "workflows/ltx25_t2v_fast.json"
+    description: "LTX 2.5 text-to-video, distilled transformer (fast)."
+    max_wait_seconds: 840
+
+  ltx25-i2v-fast:
+    file: "workflows/ltx25_i2v_fast.json"
+    description: "LTX 2.5 image-to-video, distilled transformer (fast)."
+    max_wait_seconds: 840
+
+  ltx25-fl2v-fast:
+    file: "workflows/ltx25_fl2v_fast.json"
+    description: "LTX 2.5 first+last frame to video, distilled transformer (fast)."
     max_wait_seconds: 840
 
   ltx23-t2v-pro:
@@ -72,3 +122,8 @@ workflows:
     file: "workflows/yue2_t2m_fast.json"
     description: "YuE2 text-to-music, full song with vocals from a style prompt and lyric sheet."
     max_wait_seconds: 600
+
+  stable-audio-3-t2s-small:
+    file: "workflows/stable_audio_3_sfx_small.json"
+    description: "Stable Audio 3 Small SFX, 8-step LCM text-to-sound-effect."
+    max_wait_seconds: 180

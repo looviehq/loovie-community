@@ -1,0 +1,291 @@
+{
+  "10": {
+    "class_type": "LoovieTextInput",
+    "inputs": {
+      "prompt": "",
+      "negative_prompt": "pc game, console game, video game, cartoon, childish, ugly"
+    }
+  },
+  "11": {
+    "class_type": "LoovieVideoSettings",
+    "inputs": {
+      "width": 1280,
+      "height": 720,
+      "num_frames": 49,
+      "fps": 24,
+      "audio_frames": 49,
+      "audio_fps": 25,
+      "with_audio": true,
+      "seed": -1
+    }
+  },
+  "30": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "41",
+        0
+      ],
+      "text": [
+        "10",
+        0
+      ]
+    }
+  },
+  "31": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "41",
+        0
+      ],
+      "text": [
+        "10",
+        1
+      ]
+    }
+  },
+  "40": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "ltx-2.5-22b-distilled-transformer-nvfp4.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "41": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
+      "type": "ltxv",
+      "device": "default"
+    }
+  },
+  "42": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "ltx-2.5-video-vae-conv-bf16.safetensors"
+    }
+  },
+  "43": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "ltx-2.5-audio-vae-bf16.safetensors"
+    }
+  },
+  "44": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+      "positive": [
+        "30",
+        0
+      ],
+      "negative": [
+        "31",
+        0
+      ],
+      "frame_rate": 24.0
+    }
+  },
+  "45": {
+    "class_type": "EmptyLTXVLatentVideo",
+    "inputs": {
+      "width": [
+        "11",
+        0
+      ],
+      "height": [
+        "11",
+        1
+      ],
+      "length": [
+        "11",
+        2
+      ],
+      "batch_size": 1
+    }
+  },
+  "46": {
+    "class_type": "LTXVEmptyLatentAudio",
+    "inputs": {
+      "frames_number": [
+        "11",
+        4
+      ],
+      "frame_rate": [
+        "11",
+        5
+      ],
+      "batch_size": 1,
+      "audio_vae": [
+        "43",
+        0
+      ]
+    }
+  },
+  "47": {
+    "class_type": "LTXVConcatAVLatent",
+    "inputs": {
+      "video_latent": [
+        "45",
+        0
+      ],
+      "audio_latent": [
+        "46",
+        0
+      ]
+    }
+  },
+  "48": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": [
+        "11",
+        7
+      ]
+    }
+  },
+  "49": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "euler"
+    }
+  },
+  "50": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+      "sigmas": "0.85, 0.7250, 0.4219, 0.0"
+    }
+  },
+  "51": {
+    "class_type": "LTXVDualCFGGuider",
+    "inputs": {
+      "model": [
+        "40",
+        0
+      ],
+      "positive": [
+        "44",
+        0
+      ],
+      "negative": [
+        "44",
+        1
+      ],
+      "video_cfg": 1.0,
+      "audio_cfg": 1.0
+    }
+  },
+  "52": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "48",
+        0
+      ],
+      "guider": [
+        "51",
+        0
+      ],
+      "sampler": [
+        "49",
+        0
+      ],
+      "sigmas": [
+        "50",
+        0
+      ],
+      "latent_image": [
+        "47",
+        0
+      ]
+    }
+  },
+  "53": {
+    "class_type": "LTXVSeparateAVLatent",
+    "inputs": {
+      "av_latent": [
+        "52",
+        0
+      ]
+    }
+  },
+  "54": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "53",
+        0
+      ],
+      "vae": [
+        "42",
+        0
+      ]
+    }
+  },
+  "55": {
+    "class_type": "LTXVAudioVAEDecode",
+    "inputs": {
+      "samples": [
+        "53",
+        1
+      ],
+      "audio_vae": [
+        "43",
+        0
+      ]
+    }
+  },
+  "56": {
+    "class_type": "ImageCrop",
+    "inputs": {
+      "image": [
+        "54",
+        0
+      ],
+      "width": 1280,
+      "height": 720,
+      "x": 0,
+      "y": 0
+    }
+  },
+  "57": {
+    "class_type": "LoovieAudioGate",
+    "inputs": {
+      "enabled": [
+        "11",
+        6
+      ],
+      "audio": [
+        "55",
+        0
+      ]
+    }
+  },
+  "58": {
+    "class_type": "CreateVideo",
+    "inputs": {
+      "images": [
+        "56",
+        0
+      ],
+      "audio": [
+        "57",
+        0
+      ],
+      "fps": 24.0,
+      "bit_depth": "auto",
+      "color_space": "sRGB"
+    }
+  },
+  "59": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "video": [
+        "58",
+        0
+      ],
+      "filename_prefix": "loovie/ltx25_test",
+      "format": "mp4"
+    }
+  }
+}
