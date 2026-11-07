@@ -90,21 +90,27 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
   base files. Gated/community licence applies to the adapters.
 - **Licence:** MiniMax H3 Community License. It has territorial and
   commercial-use conditions; read it before selling outputs.
-- **Files:** `minimax_h3_fl2va_pruned_int8_convrot.safetensors` and
-  `minimax_h3_ref2va_pruned_int8_convrot.safetensors` (21 GB each),
-  `qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors` (15.7 GB), video + audio VAEs,
-  and the `pika_h3_flex_*_v1_bf16.safetensors` adapters (~2 GB each).
+- **Files:** `minimax_h3_fl2va_pruned_fp8_scaled.safetensors` and
+  `minimax_h3_ref2va_pruned_fp8_scaled.safetensors` (20 GB each),
+  `qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors` (15.7 GB),
+  `minimax_h3_video_vae_fp16.safetensors`,
+  `minimax_h3_audio_vae_fp32.safetensors`, and the Pika adapters
+  (`pika_h3_flex_fl2va/ref2va_comfy_bf16`, turbo 4-step, HD 8-step; ~2–4 GB).
 - **Modes:** t2v, i2v, fl2v, ref2v (up to 9 images, 3 videos, 3 audio clips).
   Local output is 384p / 480p / 540p / 768p (16:9, 9:16, 4:3, 3:4, 1:1),
   5–15 s, 24 fps, `17n + 5` frames, with audio.
-- **Variants:** Pika's official 6-step (LCM + `ManualSigmas`), a 4-step turbo
-  distill (draft quality), and an 8-step HD recipe (FL2VA only).
+- **Variants:** Pika's official 6-step, a 4-step turbo distill (draft quality),
+  and an 8-step HD recipe (FL2VA only). The reference graphs use
+  `MiniMaxH3ImageToVideo` + `LoraLoaderModelOnly`; `ref2v` uses
+  `MiniMaxH3ReferenceToVideo` through the `LoovieH3ReferenceToVideo` adapter
+  so the graph carries exactly the references the request supplied (0–9).
 - **Planning VRAM:** 24 GB minimum with the low-VRAM attention nodes, 32 GB
   recommended; Pika's own reference run used ~66–69 GB on an H100 for a 5 s
   480p clip, and 9 references add several GB.
-- **ComfyUI:** official `video_pika_h3_flex_t2v` / `_flf2v` / `_ref2v`
-  templates. The turbo/HD adapters are community LoRAs; verify their ComfyUI
-  format before enabling those variants.
+- **ComfyUI:** shipped `pika-flex-{t2v,i2v,fl2v,ref2v}-{official,turbo}.json`
+  and `pika-flex-hd-{t2v,i2v,fl2v}-hd.json`. The official adapters come from
+  `Comfy-Org/MiniMax-H3`; the turbo/HD adapters come from
+  `Pika-Labs/Pika-H3-Flex-Turbo-LoRA`.
 
 ### Gemma-3 12B text encoder (fp8 scaled)
 

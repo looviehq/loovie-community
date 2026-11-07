@@ -25,8 +25,8 @@ open https://github.com/looviehq/loovie-community/blob/main/docs/30-runpod.md
 
 # B. Run on your own GPU using the reference workflows we ship.
 #    FLUX.2 Klein image works on 4090/5090; LTX 2.5 video on 5090; YuE2
-#    music on a 24 GB card. Pika H3 Flex is in the catalogue and needs its workflow files
-#    added before it is advertised.
+#    music on a 24 GB card. Pika H3 Flex works with the shipped ComfyUI graphs
+#    (official/turbo/HD; ~46 GB of shared base weights).
 #    Pick only the models your card can hold (one large video model at a
 #    time on 24–32 GB):
 #      python loovie-community/comfyui-loovie/scripts/models.py recommend --vram 32
@@ -48,17 +48,17 @@ The Loovie app speaks these capability modes. The "Reference workflow" column sh
 | --- | --- | --- |
 | Text → image | `t2i` | FLUX.2 Klein (**shipped**); Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MOSS-Image (catalogue) |
 | Image → image (refs + edit) | `i2i` | FLUX.2 Klein (**shipped**); Qwen-Image 2.1, FLUX 3 Klein, MOSS-Image (catalogue) |
-| Text → single‑shot video | `t2v` | LTX 2.5 fast (**shipped**); LTX‑2.3 fast / pro (legacy), Pika H3 Flex (catalogue) |
-| Image → single‑shot video | `i2v` | LTX 2.5 fast (**shipped**); LTX‑2.3 fast / pro (legacy), Pika H3 Flex (catalogue) |
-| First‑and‑last‑frame → video | `fl2v` | LTX 2.5 fast (**shipped**); LTX‑2.3 fast / pro (legacy), Pika H3 Flex (catalogue) |
-| Reference → single‑shot video | `ref2v` | Pika H3 Flex (catalogue; up to 9 references) |
+| Text → single‑shot video | `t2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
+| Image → single‑shot video | `i2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
+| First‑and‑last‑frame → video | `fl2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
+| Reference → single‑shot video | `ref2v` | Pika H3 Flex official / turbo (**shipped**; up to 9 references) |
 | Text → music | `t2m` | YuE2 (**shipped**) |
 | Text → sound effect | `t2s` | Stable Audio 3 Small SFX (**shipped**) |
 
 **Catalogue vs shipped.** A catalogue entry carries the model's modes, variants,
 reference limits, audio policy and VRAM hint, but `comfyui-loovie` only
 *advertises* it when its workflow JSONs are registered and the model is enabled
-in `config.yaml`. The shipped defaults are FLUX.2 Klein, LTX 2.5, YuE2 and Stable
+in `config.yaml`. The shipped defaults are FLUX.2 Klein, LTX 2.5, Pika H3 Flex, YuE2 and Stable
 Audio 3 Small SFX; LTX‑2.3 is kept as a legacy/pro opt-in, and the other
 catalogue models need their graphs added. See
 [`docs/80-adding-a-workflow.md`](docs/80-adding-a-workflow.md) for the recipe.
@@ -152,7 +152,7 @@ The Loovie backend **never** calls your server. The mobile app does. Direct devi
 | Path | What it is |
 | --- | --- |
 | [`openapi/`](openapi/) | The normative HTTP contract (OpenAPI 3.1). **Start here if you're writing your own server.** |
-| [`comfyui-loovie/`](comfyui-loovie/) | Reference ComfyUI implementation with the model catalogue (FLUX.2 Klein, LTX 2.5, YuE2, Stable Audio 3 SFX shipped; LTX‑2.3 legacy; Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MOSS-Image, Pika H3 Flex catalogue entries). 231 unit tests. |
+| [`comfyui-loovie/`](comfyui-loovie/) | Reference ComfyUI implementation with the model catalogue (FLUX.2 Klein, LTX 2.5, Pika H3 Flex/HD, YuE2 and Stable Audio 3 SFX shipped; LTX‑2.3 legacy; Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MOSS-Image catalogue entries). 233 unit tests. |
 | [`examples/minimal-server/`](examples/minimal-server/) | Framework‑agnostic FastAPI reference, runnable without a GPU. Used as the schemathesis target in CI. |
 | [`docker/`](docker/) | Dockerfile, RunPod template, model downloader (with HuggingFace + gated‑model handling). |
 | [`docs/`](docs/) | Account creation, hosting paths, Cloudflare tunnel, security, troubleshooting, contribution recipes, the contract human‑readable, model licences. |

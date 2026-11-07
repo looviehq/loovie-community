@@ -39,8 +39,9 @@ and already describes the models we have validated in ComfyUI:
 | `ltx-2.3` (legacy) | video | t2v, i2v, fl2v | fast, pro | 24 / 32 GB |
 | `stable-audio-3` | sfx | t2s | small | 4 / 8 GB |
 | `ltx-2.5` (**default**) | video | t2v, i2v, fl2v | fast | 24 / 32 GB |
-| `pika-flex` | video | t2v, i2v, fl2v, ref2v | official, turbo, hd | 24 / 32 GB |
+| `pika-flex` | video | t2v, i2v, fl2v, ref2v | official, turbo | 24 / 32 GB |
 | `pika-flex-hd` | video | t2v, i2v, fl2v | hd | 24 / 32 GB |
+| `pika-flex` ref2v | video | reference-to-video | official, turbo | 24 / 32 GB |
 | `yue2` | music | t2m | fast | 4 / 8 GB |
 
 A model is advertised only when **its workflows are registered and it is
