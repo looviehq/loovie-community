@@ -53,15 +53,19 @@ All notable changes to this project are documented here. Format follows [Keep a 
 * **comfyui-loovie:** 127 unit tests + 88% coverage on pure-logic modules ([03ea456](https://github.com/looviehq/loovie-community/commit/03ea4566aa4babf4867d2627b4a48ed7867e5b2f))
 * **minimal-server:** annotate fake_require_bearer request param as Request ([4111350](https://github.com/looviehq/loovie-community/commit/41113507246015ab4b457aa25de5dc9bca35b3d7))
 
-## [Unreleased]
 
 ### Features
 
+* **comfyui-loovie:** model-aware BYO contract (capabilities `schemaVersion: 2`). A new top-level `models` map (`images`, `ss_videos`) advertises each enabled model with its own modes, variants, reference limits, audio policy and VRAM hints. Requests gain `model` + model-scoped `variant`; `/videos/create` gains `ref2v` + `reference_image_urls`.
+* **comfyui-loovie:** LTX 2.5 is the default single-shot video model (t2v/i2v/fl2v fast, validated on a GB10); LTX 2.3 remains a legacy/pro opt-in.
+* **comfyui-loovie:** model registry with a built-in catalogue for FLUX.2 Klein, Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MOSS-Image, LTX 2.3, LTX 2.5, Pika H3 Flex and Pika H3 Flex HD. A model is advertised only when its workflow is registered and the model is enabled; partial installs narrow modes/variants.
+* **comfyui-loovie:** `models.enabled` / `models.defaults` in `config.yaml`, a `models.switch_policy` (`auto|always|never`), and explicit ComfyUI model-group unloading on a switch that does not fit. Never unloads after every generation or while another task is processing.
 * **comfyui-loovie:** YuE2 text-to-music reference workflow + `music` capability section (`/music/create`, `/music/status`, `LoovieMusicInput` node, `LoovieMusicInput` injection), music model manifest entry, and `LOOVIE_KIND=music` download selection.
 
 ### Documentation
 
-* **openapi:** add the `music` capability section, `MusicCapabilities`/`MusicCreateRequest` schemas, and `/music/create` + `/music/status` endpoints.
+* **openapi:** bump to `0.4.0-beta.1` and `schemaVersion: 2`; add `Models`, `ImageModel`, `VideoModel`, `ModelVariant`, `AudioPolicy` and `Hardware`; widen resolutions/aspect ratios; document `ref2v`, `reference_image_urls`, model-scoped variants and the v1 compatibility view.
+* **docs:** model catalogue, VRAM planning table, Pika H3 Flex / LTX 2.5 / Qwen 2.1 / FLUX 3 Klein / Krea 2 / MOSS-Image licence notes, and the model-switch policy.
 * **docs:** note the YuE2 model-licence responsibility for company-operated servers.
 
 ## [0.2.3-beta.1](https://github.com/looviehq/loovie-community/compare/v0.2.2-beta.1...v0.2.3-beta.1) (2026-05-30)
@@ -131,6 +135,16 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ### Added
 
+- **comfyui-loovie:** sound effects are a first-class modality (`t2s`): Stable
+  Audio 3 Small SFX (`checkpoints/stable_audio_3_small_sfx.safetensors` +
+  `t5gemma_b_b_ul2`), `/sfx/create` + `/sfx/status`, `models.sfx` capabilities,
+  and the `LoovieSfxInput` node.
+- **comfyui-loovie:** 384p/480p/540p/768p/2K video dimensions are in the
+  resolution table; LTX 2.5 advertises 540p/720p/1080p/2K (its distilled
+  transformer rejects lower latents), while Pika H3 keeps 384p/480p/540p/768p.
+- **comfyui-loovie:** silent LTX 2.5 renders no longer fail with a tensor-size
+  mismatch — the audio latent is always sized to the clip and the
+  `LoovieAudioGate` node drops the track after decode.
 - Initial repository scaffold: LICENSE (Apache-2.0), NOTICE, README, CHANGELOG, CONTRIBUTING (DCO), CODE_OF_CONDUCT (Contributor Covenant 2.1), SECURITY, LEGAL.
 - `.github/` issue forms (bug, feature, spec change), PR template, Dependabot configuration.
 - Standard editor and Git configuration (`.editorconfig`, `.nvmrc`, `.gitignore`).

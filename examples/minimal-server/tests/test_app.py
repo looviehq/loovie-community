@@ -36,11 +36,16 @@ def test_health_returns_ready() -> None:
     assert body["data"]["phase"] == "ready"
 
 
-def test_capabilities_matches_schema_v1() -> None:
+def test_capabilities_matches_schema_v2() -> None:
     r = client.get("/loovie/capabilities")
     assert r.status_code == 200
     body = r.json()
-    assert body["schemaVersion"] == 1
+    assert body["schemaVersion"] == 2
+    assert "models" in body
+    assert [m["id"] for m in body["models"]["images"]] == ["placeholder-image"]
+    assert [m["id"] for m in body["models"]["ss_videos"]] == ["placeholder-video"]
+    assert body["models"]["ss_videos"][0]["audio"] == "optional"
+    # v1 compatibility view for released app builds.
     assert "images" in body and "ss_videos" in body
     assert set(body["images"]["capabilities"]) <= {"t2i", "i2i"}
     assert set(body["ss_videos"]["capabilities"]) <= {"t2v", "i2v", "fl2v"}

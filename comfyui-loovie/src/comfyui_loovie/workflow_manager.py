@@ -160,6 +160,16 @@ class WorkflowManager:
     def get_workflow_names(self) -> list[str]:
         return list(self._config.get("workflows", {}).keys())
 
+    @property
+    def config(self) -> dict[str, Any]:
+        """The parsed `config.yaml` mapping (read-only by convention).
+
+        Exposes the `models` selector and any workflow overrides to the model
+        registry in `models.py`; callers must not mutate it.
+        """
+
+        return self._config
+
     def load_workflow(self, workflow_name: str) -> dict[str, Any]:
         """Load a workflow template by registered name and return a deep copy."""
         if workflow_name in self._template_cache:

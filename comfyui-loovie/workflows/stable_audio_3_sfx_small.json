@@ -1,0 +1,77 @@
+{
+  "10": {
+    "class_type": "LoovieSfxInput",
+    "inputs": {
+      "prompt": "Heavy rain hitting a metal roof during a thunderstorm, distant thunder rumbles, stereo, realistic ambience.",
+      "negative_prompt": "music, speech, vocals, distorted, low quality",
+      "duration": 5.0,
+      "seed": 42
+    }
+  },
+  "20": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+    }
+  },
+  "21": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "t5gemma_b_b_ul2.safetensors",
+      "type": "stable_audio",
+      "device": "default"
+    }
+  },
+  "30": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": ["21", 0],
+      "text": ["10", 0]
+    }
+  },
+  "31": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": ["21", 0],
+      "text": ["10", 1]
+    }
+  },
+  "32": {
+    "class_type": "EmptyLatentAudio",
+    "inputs": {
+      "seconds": ["10", 2],
+      "batch_size": 1
+    }
+  },
+  "40": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["20", 0],
+      "positive": ["30", 0],
+      "negative": ["31", 0],
+      "latent_image": ["32", 0],
+      "seed": ["10", 3],
+      "steps": 8,
+      "cfg": 1.0,
+      "sampler_name": "lcm",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "50": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": ["40", 0],
+      "vae": ["20", 2]
+    }
+  },
+  "60": {
+    "class_type": "SaveAudioAdvanced",
+    "inputs": {
+      "audio": ["50", 0],
+      "filename_prefix": "loovie/sfx",
+      "format": "mp3",
+      "format.quality": "320k"
+    }
+  }
+}

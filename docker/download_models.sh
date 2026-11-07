@@ -7,7 +7,7 @@
 #
 # Manifest format (tab-separated, comments allowed with '#'):
 #
-#   kind hf_repo hf_path local_name target_subdir
+#   kind hf_repo hf_path local_name target_subdir [model]
 #
 #   kind         = "image" | "video" | "music", used to select via LOOVIE_KIND.
 #   hf_repo      = HuggingFace repo (e.g. Lightricks/LTX-2.3-fp8).
@@ -15,6 +15,7 @@
 #   local_name   = ComfyUI filename under target_subdir after download.
 #   target_subdir= ComfyUI folder name (diffusion_models, checkpoints,
 #                  text_encoders, vae, loras, upscale_models, latent_upscale_models).
+#   model        = optional model id; LOOVIE_MODELS filters rows by it.
 #
 # Some models are GATED on HuggingFace. The user must accept the model
 # license on the HF web UI before the download will succeed; see
@@ -129,6 +130,14 @@ case "${LOOVIE_KIND}" in
 esac
 
 log "LOOVIE_KIND=${LOOVIE_KIND} (override with export LOOVIE_KIND=images|videos|music|all)"
+declare -a wanted_models=()
+if [[ -n "${LOOVIE_MODELS:-}" ]]; then
+  IFS=',' read -r -a wanted_models <<< "${LOOVIE_MODELS}"
+  for i in "${!wanted_models[@]}"; do
+    wanted_models[i]="$(printf '%s' "${wanted_models[i]}" | tr -d '[:space:]')"
+  done
+  log "LOOVIE_MODELS=${LOOVIE_MODELS} (rows for other models are skipped)"
+fi
 log "Models root: ${MODELS_ROOT}"
 log "  source: ${MODELS_ROOT_SOURCE}"
 log "Manifest: ${MANIFEST}"
@@ -145,8 +154,8 @@ log ""
 log "Approximate disk requirements:"
 log "  images          ~24 GB (FLUX.2 Klein + Qwen text encoder + VAE)"
 log "  videos          ~70 GB (LTX-2.3 + Gemma text encoder + upscaler + LoRA)"
-log "  music            ~4 GB (YuE2 3B int8 checkpoint)"
-log "  all             ~103 GB"
+log "  music            ~7 GB (YuE2 3B int8 + Stable Audio 3 Small SFX + T5Gemma)"
+log "  all             ~106 GB"
 log ""
 
 # ----------------------------------------------------------------------------
@@ -215,7 +224,7 @@ flatten_download() {
 
 total=0; downloaded=0; skipped=0; failures=0
 
-while IFS=$'\t' read -r kind repo hf_path local_name target_subdir; do
+while IFS=$'\t' read -r kind repo hf_path local_name target_subdir model; do
   # Skip blanks and comments.
   [[ -z "${kind}" || "${kind}" == \#* ]] && continue
 
@@ -226,13 +235,19 @@ while IFS=$'\t' read -r kind repo hf_path local_name target_subdir; do
   fi
 
   if [[ -z "${repo}" || -z "${hf_path}" || -z "${local_name}" || -z "${target_subdir}" ]]; then
-    fail "Bad manifest row (need 5 tab-separated fields): kind=${kind} repo=${repo} hf_path=${hf_path} local_name=${local_name} target_subdir=${target_subdir}"
+    fail "Bad manifest row (need at least 5 tab-separated fields): kind=${kind} repo=${repo} hf_path=${hf_path} local_name=${local_name} target_subdir=${target_subdir}"
   fi
 
   total=$((total + 1))
 
   if ! contains "${kind}" "${wanted_kinds[@]}"; then
     log "  [skip kind] ${repo} :: ${hf_path}"
+    skipped=$((skipped + 1))
+    continue
+  fi
+
+  if [[ ${#wanted_models[@]} -gt 0 && -n "${model}" ]] && ! contains "${model}" "${wanted_models[@]}"; then
+    log "  [skip model] ${model}: ${repo} :: ${hf_path}"
     skipped=$((skipped + 1))
     continue
   fi

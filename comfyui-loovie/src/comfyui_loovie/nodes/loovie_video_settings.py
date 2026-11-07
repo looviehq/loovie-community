@@ -1,8 +1,10 @@
 """`LoovieVideoSettings` node: emit WIDTH/HEIGHT/NUM_FRAMES/FPS/audio/seed.
 
-Audio is opt-in: when `with_audio` is False the audio frame budget is
-zeroed and the AUDIO_ENABLED switch flips so the graph bypasses the
-audio decode entirely.
+Audio is opt-in: `with_audio` flips the AUDIO_ENABLED switch so the graph
+drops the decoded track. The audio FRAME BUDGET is emitted regardless: LTX
+2.5 concatenates video and audio latents before sampling, and a zero-length
+audio latent makes the sampler fail with a tensor-size mismatch. Silent
+renders therefore pay for the audio latent and discard the track at the gate.
 """
 
 from __future__ import annotations
@@ -53,13 +55,12 @@ class LoovieVideoSettings:
     ) -> tuple[int, int, int, int, int, int, bool, int]:
         if seed < 0:
             seed = random.randint(0, 2**31 - 1)
-        effective_audio_frames = audio_frames if with_audio else 0
         return (
             width,
             height,
             num_frames,
             fps,
-            effective_audio_frames,
+            audio_frames,
             audio_fps,
             bool(with_audio),
             seed,

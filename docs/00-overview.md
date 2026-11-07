@@ -1,6 +1,6 @@
 # Overview
 
-**Loovie BYO** ("Bring Your Own" server) lets you run Loovie's image and single-shot video generation on **any HTTP server you control** that implements [the contract](90-the-contract.md). In the Loovie iOS app it appears as *Your server (BYO)* under image and video quality. Generations run on your hardware, so **Loovie itself charges you nothing for them.** If you rent a GPU (for example, RunPod), that provider charges you for compute.
+**Loovie BYO** ("Bring Your Own" server) lets you run Loovie's image, single-shot video, music and sound-effect generation on **any HTTP server you control** that implements [the contract](90-the-contract.md). In the Loovie iOS app it appears as *Your server (BYO)* under image and video quality. Generations run on your hardware, so **Loovie itself charges you nothing for them.** If you rent a GPU (for example, RunPod), that provider charges you for compute.
 
 > **Status: public beta. Free in the app while in beta** (no subscription, no credits). After beta we expect to introduce a small flat-fee "BYO Pass" subscription; generations stay 0 credits forever.
 >
