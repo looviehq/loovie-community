@@ -135,6 +135,10 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ### Added
 
+- **comfyui-loovie:** Pika H3 Flex is runnable in the reference server:
+  official/turbo t2v/i2v/fl2v/ref2v, HD t2v/i2v/fl2v, a dynamic
+  `LoovieH3ReferenceToVideo` adapter for 0–9 references, and ComfyUI base/LoRA
+  manifest entries.
 - **comfyui-loovie:** sound effects are a first-class modality (`t2s`): Stable
   Audio 3 Small SFX (`checkpoints/stable_audio_3_small_sfx.safetensors` +
   `t5gemma_b_b_ul2`), `/sfx/create` + `/sfx/status`, `models.sfx` capabilities,

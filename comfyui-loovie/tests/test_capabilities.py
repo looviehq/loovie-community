@@ -41,6 +41,33 @@ H3_WORKFLOWS = [
     "pika-flex-ref2v-official",
 ]
 
+PIKA_WORKFLOWS = [
+    "pika-flex-t2v-official",
+    "pika-flex-i2v-official",
+    "pika-flex-fl2v-official",
+    "pika-flex-ref2v-official",
+    "pika-flex-t2v-turbo",
+    "pika-flex-i2v-turbo",
+    "pika-flex-fl2v-turbo",
+    "pika-flex-ref2v-turbo",
+    "pika-flex-hd-t2v-hd",
+    "pika-flex-hd-i2v-hd",
+    "pika-flex-hd-fl2v-hd",
+]
+
+PIKA_CONFIG = {
+    "models": {
+        "enabled": {
+            "video": ["pika-flex", "pika-flex-hd"],
+            "image": [],
+            "music": [],
+            "sfx": [],
+        },
+        "defaults": {"video": "pika-flex"},
+        "report_hardware": False,
+    }
+}
+
 H3_ONLY_CONFIG = {
     "models": {
         "enabled": {"video": ["pika-flex"], "image": []},
@@ -163,6 +190,21 @@ def test_only_yue2_yields_music_model_and_legacy_section() -> None:
     assert music["supportsInstrumental"] is True
 
 
+def test_pika_h3_flex_workflows_advertise_all_shipped_modes() -> None:
+    manifest = build_capabilities_manifest(PIKA_WORKFLOWS, version="test", config=PIKA_CONFIG)
+    assert "ss_videos" not in manifest  # 384p/480p/540p/768p is not v1-safe
+    flex, hd = manifest["models"]["ss_videos"]
+    assert flex["id"] == "pika-flex"
+    assert set(flex["capabilities"]) == {"t2v", "i2v", "fl2v", "ref2v"}
+    assert {v["id"] for v in flex["variants"]} == {"official", "turbo"}
+    assert flex["maxReferenceImages"] == 9
+    assert flex["referencesExcludeFrames"] is True
+    assert flex["audio"] == "always"
+    assert hd["id"] == "pika-flex-hd"
+    assert set(hd["capabilities"]) == {"t2v", "i2v", "fl2v"}
+    assert {v["id"] for v in hd["variants"]} == {"hd"}
+
+
 def test_stable_audio_3_yields_sfx_model_and_no_v1_view() -> None:
     manifest = build_capabilities_manifest(["stable-audio-3-t2s-small"], version="test")
     assert "music" not in manifest
@@ -238,8 +280,13 @@ def test_repo_config_advertises_the_shipped_models() -> None:
     workflows = list(config["workflows"])
     manifest = build_capabilities_manifest(workflows, version="x", config=config)
     assert [m["id"] for m in manifest["models"]["images"]] == ["flux-2-klein"]
-    assert [m["id"] for m in manifest["models"]["ss_videos"]] == ["ltx-2.5"]
+    assert [m["id"] for m in manifest["models"]["ss_videos"]] == [
+        "ltx-2.5",
+        "pika-flex",
+        "pika-flex-hd",
+    ]
     assert [m["id"] for m in manifest["models"]["music"]] == ["yue2"]
+    assert [m["id"] for m in manifest["models"]["sfx"]] == ["stable-audio-3"]
 
 
 def test_manifest_conforms_to_openapi_capabilities_schema(
@@ -276,6 +323,7 @@ def test_empty_manifest_conforms_to_openapi_schema(
         ["flux-2-klein", "yue2-t2m-fast"],
         ["yue2-t2m-fast", "stable-audio-3-t2s-small"],
         H3_WORKFLOWS,
+        PIKA_WORKFLOWS,
     ],
     ids=[
         "image-only",
@@ -288,11 +336,16 @@ def test_empty_manifest_conforms_to_openapi_schema(
         "image+music",
         "music+sfx",
         "h3",
+        "pika",
     ],
 )
 def test_various_workflow_subsets_all_conform(
     workflow_set: list[str], capabilities_validator: Draft202012Validator
 ) -> None:
-    config = H3_ONLY_CONFIG if workflow_set == H3_WORKFLOWS else None
+    config = (
+        H3_ONLY_CONFIG
+        if workflow_set == H3_WORKFLOWS
+        else (PIKA_CONFIG if workflow_set == PIKA_WORKFLOWS else None)
+    )
     manifest = build_capabilities_manifest(workflow_set, version="x", config=config)
     _validate(manifest, capabilities_validator)

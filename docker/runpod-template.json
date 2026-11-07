@@ -34,7 +34,7 @@
     {
       "key": "LOOVIE_KIND",
       "value": "all",
-      "description": "Which model sets to download: `images`, `videos`, `music`, or `all`. Disk budget: images ~24 GB, videos ~70 GB, music ~7 GB, all ~106 GB. Use LOOVIE_MODELS to filter by model id."
+      "description": "Which model sets to download: `images`, `videos`, `music`, or `all`. Disk budget: images ~24 GB, videos ~166 GB, music ~7 GB, all ~200 GB. Use LOOVIE_MODELS to filter by model id."
     }
   ],
 

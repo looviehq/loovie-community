@@ -40,6 +40,18 @@ video	Lightricks/LTX-2.5	vae/ltx-2.5-video-vae-conv-bf16.safetensors	ltx-2.5-vid
 video	Lightricks/LTX-2.5	vae/ltx-2.5-audio-vae-bf16.safetensors	ltx-2.5-audio-vae-bf16.safetensors	vae	ltx-2.5
 video	Lightricks/LTX-2.5	latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors	ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors	latent_upscale_models	ltx-2.5
 
+# --- Video: Pika H3 Flex (~46 GB shared base + adapters) --------------------
+video	Comfy-Org/MiniMax-H3	diffusion_models/minimax_h3_fl2va_pruned_fp8_scaled.safetensors	minimax_h3_fl2va_pruned_fp8_scaled.safetensors	diffusion_models	pika-flex
+video	Comfy-Org/MiniMax-H3	diffusion_models/minimax_h3_ref2va_pruned_fp8_scaled.safetensors	minimax_h3_ref2va_pruned_fp8_scaled.safetensors	diffusion_models	pika-flex
+video	Comfy-Org/MiniMax-H3	text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors	qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors	text_encoders	pika-flex
+video	Comfy-Org/MiniMax-H3	vae/minimax_h3_video_vae_fp16.safetensors	minimax_h3_video_vae_fp16.safetensors	vae	pika-flex
+video	Comfy-Org/MiniMax-H3	vae/minimax_h3_audio_vae_fp32.safetensors	minimax_h3_audio_vae_fp32.safetensors	vae	pika-flex
+video	Pika-Labs/Pika-H3-Flex	comfy/loras/pika_h3_flex_fl2va_comfy_bf16.safetensors	pika_h3_flex_fl2va_comfy_bf16.safetensors	loras	pika-flex
+video	Pika-Labs/Pika-H3-Flex	comfy/loras/pika_h3_flex_ref2va_comfy_bf16.safetensors	pika_h3_flex_ref2va_comfy_bf16.safetensors	loras	pika-flex
+video	Pika-Labs/Pika-H3-Flex-Turbo-LoRA	pika_h3_flex_turbo_4step_fl2va.safetensors	pika_h3_flex_turbo_4step_fl2va.safetensors	loras	pika-flex
+video	Pika-Labs/Pika-H3-Flex-Turbo-LoRA	pika_h3_flex_turbo_4step_ref2va.safetensors	pika_h3_flex_turbo_4step_ref2va.safetensors	loras	pika-flex
+video	Pika-Labs/Pika-H3-Flex-Turbo-LoRA	pika_h3_flex_turbo_8step_hd_fl2va.safetensors	pika_h3_flex_turbo_8step_hd_fl2va.safetensors	loras	pika-flex-hd
+
 # --- Music: YuE2 (~3.7 GB) ---------------------------------------------------
 music	Comfy-Org/YuE2	checkpoints/yue2_3b_int8_convrot.safetensors	yue2_3b_int8_convrot.safetensors	checkpoints	yue2
 

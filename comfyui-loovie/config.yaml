@@ -49,6 +49,8 @@ models:
       - flux-2-klein
     video:
       - ltx-2.5
+      - pika-flex
+      - pika-flex-hd
     music:
       - yue2
     sfx:
@@ -116,6 +118,61 @@ workflows:
   ltx23-fl2v-pro:
     file: "workflows/ltx23_fl2v_pro.json"
     description: "LTX 2.3 first+last frame to video, two-stage with spatial upscaler (pro quality)."
+    max_wait_seconds: 840
+
+  pika-flex-t2v-official:
+    file: "workflows/pika-flex-t2v-official.json"
+    description: "Pika H3 Flex, official 6-step text-to-video."
+    max_wait_seconds: 840
+
+  pika-flex-i2v-official:
+    file: "workflows/pika-flex-i2v-official.json"
+    description: "Pika H3 Flex, official 6-step image-to-video."
+    max_wait_seconds: 840
+
+  pika-flex-fl2v-official:
+    file: "workflows/pika-flex-fl2v-official.json"
+    description: "Pika H3 Flex, official 6-step first+last frame to video."
+    max_wait_seconds: 840
+
+  pika-flex-ref2v-official:
+    file: "workflows/pika-flex-ref2v-official.json"
+    description: "Pika H3 Flex, official 6-step reference-to-video."
+    max_wait_seconds: 840
+
+  pika-flex-ref2v-turbo:
+    file: "workflows/pika-flex-ref2v-turbo.json"
+    description: "Pika H3 Flex, 4-step turbo reference-to-video."
+    max_wait_seconds: 840
+
+  pika-flex-t2v-turbo:
+    file: "workflows/pika-flex-t2v-turbo.json"
+    description: "Pika H3 Flex, 4-step turbo text-to-video."
+    max_wait_seconds: 840
+
+  pika-flex-i2v-turbo:
+    file: "workflows/pika-flex-i2v-turbo.json"
+    description: "Pika H3 Flex, 4-step turbo image-to-video."
+    max_wait_seconds: 840
+
+  pika-flex-fl2v-turbo:
+    file: "workflows/pika-flex-fl2v-turbo.json"
+    description: "Pika H3 Flex, 4-step turbo first+last frame to video."
+    max_wait_seconds: 840
+
+  pika-flex-hd-t2v-hd:
+    file: "workflows/pika-flex-hd-t2v-hd.json"
+    description: "Pika H3 Flex HD, 8-step text-to-video."
+    max_wait_seconds: 840
+
+  pika-flex-hd-i2v-hd:
+    file: "workflows/pika-flex-hd-i2v-hd.json"
+    description: "Pika H3 Flex HD, 8-step image-to-video."
+    max_wait_seconds: 840
+
+  pika-flex-hd-fl2v-hd:
+    file: "workflows/pika-flex-hd-fl2v-hd.json"
+    description: "Pika H3 Flex HD, 8-step first+last frame to video."
     max_wait_seconds: 840
 
   yue2-t2m-fast:
