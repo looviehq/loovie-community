@@ -1,0 +1,93 @@
+{
+  "10": {
+    "inputs": { "aspect_ratio": "1:1", "seed": -1 },
+    "class_type": "LoovieSettings",
+    "_meta": { "title": "Loovie Settings" }
+  },
+  "11": {
+    "inputs": { "prompt": "", "negative_prompt": "" },
+    "class_type": "LoovieTextInput",
+    "_meta": { "title": "Loovie Text Input" }
+  },
+  "12": {
+    "inputs": {
+      "width": ["10", 0],
+      "height": ["10", 1],
+      "latent_type": "flux2",
+      "mask_url": "",
+      "image_url_1": "",
+      "image_url_2": "",
+      "image_url_3": "",
+      "image_url_4": "",
+      "image_url_5": "",
+      "image_url_6": "",
+      "image_url_7": "",
+      "image_url_8": "",
+      "image_url_9": "",
+      "image_url_10": ""
+    },
+    "class_type": "LoovieImageInput",
+    "_meta": { "title": "Loovie Latent Input" }
+  },
+  "20": {
+    "inputs": {
+      "unet_name": "flux3-image-klein-bf16.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": { "title": "Load FLUX 3 Klein" }
+  },
+  "21": {
+    "inputs": {
+      "clip_name": "qwen3vl_4b_bf16.safetensors",
+      "type": "flux3",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": { "title": "Load CLIP (Qwen3-VL 4B for FLUX 3)" }
+  },
+  "22": {
+    "inputs": { "vae_name": "flux2-vae.safetensors" },
+    "class_type": "VAELoader",
+    "_meta": { "title": "Load VAE" }
+  },
+  "30": {
+    "inputs": { "text": ["11", 0], "clip": ["21", 0] },
+    "class_type": "CLIPTextEncode",
+    "_meta": { "title": "Positive Prompt" }
+  },
+  "31": {
+    "inputs": { "text": ["11", 1], "clip": ["21", 0] },
+    "class_type": "CLIPTextEncode",
+    "_meta": { "title": "Negative Prompt" }
+  },
+  "32": {
+    "inputs": {
+      "model": ["20", 0],
+      "seed": ["10", 2],
+      "steps": 15,
+      "cfg": 1.0,
+      "sampler_name": "er_sde",
+      "scheduler": "simple",
+      "positive": ["30", 0],
+      "negative": ["31", 0],
+      "latent_image": ["12", 1],
+      "denoise": 1.0
+    },
+    "class_type": "KSampler",
+    "_meta": { "title": "KSampler (15 steps)" }
+  },
+  "33": {
+    "inputs": { "samples": ["32", 0], "vae": ["22", 0] },
+    "class_type": "VAEDecode",
+    "_meta": { "title": "VAE Decode" }
+  },
+  "34": {
+    "inputs": {
+      "filename_prefix": "loovie/flux-3-klein_t2i_distilled",
+      "images": ["33", 0]
+    },
+    "class_type": "SaveImage",
+    "_meta": { "title": "Save Image" }
+  }
+}

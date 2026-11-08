@@ -47,6 +47,9 @@ models:
   enabled:
     image:
       - flux-2-klein
+      - qwen-image-2.1
+      - flux-3-klein
+      - krea-2
     video:
       - ltx-2.5
       - pika-flex
@@ -75,6 +78,26 @@ workflows:
   flux-2-klein:
     file: "workflows/flux_2_klein.json"
     description: "FLUX.2 Klein, multi-reference image generation with optional LoRAs."
+
+  qwen-image-2-1-t2i-turbo:
+    file: "workflows/qwen_image_2_1_t2i_turbo.json"
+    description: "Qwen-Image 2.1 Turbo text-to-image, 8-step distilled schedule."
+
+  qwen-image-2-1-i2i-turbo:
+    file: "workflows/qwen_image_2_1_i2i_turbo.json"
+    description: "Qwen-Image 2.1 Turbo image edit with up to 4 references."
+
+  flux-3-klein-t2i-distilled:
+    file: "workflows/flux_3_klein_t2i_distilled.json"
+    description: "FLUX 3 Image Klein (distilled) text-to-image, 15-step."
+
+  flux-3-klein-i2i-distilled:
+    file: "workflows/flux_3_klein_i2i_distilled.json"
+    description: "FLUX 3 Image Klein (distilled) multi-reference edit, 15-step."
+
+  krea-2-t2i-turbo:
+    file: "workflows/krea_2_t2i_turbo.json"
+    description: "Krea 2 Turbo text-to-image, 8-step distilled."
 
   ltx23-t2v-fast:
     file: "workflows/ltx23_t2v_fast.json"

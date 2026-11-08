@@ -86,7 +86,7 @@ class LoovieImageInput:
             "required": {
                 "width": ("INT", {"default": 768, "min": 64, "max": 8192, "step": 8}),
                 "height": ("INT", {"default": 768, "min": 64, "max": 8192, "step": 8}),
-                "latent_type": (["sd3", "flux2"], {"default": "sd3"}),
+                "latent_type": (["sd3", "flux2", "qwen21"], {"default": "sd3"}),
             },
             "optional": {
                 "vae": ("VAE",),
@@ -140,6 +140,9 @@ class LoovieImageInput:
         if latent_type == "flux2":
             samples = torch.zeros([1, 128, height // 16, width // 16], device=device)
             return {"samples": samples}
+        if latent_type == "qwen21":
+            samples = torch.zeros([1, 64, height // 16, width // 16], device=device)
+            return {"samples": samples, "downscale_ratio_spacial": 16}
         samples = torch.zeros([1, 16, height // 8, width // 8], device=device)
         return {"samples": samples, "downscale_ratio_spacial": 8}
 
