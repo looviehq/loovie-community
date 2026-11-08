@@ -1,0 +1,93 @@
+{
+  "10": {
+    "inputs": { "aspect_ratio": "1:1", "seed": -1 },
+    "class_type": "LoovieSettings",
+    "_meta": { "title": "Loovie Settings" }
+  },
+  "11": {
+    "inputs": { "prompt": "", "negative_prompt": "" },
+    "class_type": "LoovieTextInput",
+    "_meta": { "title": "Loovie Text Input" }
+  },
+  "12": {
+    "inputs": {
+      "width": ["10", 0],
+      "height": ["10", 1],
+      "latent_type": "sd3",
+      "mask_url": "",
+      "image_url_1": "",
+      "image_url_2": "",
+      "image_url_3": "",
+      "image_url_4": "",
+      "image_url_5": "",
+      "image_url_6": "",
+      "image_url_7": "",
+      "image_url_8": "",
+      "image_url_9": "",
+      "image_url_10": ""
+    },
+    "class_type": "LoovieImageInput",
+    "_meta": { "title": "Loovie Latent Input" }
+  },
+  "20": {
+    "inputs": {
+      "unet_name": "krea2_turbo_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": { "title": "Load Krea 2 Turbo" }
+  },
+  "21": {
+    "inputs": {
+      "clip_name": "qwen3vl_4b_bf16.safetensors",
+      "type": "krea2",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": { "title": "Load CLIP (Qwen3-VL 4B for Krea 2)" }
+  },
+  "22": {
+    "inputs": { "vae_name": "qwen_image_vae.safetensors" },
+    "class_type": "VAELoader",
+    "_meta": { "title": "Load VAE" }
+  },
+  "30": {
+    "inputs": { "text": ["11", 0], "clip": ["21", 0] },
+    "class_type": "CLIPTextEncode",
+    "_meta": { "title": "Positive Prompt" }
+  },
+  "31": {
+    "inputs": { "conditioning": ["30", 0] },
+    "class_type": "ConditioningZeroOut",
+    "_meta": { "title": "Zero Out Negative" }
+  },
+  "32": {
+    "inputs": {
+      "model": ["20", 0],
+      "seed": ["10", 2],
+      "steps": 8,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": ["30", 0],
+      "negative": ["31", 0],
+      "latent_image": ["12", 1],
+      "denoise": 1.0
+    },
+    "class_type": "KSampler",
+    "_meta": { "title": "KSampler (8 steps)" }
+  },
+  "33": {
+    "inputs": { "samples": ["32", 0], "vae": ["22", 0] },
+    "class_type": "VAEDecode",
+    "_meta": { "title": "VAE Decode" }
+  },
+  "34": {
+    "inputs": {
+      "filename_prefix": "loovie/krea-2_t2i_turbo",
+      "images": ["33", 0]
+    },
+    "class_type": "SaveImage",
+    "_meta": { "title": "Save Image" }
+  }
+}

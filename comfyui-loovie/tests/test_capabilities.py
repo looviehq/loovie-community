@@ -279,7 +279,12 @@ def test_repo_config_advertises_the_shipped_models() -> None:
     config = yaml.safe_load((REPO_ROOT / "comfyui-loovie" / "config.yaml").read_text())
     workflows = list(config["workflows"])
     manifest = build_capabilities_manifest(workflows, version="x", config=config)
-    assert [m["id"] for m in manifest["models"]["images"]] == ["flux-2-klein"]
+    assert [m["id"] for m in manifest["models"]["images"]] == [
+        "flux-2-klein",
+        "qwen-image-2.1",
+        "flux-3-klein",
+        "krea-2",
+    ]
     assert [m["id"] for m in manifest["models"]["ss_videos"]] == [
         "ltx-2.5",
         "pika-flex",

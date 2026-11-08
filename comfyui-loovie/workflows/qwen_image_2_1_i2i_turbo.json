@@ -1,0 +1,229 @@
+{
+  "10": {
+    "inputs": {
+      "aspect_ratio": "1:1",
+      "seed": -1
+    },
+    "class_type": "LoovieSettings",
+    "_meta": {
+      "title": "Loovie Settings"
+    }
+  },
+  "11": {
+    "inputs": {
+      "prompt": "",
+      "negative_prompt": ""
+    },
+    "class_type": "LoovieTextInput",
+    "_meta": {
+      "title": "Loovie Text Input"
+    }
+  },
+  "12": {
+    "inputs": {
+      "width": [
+        "10",
+        0
+      ],
+      "height": [
+        "10",
+        1
+      ],
+      "latent_type": "qwen21",
+      "mask_url": "",
+      "image_url_1": "",
+      "image_url_2": "",
+      "image_url_3": "",
+      "image_url_4": "",
+      "image_url_5": "",
+      "image_url_6": "",
+      "image_url_7": "",
+      "image_url_8": "",
+      "image_url_9": "",
+      "image_url_10": ""
+    },
+    "class_type": "LoovieImageInput",
+    "_meta": {
+      "title": "Loovie Image Input"
+    }
+  },
+  "20": {
+    "inputs": {
+      "unet_name": "qwen_image_2.1_turbo_bf16.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Qwen-Image 2.1 Turbo"
+    }
+  },
+  "21": {
+    "inputs": {
+      "clip_name": "qwen3vl_8b_bf16.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP (Qwen3-VL 8B)"
+    }
+  },
+  "22": {
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "40": {
+    "inputs": {
+      "clip": [
+        "21",
+        0
+      ],
+      "prompt": [
+        "11",
+        0
+      ],
+      "negative_prompt": [
+        "11",
+        1
+      ],
+      "resolution": 1024,
+      "vae": [
+        "22",
+        0
+      ],
+      "images.image_1": [
+        "12",
+        5
+      ],
+      "images.image_2": [
+        "12",
+        7
+      ],
+      "images.image_3": [
+        "12",
+        9
+      ],
+      "images.image_4": [
+        "12",
+        11
+      ]
+    },
+    "class_type": "TextEncodeQwenImage21",
+    "_meta": {
+      "title": "Qwen 2.1 Edit Encode (4 references)"
+    }
+  },
+  "50": {
+    "inputs": {
+      "noise_seed": [
+        "10",
+        2
+      ]
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "Random Noise"
+    }
+  },
+  "51": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "Sampler Select (euler)"
+    }
+  },
+  "52": {
+    "inputs": {
+      "sigmas": "1.0, 0.978453, 0.95418, 0.926626, 0.89508, 0.845148, 0.704534, 0.414568, 0"
+    },
+    "class_type": "ManualSigmas",
+    "_meta": {
+      "title": "Qwen 2.1 Turbo Sigmas (8 steps)"
+    }
+  },
+  "53": {
+    "inputs": {
+      "model": [
+        "20",
+        0
+      ],
+      "positive": [
+        "40",
+        0
+      ],
+      "negative": [
+        "40",
+        1
+      ],
+      "cfg": 1.0
+    },
+    "class_type": "CFGGuider",
+    "_meta": {
+      "title": "CFG Guider"
+    }
+  },
+  "54": {
+    "inputs": {
+      "noise": [
+        "50",
+        0
+      ],
+      "guider": [
+        "53",
+        0
+      ],
+      "sampler": [
+        "51",
+        0
+      ],
+      "sigmas": [
+        "52",
+        0
+      ],
+      "latent_image": [
+        "40",
+        2
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "Sampler (Advanced)"
+    }
+  },
+  "33": {
+    "inputs": {
+      "samples": [
+        "54",
+        0
+      ],
+      "vae": [
+        "22",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "34": {
+    "inputs": {
+      "filename_prefix": "loovie/qwen-image-2-1_i2i_turbo",
+      "images": [
+        "33",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  }
+}
