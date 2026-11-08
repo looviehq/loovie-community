@@ -112,6 +112,39 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
   `Comfy-Org/MiniMax-H3`; the turbo/HD adapters come from
   `Pika-Labs/Pika-H3-Flex-Turbo-LoRA`.
 
+### HyperFlow H3 Flash (MiniMax H3 distill)
+
+- **HuggingFace:** [`VideoRebirthAI/hyperflow-h3-flash`](https://huggingface.co/VideoRebirthAI/hyperflow-h3-flash)
+  (GGUF transforms) + `Comfy-Org/MiniMax-H3` for the shared text encoder and
+  VAEs. The **full 8-step HyperFlow LoRA** on the 31B base H3 is a separate
+  model (`VideoRebirthAI/hyperflow`) and runs on the official diffusers
+  pipeline, **not** in ComfyUI; this catalogue entry is the compressed 14B
+  Flash model only.
+- **Licence:** MiniMax H3 Community License. It has territorial and
+  commercial-use conditions; read it before selling outputs. The licence
+  excludes the EU, UK, South Korea and the US without MiniMax's prior
+  authorization.
+- **Files:** `minimax_h3_fl2va_hyperflow_flash_14b-Q4_K_M.gguf` (~9.1 GB),
+  `minimax_h3_ref2va_hyperflow_flash_14b-Q4_K_M.gguf` (~9.2 GB), plus the
+  shared `qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors` (15.7 GB),
+  `minimax_h3_video_vae_fp16.safetensors` and
+  `minimax_h3_audio_vae_fp32.safetensors` from `Comfy-Org/MiniMax-H3`.
+- **Modes:** t2v, i2v, fl2v, ref2v (up to 9 images, 3 videos, 3 audio clips).
+  384p / 480p / 540p / 768p, 5–15 s, 24 fps, `17n + 5` frames, with audio.
+- **Recipe:** three variants sharing one checkpoint: **Fast** (4-step,
+  draft), **Flash** (6-step, default) and **HQ** (8-step). No CFG
+  (`cfg = 1`).
+- **Planning VRAM:** 24 GB minimum, 32 GB recommended. The Q4_K_M Flash
+  transformer is ~9 GB instead of the ~20 GB full H3 DiT, but the shared
+  text encoder/VAEs dominate the footprint.
+- **ComfyUI:** needs `ComfyUI-GGUF` and
+  [`ComfyUI-HyperFlow-Flash`](https://github.com/Video-Rebirth/ComfyUI-HyperFlow-Flash)
+  (`HyperFlowGGUFLoader` + `HyperFlowSigmas`). The shipped
+  `hyperflow-h3-flash-{t2v,i2v,fl2v,ref2v}-{fast,flash,hq}.json` graphs use
+  the same `Loovie*` nodes as the Pika H3 workflows. Requires ComfyUI >=
+  0.43.0; the repo's current Docker/quickstart pin (`v0.21.1`) predates the
+  MiniMax H3 nodes and must be bumped before enabling either H3 family.
+
 ### Gemma-3 12B text encoder (fp8 scaled)
 
 - **Purpose:** text encoder used by LTX-2.3. Without it, the video model cannot tokenise prompts.
@@ -175,11 +208,13 @@ These are **downloaded sizes**. Add roughly 5 to 10 GB of headroom for ComfyUI's
 |---|---|---|
 | `images` (FLUX.2 Klein bundle) | ~24 GB | 30 GB |
 | `videos` (LTX-2.3 main + LoRA + Gemma encoder + upscaler + ESRGAN) | ~70 GB | 80 GB |
+| `videos` + Pika H3 Flex + HD | ~166 GB | 180 GB |
+| `videos` + Pika H3 Flex + HD + HyperFlow H3 Flash | ~191 GB | 210 GB |
 | `music` (YuE2 3B int8) | ~4 GB | 8 GB |
 | `sfx` (Stable Audio 3 Small SFX + T5Gemma) | ~3.4 GB | 8 GB |
-| `all` (all of the above) | ~103 GB | 110 GB |
+| `all` (current video manifest + image + audio) | ~225 GB | 245 GB |
 
-Per-file approximate sizes used above: FLUX.2 Klein bundle ~24 GB (main + VAE + Qwen encoder), LTX-2.3 22B main fp8 ~22 GB, LTX-2.3 22B distilled LoRA ~35 GB, Gemma-3 12B fp8 ~12 GB, LTX-2.3 spatial upscaler ~1 GB, RealESRGAN ~64 MB, YuE2 3B int8 ~3.7 GB. These are rough figures from Comfy-Org's published builds; the exact bytes on disk depend on which point release of each repo you fetch. The truthful source of truth is what HuggingFace serves to your token; treat the numbers above as planning aids, not contracts.
+Per-file approximate sizes used above: FLUX.2 Klein bundle ~24 GB (main + VAE + Qwen encoder), LTX-2.3 22B main fp8 ~22 GB, LTX-2.3 22B distilled LoRA ~35 GB, Gemma-3 12B fp8 ~12 GB, LTX-2.3 spatial upscaler ~1 GB, RealESRGAN ~64 MB, Pika H3 base + adapters ~46 GB, HyperFlow H3 Flash Q4_K_M transformers ~18 GB plus the shared 15.7 GB text encoder and ~10 GB of VAEs, YuE2 3B int8 ~3.7 GB. These are rough figures from Comfy-Org's published builds; the exact bytes on disk depend on which point release of each repo you fetch. The truthful source of truth is what HuggingFace serves to your token; treat the numbers above as planning aids, not contracts.
 
 ## Adding a new model in a PR
 

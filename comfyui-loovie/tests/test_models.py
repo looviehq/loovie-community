@@ -23,6 +23,47 @@ H3_WORKFLOWS = [
 ]
 
 
+HYPERFLOW_WORKFLOWS = [
+    f"hyperflow-h3-flash-{mode}-{variant}"
+    for mode in ("t2v", "i2v", "fl2v", "ref2v")
+    for variant in ("fast", "flash", "hq")
+]
+
+
+def test_hyperflow_flash_offers_all_h3_modes() -> None:
+    models = available_models({}, HYPERFLOW_WORKFLOWS)
+    spec = next(m for m in models if m.id == "hyperflow-h3-flash")
+    assert spec.capabilities == ("t2v", "i2v", "fl2v", "ref2v")
+    assert [v.id for v in spec.variants] == ["fast", "flash", "hq"]
+    assert find_variant(spec, None).id == "flash"
+    assert find_variant(spec, "fast").id == "fast"
+    assert find_variant(spec, "pro").id == "hq"
+    assert residency_group(spec, "t2v") == "hyperflow-h3-fl2va"
+    assert residency_group(spec, "ref2v") == "hyperflow-h3-ref2va"
+    assert spec.audio == "always"
+    assert spec.frame_step == 17
+    assert spec.frame_offset == 5
+
+
+def test_hyperflow_flash_variants_route_to_the_step_schedules() -> None:
+    models = available_models({}, HYPERFLOW_WORKFLOWS)
+    spec = next(m for m in models if m.id == "hyperflow-h3-flash")
+    for variant, workflow in (
+        ("fast", "hyperflow-h3-flash-t2v-fast"),
+        ("flash", "hyperflow-h3-flash-t2v-flash"),
+        ("hq", "hyperflow-h3-flash-t2v-hq"),
+    ):
+        assert spec.workflows[("t2v", variant)] == workflow
+        assert find_variant(spec, variant).id == variant
+
+
+def test_hyperflow_flash_partial_install_narrows_modes() -> None:
+    models = available_models({}, ["hyperflow-h3-flash-t2v-flash"])
+    spec = next(m for m in models if m.id == "hyperflow-h3-flash")
+    assert spec.capabilities == ("t2v",)
+    assert [v.id for v in spec.variants] == ["flash"]
+
+
 def _models(config=None):
     return available_models(
         config,

@@ -42,6 +42,7 @@ and already describes the models we have validated in ComfyUI:
 | `pika-flex` | video | t2v, i2v, fl2v, ref2v | official, turbo | 24 / 32 GB |
 | `pika-flex-hd` | video | t2v, i2v, fl2v | hd | 24 / 32 GB |
 | `pika-flex` ref2v | video | reference-to-video | official, turbo | 24 / 32 GB |
+| `hyperflow-h3-flash` | video | t2v, i2v, fl2v, ref2v | fast, flash, hq | 24 / 32 GB |
 | `yue2` | music | t2m | fast | 4 / 8 GB |
 
 A model is advertised only when **its workflows are registered and it is

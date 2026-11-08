@@ -199,6 +199,62 @@ def _pika(model_id: str, label: str, description: str, *, hd: bool = False) -> M
     )
 
 
+def _hyperflow_flash() -> ModelSpec:
+    """Video Rebirth's 14B few-step distillation of MiniMax H3 (GGUF path)."""
+
+    model_id = "hyperflow-h3-flash"
+    workflows = {
+        (mode, variant): f"{model_id}-{mode}-{variant}"
+        for mode in ("t2v", "i2v", "fl2v", "ref2v")
+        for variant in ("fast", "flash", "hq")
+    }
+    return ModelSpec(
+        id=model_id,
+        modality="video",
+        label="HyperFlow H3 Flash",
+        description=(
+            "Video Rebirth's 14B distillation of MiniMax H3. "
+            "Native audio, first/last-frame and reference-to-video, with a "
+            "smaller transformer and lower latency than the full H3 recipes."
+        ),
+        capabilities=("t2v", "i2v", "fl2v", "ref2v"),
+        variants=(
+            VariantSpec(
+                "fast",
+                "Fast",
+                "4-step schedule; fastest, draft quality.",
+                draft=True,
+            ),
+            VariantSpec(
+                "flash",
+                "Flash",
+                "6-step schedule; the balanced default.",
+                default=True,
+            ),
+            VariantSpec(
+                "hq",
+                "HQ",
+                "8-step schedule; highest quality, slower.",
+            ),
+        ),
+        workflows=workflows,
+        resolutions=("384p", "480p", "540p", "768p"),
+        aspect_ratios=("auto", "16:9", "9:16", "1:1", "4:3", "3:4"),
+        durations=tuple(range(5, 16)),
+        max_reference_images=9,
+        references_exclude_frames=True,
+        audio=AUDIO_ALWAYS,
+        frame_step=17,
+        frame_offset=5,
+        vram_gb=24,
+        recommended_vram_gb=32,
+        residency_group="hyperflow-h3-fl2va",
+        residency_by_mode={"ref2v": "hyperflow-h3-ref2va"},
+        legacy_variants={"fast": "fast", "pro": "hq"},
+        min_comfyui="0.43.0",
+    )
+
+
 CATALOG: tuple[ModelSpec, ...] = (
     # ── images ─────────────────────────────────────────────────────────────
     ModelSpec(
@@ -370,6 +426,7 @@ CATALOG: tuple[ModelSpec, ...] = (
         "Pika H3 Flex 8-step HD recipe; first/last frame only.",
         hd=True,
     ),
+    _hyperflow_flash(),
 )
 
 
