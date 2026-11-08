@@ -18,6 +18,8 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn-runtime-ubuntu${UBUNTU_VERSION} AS builde
 
 ARG COMFYUI_REF=v0.21.1
 ARG COMFYUI_LTX_REF=229437c6b65796d6a7a63ae34be2bd5ba31fa543
+ARG COMFYUI_GGUF_REF=6ea2651e7df66d7585f6ffee804b20e92fb38b8a
+ARG COMFYUI_HYPERFLOW_REF=20a22ab2b075f3c948eb5dba62637ff89fc0f363
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -60,6 +62,17 @@ WORKDIR /opt/comfyui/custom_nodes/ComfyUI-LTXVideo
 RUN git checkout "${COMFYUI_LTX_REF}" \
     && pip install -r requirements.txt
 WORKDIR /opt/comfyui
+
+# Install ComfyUI-GGUF + the HyperFlow H3 Flash nodes (HyperFlow GGUF loader
+# and its 4/6/8-step sigma grid; the loader needs ComfyUI-GGUF next to it).
+RUN git clone https://github.com/city96/ComfyUI-GGUF.git \
+        /opt/comfyui/custom_nodes/ComfyUI-GGUF \
+    && git -C /opt/comfyui/custom_nodes/ComfyUI-GGUF checkout "${COMFYUI_GGUF_REF}" \
+    && pip install -r /opt/comfyui/custom_nodes/ComfyUI-GGUF/requirements.txt
+RUN git clone https://github.com/Video-Rebirth/ComfyUI-HyperFlow-Flash.git \
+        /opt/comfyui/custom_nodes/ComfyUI-HyperFlow-Flash \
+    && git -C /opt/comfyui/custom_nodes/ComfyUI-HyperFlow-Flash checkout "${COMFYUI_HYPERFLOW_REF}" \
+    && pip install -r /opt/comfyui/custom_nodes/ComfyUI-HyperFlow-Flash/requirements.txt
 
 # Copy and install the Loovie reference implementation.
 # Build context root is the repo root; we copy comfyui-loovie/ into the

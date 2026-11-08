@@ -32,6 +32,7 @@ Workflows shipped (one JSON per file under `workflows/`):
 | Video | `ltx23-t2v-{fast,pro}` | text-to-video |
 | Video | `ltx23-i2v-{fast,pro}` | image-to-video |
 | Video | `ltx23-fl2v-{fast,pro}` | first+last frame to video |
+| Video | `hyperflow-h3-flash-{t2v,i2v,fl2v,ref2v}-{fast,flash,hq}` | HyperFlow H3 Flash (needs ComfyUI-GGUF) |
 
 The capabilities manifest is built dynamically from the workflows you
 register in `config.yaml`. Remove an entry to hide that capability from the
@@ -87,6 +88,12 @@ fetch a baseline set.
 | `flux-2-klein` | FLUX.2 Klein UNet, T5-XXL + CLIP-L text encoders, FLUX VAE |
 | `ltx23-*-fast` | LTX 2.3 distilled checkpoint, Gemma-3-12B text encoder |
 | `ltx23-*-pro` | LTX 2.3 checkpoint + spatial upscaler, Gemma-3-12B text encoder |
+
+`hyperflow-h3-flash-*` additionally needs the
+[`ComfyUI-GGUF`](https://github.com/city96/ComfyUI-GGUF) and
+[`ComfyUI-HyperFlow-Flash`](https://github.com/Video-Rebirth/ComfyUI-HyperFlow-Flash)
+custom-node packs in `custom_nodes/`. The Docker image installs both at pinned
+refs; bare-metal installs must clone them next to `loovie`.
 
 ## Extending
 

@@ -284,9 +284,26 @@ def test_repo_config_advertises_the_shipped_models() -> None:
         "ltx-2.5",
         "pika-flex",
         "pika-flex-hd",
+        "hyperflow-h3-flash",
     ]
     assert [m["id"] for m in manifest["models"]["music"]] == ["yue2"]
     assert [m["id"] for m in manifest["models"]["sfx"]] == ["stable-audio-3"]
+
+
+def test_hyperflow_flash_is_advertised_from_its_workflows() -> None:
+    manifest = build_capabilities_manifest(
+        [
+            f"hyperflow-h3-flash-{mode}-{variant}"
+            for mode in ("t2v", "i2v", "fl2v", "ref2v")
+            for variant in ("fast", "flash", "hq")
+        ],
+        version="x",
+    )
+    model = manifest["models"]["ss_videos"][0]
+    assert model["id"] == "hyperflow-h3-flash"
+    assert model["capabilities"] == ["t2v", "i2v", "fl2v", "ref2v"]
+    assert [v["id"] for v in model["variants"]] == ["fast", "flash", "hq"]
+    assert "768p" in model["resolution"]
 
 
 def test_manifest_conforms_to_openapi_capabilities_schema(
