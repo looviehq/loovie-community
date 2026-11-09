@@ -39,7 +39,7 @@ imageio==2.38.0
     # via comfyui-loovie (pyproject.toml)
 imageio-ffmpeg==0.7.0
     # via imageio
-multidict==6.7.1
+multidict==7.1.0
     # via
     #   aiohttp
     #   yarl
