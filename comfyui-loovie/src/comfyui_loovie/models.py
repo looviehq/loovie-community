@@ -372,9 +372,9 @@ CATALOG: tuple[ModelSpec, ...] = (
         },
         resolutions=("1K", "2K", "4K"),
         aspect_ratios=("auto", "1:1", "4:3", "3:4", "3:2", "2:3", "16:9", "9:16"),
-        # H3 Image takes up to 16 references; `LoovieImageInput` exposes 4
-        # IMAGE_N slots, so that is what the shipped graphs can carry.
-        reference_count=4,
+        # H3 Image takes up to 16 references; the shipped i2i graph wires all
+        # sixteen `images.image_N` slots.
+        reference_count=16,
         # Guidance is fixed at 1, so the model has no negative-prompt pass.
         supports_negative_prompt=False,
         prompt_char_limit=6000,

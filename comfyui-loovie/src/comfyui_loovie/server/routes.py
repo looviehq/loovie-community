@@ -205,8 +205,12 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
             inputs["resolution"] = str(body.get("_loovie_image_resolution", "auto"))
 
         elif cls == "LoovieImageInput":
-            max_images = 9 if mask_url else 10
-            for i, url in enumerate(image_urls[:max_images], 1):
+            # Fill exactly the slots this graph declares: each model wires as
+            # many as its `referenceCount` advertises, and a mask takes the
+            # last one (the node reserves it).
+            slots = sorted(name for name in inputs if name.startswith("image_url_"))
+            capacity = max(0, len(slots) - (1 if mask_url else 0))
+            for i, url in enumerate(image_urls[:capacity], 1):
                 inputs[f"image_url_{i}"] = url
             if mask_url:
                 inputs["mask_url"] = mask_url

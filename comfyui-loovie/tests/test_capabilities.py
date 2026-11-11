@@ -384,7 +384,7 @@ def test_minimax_h3_image_is_advertised_from_its_workflows() -> None:
     assert model["id"] == "minimax-h3-image"
     assert model["capabilities"] == ["t2i", "i2i"]
     assert model["resolution"] == ["1K", "2K", "4K"]
-    assert model["referenceCount"] == 4
+    assert model["referenceCount"] == 16
     assert model["vramGb"] == 36
     assert model["recommendedVramGb"] == 64
     assert [v["id"] for v in model["variants"]] == ["default"]

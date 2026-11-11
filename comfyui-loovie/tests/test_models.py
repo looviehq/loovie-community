@@ -301,7 +301,7 @@ def test_minimax_h3_image_offers_text_to_image_and_editing() -> None:
     assert find_variant(spec, None).id == "default"
     assert find_variant(spec, "pro") is None
     assert spec.resolutions == ("1K", "2K", "4K")
-    assert spec.reference_count == 4
+    assert spec.reference_count == 16
     # Guidance is fixed at 1, so the app must not offer a negative prompt.
     assert spec.supports_negative_prompt is False
     assert spec.residency_group == "h3-image"

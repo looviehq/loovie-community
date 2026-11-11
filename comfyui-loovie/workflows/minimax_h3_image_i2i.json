@@ -31,7 +31,13 @@
       "image_url_7": "",
       "image_url_8": "",
       "image_url_9": "",
-      "image_url_10": ""
+      "image_url_10": "",
+      "image_url_11": "",
+      "image_url_12": "",
+      "image_url_13": "",
+      "image_url_14": "",
+      "image_url_15": "",
+      "image_url_16": ""
     },
     "class_type": "LoovieImageInput",
     "_meta": { "title": "Loovie Image Input" }
@@ -70,7 +76,19 @@
       "images.image_1": ["12", 5],
       "images.image_2": ["12", 7],
       "images.image_3": ["12", 9],
-      "images.image_4": ["12", 11]
+      "images.image_4": ["12", 11],
+      "images.image_5": ["12", 13],
+      "images.image_6": ["12", 15],
+      "images.image_7": ["12", 17],
+      "images.image_8": ["12", 19],
+      "images.image_9": ["12", 21],
+      "images.image_10": ["12", 23],
+      "images.image_11": ["12", 25],
+      "images.image_12": ["12", 27],
+      "images.image_13": ["12", 29],
+      "images.image_14": ["12", 31],
+      "images.image_15": ["12", 33],
+      "images.image_16": ["12", 35]
     },
     "class_type": "MiniMaxH3ImageConditioning",
     "_meta": { "title": "MiniMax H3 Image Conditioning (Picture 1-4)" }

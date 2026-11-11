@@ -228,7 +228,7 @@ and the registry's `residency_group`.
   "variant": "turbo",              // model-scoped; fast/pro still accepted
   "resolution": "2K",              // from the model's resolution list
   "aspect_ratio": "16:9",
-  "image_urls": ["https://..."],   // for i2i; up to referenceCount
+  "image_urls": ["https://..."],   // for i2i; up to referenceCount (per model)
   "mask_url": "https://...",       // optional
   "seed": -1                       // -1 = random
 }

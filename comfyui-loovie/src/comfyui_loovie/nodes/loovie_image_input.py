@@ -20,8 +20,13 @@ from ..helpers.image_cache import cache_image
 
 logger = logging.getLogger("comfyui_loovie.nodes.image_input")
 
-_MAX_SLOTS = 10
-_REF_SLOTS = 4
+#: Image URL slots and per-slot outputs. Sixteen covers the largest
+#: reference budget in the catalogue (MiniMax H3 Image), and every graph wires
+#: exactly as many slots as its model advertises in `ModelSpec.reference_count`.
+#: Output indices are stable, so a graph that only uses `IMAGE_1..4` keeps
+#: working against a node that exposes sixteen.
+_MAX_SLOTS = 16
+_REF_SLOTS = 16
 _TARGET_PIXELS = 1_048_576  # 1 megapixel; matches ImageScaleToTotalPixels
 
 
@@ -103,14 +108,7 @@ class LoovieImageInput:
         "INT",
         "MASK",
         "BOOLEAN",
-        "IMAGE",
-        "LATENT",
-        "IMAGE",
-        "LATENT",
-        "IMAGE",
-        "LATENT",
-        "IMAGE",
-        "LATENT",
+        *(output_type for _ in range(_REF_SLOTS) for output_type in ("IMAGE", "LATENT")),
     )
     RETURN_NAMES = (
         "IMAGES",
@@ -118,14 +116,11 @@ class LoovieImageInput:
         "IMAGE_COUNT",
         "MASK",
         "HAS_MASK",
-        "IMAGE_1",
-        "LATENT_1",
-        "IMAGE_2",
-        "LATENT_2",
-        "IMAGE_3",
-        "LATENT_3",
-        "IMAGE_4",
-        "LATENT_4",
+        *(
+            output_name
+            for slot in range(1, _REF_SLOTS + 1)
+            for output_name in (f"IMAGE_{slot}", f"LATENT_{slot}")
+        ),
     )
     FUNCTION = "process"
     CATEGORY = "loovie"
@@ -153,6 +148,14 @@ class LoovieImageInput:
 
     def _empty_image(self, height: int = 64, width: int = 64) -> torch.Tensor:
         return torch.zeros((1, height, width, 3), dtype=torch.float32)
+
+    def _slot_outputs(
+        self,
+        images: list[torch.Tensor],
+        latents: list[dict[str, torch.Tensor]],
+    ) -> tuple[object, ...]:
+        """Interleave IMAGE_n / LATENT_n for every reference slot."""
+        return tuple(value for slot in range(_REF_SLOTS) for value in (images[slot], latents[slot]))
 
     def process(
         self,
@@ -194,14 +197,7 @@ class LoovieImageInput:
                 0,
                 mask_tensor,
                 has_mask,
-                ref_images[0],
-                ref_latents[0],
-                ref_images[1],
-                ref_latents[1],
-                ref_images[2],
-                ref_latents[2],
-                ref_images[3],
-                ref_latents[3],
+                *self._slot_outputs(ref_images, ref_latents),
             )
 
         logger.info("Loading %d reference image(s)", len(urls))
@@ -261,12 +257,5 @@ class LoovieImageInput:
             len(urls),
             mask_tensor,
             has_mask,
-            ref_images[0],
-            ref_latents[0],
-            ref_images[1],
-            ref_latents[1],
-            ref_images[2],
-            ref_latents[2],
-            ref_images[3],
-            ref_latents[3],
+            *self._slot_outputs(ref_images, ref_latents),
         )

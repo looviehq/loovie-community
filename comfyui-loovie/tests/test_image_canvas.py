@@ -21,10 +21,12 @@ from typing import Any
 import pytest
 
 from comfyui_loovie.models import (
+    CATALOG,
     DEFAULT_SCALED_IMAGE_RESOLUTION,
     available_models,
     image_canvas_resolution,
 )
+from comfyui_loovie.nodes.loovie_image_input import LoovieImageInput
 from comfyui_loovie.nodes.loovie_settings import LoovieSettings
 from comfyui_loovie.server.routes import _inject_inputs
 
@@ -159,16 +161,82 @@ def test_minimax_h3_image_i2i_graph_carries_references_not_a_target_latent() -> 
         node_id for node_id, node in workflow.items() if node["class_type"] == "LoovieImageInput"
     )
     conditioning = by_class["MiniMaxH3ImageConditioning"]["inputs"]
-    # IMAGE_N is the transport: LoovieImageInput returns IMAGE_1..4 on slots
-    # 5, 7, 9 and 11 (each IMAGE_n/LATENT_n pair).
-    assert conditioning["images.image_1"] == [image_input_id, 5]
-    for index, slot in zip(range(2, 5), (7, 9, 11), strict=True):
-        assert conditioning[f"images.image_{index}"] == [image_input_id, slot]
+    # IMAGE_N is the transport: LoovieImageInput returns IMAGE_n on slot
+    # 2n + 3 (each IMAGE_n/LATENT_n pair), and H3 Image wires all sixteen.
+    for index in range(1, 17):
+        assert conditioning[f"images.image_{index}"] == [image_input_id, 2 * index + 3]
 
     # The sampler samples the conditioning node's latent, never an encoded
     # copy of the first picture.
     assert by_class["KSampler"]["inputs"]["latent_image"] == ["30", 1]
     assert by_class["KSampler"]["inputs"]["positive"] == ["30", 0]
+
+
+def test_image_input_exposes_enough_reference_slots() -> None:
+    """Every model's advertised reference count must fit in the node's outputs."""
+
+    slots = [
+        name
+        for name in LoovieImageInput.RETURN_NAMES
+        if name.startswith("IMAGE_") and name[6:].isdigit()
+    ]
+    widest = max(spec.reference_count for spec in CATALOG if spec.modality == "image")
+    assert len(slots) >= widest
+    assert len(slots) == len(LoovieImageInput.INPUT_TYPES()["optional"]) - 2  # vae + mask
+
+
+def _reference_slots(workflow: dict[str, Any]) -> int:
+    """How many reference pictures a graph actually wires into its encoder."""
+
+    latent_chain = sum(1 for node in workflow.values() if node["class_type"] == "ReferenceLatent")
+    encoded = max(
+        (
+            sum(1 for key in node["inputs"] if key.startswith("images.image_"))
+            for node in workflow.values()
+            if "inputs" in node
+        ),
+        default=0,
+    )
+    return max(latent_chain, encoded)
+
+
+@pytest.mark.parametrize(
+    ("filename", "model_id"),
+    [
+        ("flux_2_klein.json", "flux-2-klein"),
+        ("flux_3_klein_i2i_distilled.json", "flux-3-klein"),
+        ("qwen_image_2_1_i2i_turbo.json", "qwen-image-2.1"),
+        ("minimax_h3_image_i2i.json", "minimax-h3-image"),
+    ],
+)
+def test_reference_slots_match_the_catalogue(filename: str, model_id: str) -> None:
+    """The graph must carry exactly the count the model advertises."""
+
+    spec = next(spec for spec in CATALOG if spec.id == model_id)
+    workflow = _load(WORKFLOWS / filename)
+    assert _reference_slots(workflow) == spec.reference_count
+
+
+def test_route_fills_only_the_slots_the_graph_declares() -> None:
+    workflow = _load(H3_I2I)
+    urls = [f"https://example.com/{i}.png" for i in range(1, 20)]
+    _inject_inputs(workflow, {"prompt": "x", "image_urls": urls})
+    image_input = next(n for n in workflow.values() if n["class_type"] == "LoovieImageInput")
+    filled = [k for k, v in image_input["inputs"].items() if k.startswith("image_url_") and v]
+    assert len(filled) == 16
+    assert "image_url_17" not in image_input["inputs"]
+
+
+def test_route_reserves_the_last_slot_for_a_mask() -> None:
+    workflow = _load(H3_I2I)
+    urls = [f"https://example.com/{i}.png" for i in range(1, 20)]
+    _inject_inputs(
+        workflow, {"prompt": "x", "image_urls": urls, "mask_url": "https://example.com/m.png"}
+    )
+    image_input = next(n for n in workflow.values() if n["class_type"] == "LoovieImageInput")
+    filled = [k for k, v in image_input["inputs"].items() if k.startswith("image_url_") and v]
+    assert len(filled) == 15
+    assert image_input["inputs"]["mask_url"] == "https://example.com/m.png"
 
 
 def test_resolution_stays_an_optional_input() -> None:

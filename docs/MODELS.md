@@ -62,7 +62,8 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 
 - **HuggingFace:** `black-forest-labs/flux-3-image-klein-comfy` (gated).
 - **Licence:** FLUX Kommunity License. Accept it on that exact HF repo.
-- **Modes:** t2i, i2i, up to 4 references in the ComfyUI template (10 in the model card).
+- **Modes:** t2i, i2i, up to 10 references (`LoovieImageInput` slots 1-10; the
+  15-step distilled graph chains ten `ReferenceLatent` nodes).
 - **Planning VRAM:** int8 fits an 8–12 GB card; 16 GB recommended.
 - **ComfyUI:** native since 0.41.0.
 
@@ -108,8 +109,8 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
   quality for a smaller footprint.
 - **Modes:** `t2i` and `i2i`. Images are addressed as `<Picture 1>`,
   `<Picture 2>`, ... in the prompt, with **image 1 being the picture to edit**.
-  The model accepts up to 16 references; the shipped Loovie graphs carry 4
-  (`LoovieImageInput` exposes four `IMAGE_N` slots).
+  The model accepts up to 16 references and the shipped graph wires all
+  sixteen (`LoovieImageInput` exposes `IMAGE_1..16`).
 - **Recipe:** 6 distilled steps, `cfg = 1`, euler, simple scheduler, denoise 1.
   **No negative prompt** — write every exclusion into the positive prompt.
 - **Resolutions:** the Loovie workflow honours `resolution` as a canvas size —
@@ -119,7 +120,8 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
   detail is.
 - **Measured on a GB10 (INT8 DiT + nvfp4 encoder):** 15 s for 4 MP, 84 s for
   16 MP, ~36 GB resident, with 6 steps in both cases. Same seed reproduces the
-  same pixels.
+  same pixels. Reference pictures ride through every sampling step, so they
+  dominate latency: one reference at 1K is ~90 s, three references ~6 min.
 - **ComfyUI:** needs **0.45.0** or newer (`MiniMaxH3ImageConditioning`, the
   `minimax_h3_image` model type and the PDD sigma grid that ships in the
   checkpoint metadata). The shipped graphs are `minimax_h3_image_t2i.json` and
