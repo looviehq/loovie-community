@@ -199,6 +199,10 @@ The single most important endpoint. Tells the app what your server can do.
 **Hard rules.**
 
 - `models` is the v2 source of truth. The app reads it first.
+- Clients send `x-loovie-byo-contract: 3` on the capabilities probe to ask for
+  the v3 modes. A server SHOULD answer a probe without the header with the v2
+  vocabulary (schemaVersion 2, legacy modes only) so older app builds do not
+  reject the whole manifest when the server adds modes.
 - The flat `images` / `ss_videos` blocks are a **compatibility view** for app
   builds from before multi-model BYO. Keep them inside the v1 closed enums or
   omit them; an old app fails the whole parse on an unknown value. Omitting a

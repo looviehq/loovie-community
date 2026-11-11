@@ -1373,8 +1373,25 @@ paths:
         picker. Servers omit the `images` or `ss_videos` section they
         can't serve, and the matching endpoints under `/images/*` or
         `/videos/*` MAY be omitted entirely.
+
+        Clients send `x-loovie-byo-contract: 3` to ask for the v3 manifest.
+        A server SHOULD answer a request without that header with the v2
+        vocabulary (schemaVersion 2, no new modes) so an older app build does
+        not reject the whole manifest when the server adds modes.
       security: []
       operationId: getCapabilities
+      parameters:
+        - name: x-loovie-byo-contract
+          in: header
+          required: false
+          schema:
+            type: integer
+            enum: [2, 3]
+            default: 2
+          description: >-
+            Capability-contract version the client speaks. `3` includes the
+            LTX 2.5 edit/retake/extend/motion modes and their limits; absent
+            or `2` returns the legacy mode vocabulary.
       responses:
         '200':
           description: Capability manifest.

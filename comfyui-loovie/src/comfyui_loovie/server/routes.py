@@ -1222,11 +1222,19 @@ async def health(_request: web.Request) -> web.Response:
 
 
 @PromptServer.instance.routes.get("/loovie/capabilities")
-async def capabilities(_request: web.Request) -> web.Response:
+async def capabilities(request: web.Request) -> web.Response:
     """Capability manifest probe. ALWAYS public; never auth-checked."""
     wf_manager = WorkflowManager.get_instance()
+    raw_contract = (request.headers.get("x-loovie-byo-contract") or "").strip()
+    try:
+        contract_version = int(raw_contract) if raw_contract else 0
+    except ValueError:
+        contract_version = 0
     manifest = build_capabilities_manifest(
-        wf_manager.get_workflow_names(), VERSION, wf_manager.config
+        wf_manager.get_workflow_names(),
+        VERSION,
+        wf_manager.config,
+        contract_version=contract_version,
     )
     return web.json_response(manifest)
 
