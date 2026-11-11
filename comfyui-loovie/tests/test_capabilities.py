@@ -30,6 +30,14 @@ ALL_WORKFLOWS = [
     "ltx23-i2v-pro",
     "ltx23-fl2v-fast",
     "ltx23-fl2v-pro",
+    "ltx25-t2v-fast",
+    "ltx25-i2v-fast",
+    "ltx25-fl2v-fast",
+    "ltx25-ref2v-fast",
+    "ltx25-edit-fast",
+    "ltx25-retake-fast",
+    "ltx25-extend-fast",
+    "ltx25-motion-fast",
     "yue2-t2m-fast",
 ]
 
@@ -225,9 +233,9 @@ def test_full_workflow_set_emits_all_sections() -> None:
     assert manifest["version"] == "0.1.0"
 
 
-def test_schema_version_is_two() -> None:
+def test_schema_version_is_three() -> None:
     manifest = build_capabilities_manifest(["flux-2-klein"], version="x")
-    assert manifest["schemaVersion"] == 2
+    assert manifest["schemaVersion"] == 3
 
 
 def test_hardware_is_omitted_when_reporting_is_disabled() -> None:

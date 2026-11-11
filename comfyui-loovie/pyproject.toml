@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "comfyui-loovie"
-version = "0.5.0"
-description = "Reference ComfyUI server implementing the Loovie BYO protocol (FLUX.2 Klein image + LTX-2.3 single-shot video)."
+version = "0.6.0"
+description = "Reference ComfyUI server implementing the Loovie BYO protocol (image, video generation and LTX video editing)."
 license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.10"
@@ -115,6 +115,8 @@ omit = [
   "src/comfyui_loovie/nodes/loovie_settings.py",
   "src/comfyui_loovie/nodes/loovie_text_input.py",
   "src/comfyui_loovie/nodes/loovie_video_input.py",
+  "src/comfyui_loovie/nodes/loovie_video_edit.py",
+  "src/comfyui_loovie/nodes/loovie_reference_sheet.py",
   "src/comfyui_loovie/nodes/loovie_video_settings.py",
   "src/comfyui_loovie/nodes/loovie_audio_gate.py",
   # WebSocket polling of ComfyUI's `/ws` and `/history` endpoints; needs

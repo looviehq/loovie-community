@@ -14,9 +14,11 @@ from .loovie_h3_reference import LoovieH3ReferenceToVideo
 from .loovie_image_input import LoovieImageInput
 from .loovie_lora_stack import LoovieLoraStack
 from .loovie_music_input import LoovieMusicInput
+from .loovie_reference_sheet import LoovieReferenceSheet
 from .loovie_settings import LoovieSettings
 from .loovie_sfx_input import LoovieSfxInput
 from .loovie_text_input import LoovieTextInput
+from .loovie_video_edit import LoovieVideoEdit
 from .loovie_video_input import LoovieVideoInput
 from .loovie_video_settings import LoovieVideoSettings
 
@@ -28,6 +30,8 @@ NODE_CLASS_MAPPINGS: dict[str, type] = {
     "LoovieLoraStack": LoovieLoraStack,
     "LoovieVideoSettings": LoovieVideoSettings,
     "LoovieVideoInput": LoovieVideoInput,
+    "LoovieVideoEdit": LoovieVideoEdit,
+    "LoovieReferenceSheet": LoovieReferenceSheet,
     "LoovieAudioGate": LoovieAudioGate,
     "LoovieMusicInput": LoovieMusicInput,
     "LoovieSfxInput": LoovieSfxInput,
@@ -41,6 +45,8 @@ NODE_DISPLAY_NAME_MAPPINGS: dict[str, str] = {
     "LoovieLoraStack": "Loovie LoRA Stack",
     "LoovieVideoSettings": "Loovie Video Settings",
     "LoovieVideoInput": "Loovie Video Input",
+    "LoovieVideoEdit": "Loovie Video Edit",
+    "LoovieReferenceSheet": "Loovie Reference Sheet",
     "LoovieAudioGate": "Loovie Audio Gate",
     "LoovieMusicInput": "Loovie Music Input",
     "LoovieSfxInput": "Loovie SFX Input",

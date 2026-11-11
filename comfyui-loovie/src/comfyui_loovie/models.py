@@ -30,9 +30,31 @@ AUDIO_NONE = "none"
 AUDIO_OPTIONAL = "optional"
 AUDIO_ALWAYS = "always"
 
-VIDEO_MODES = ("t2v", "i2v", "fl2v", "ref2v")
+# LTX 2.5 advanced video operations. `edit` is a full-clip restyle, `retake`
+# regenerates a time window, `extend` lengthens a clip, and `motion` follows a
+# reference video. Ingredients reuse `ref2v`. Camera control is a request field
+# on any of these modes, not a mode of its own.
+VIDEO_MODES = ("t2v", "i2v", "fl2v", "ref2v", "edit", "retake", "extend", "motion")
+SOURCE_VIDEO_MODES = ("edit", "retake", "extend")
 IMAGE_MODES = ("t2i", "i2i")
 SFX_MODES = ("t2s",)
+
+# Camera moves the LTX 2.5 prompt conditioning understands. The reference
+# implementation turns these into explicit camera language in the prompt.
+CAMERA_MOTIONS = (
+    "static",
+    "dolly_in",
+    "dolly_out",
+    "dolly_left",
+    "dolly_right",
+    "jib_up",
+    "jib_down",
+    "pan_left",
+    "pan_right",
+    "tilt_up",
+    "tilt_down",
+    "focus_shift",
+)
 
 # V1 closed enums. The legacy compatibility view must stay inside these; an old
 # app fails the WHOLE parse on an unknown value.
@@ -78,6 +100,16 @@ class ModelSpec:
     max_reference_images: int = 0
     references_exclude_frames: bool = False
     audio: str = AUDIO_NONE
+    # Source-video limits for edit/retake/extend/motion. 0 = unsupported.
+    max_source_video_seconds: int = 0
+    min_source_video_seconds: int = 0
+    retake_max_duration_seconds: int = 0
+    extend_max_duration_seconds: int = 0
+    max_context_seconds: int = 0
+    # Camera moves this model can follow; empty = no camera control.
+    camera_motions: tuple[str, ...] = ()
+    # Whether edit/motion can keep the source clip's audio track.
+    supports_keep_original_audio: bool = False
     # Music-only capabilities.
     max_duration_seconds: int = 240
     supports_vocals: bool = True
@@ -146,6 +178,64 @@ def _ltx(model_id: str, prefix: str, generation: str) -> ModelSpec:
         residency_group=f"{model_id}-group",
         legacy_variants={"fast": "fast", "pro": "pro"},
         min_comfyui="0.32.0",
+    )
+
+
+def _ltx25() -> ModelSpec:
+    """LTX 2.5: generation plus the advanced edit/retake/extend/motion surface.
+
+    The advanced modes are advertised only when their workflow exists, so a
+    server that ships only the generation graphs still behaves exactly as it
+    did before. Ingredients are `ref2v`; camera control is a request field.
+    """
+
+    model_id = "ltx-2.5"
+    workflows = {
+        ("t2v", "fast"): "ltx25-t2v-fast",
+        ("i2v", "fast"): "ltx25-i2v-fast",
+        ("fl2v", "fast"): "ltx25-fl2v-fast",
+        ("ref2v", "fast"): "ltx25-ref2v-fast",
+        ("edit", "fast"): "ltx25-edit-fast",
+        ("retake", "fast"): "ltx25-retake-fast",
+        ("extend", "fast"): "ltx25-extend-fast",
+        ("motion", "fast"): "ltx25-motion-fast",
+    }
+    return ModelSpec(
+        id=model_id,
+        modality="video",
+        label="LTX 2.5",
+        description=(
+            "Lightricks LTX video with synchronized audio. "
+            "fast is the distilled recipe; supports text/image/first-last-frame "
+            "generation, ingredient references, editing, retake, extension, "
+            "motion control and camera moves."
+        ),
+        capabilities=VIDEO_MODES,
+        variants=(VariantSpec("fast", "Fast", "Distilled, faster.", default=True),),
+        workflows=workflows,
+        # LTX 2.5's distilled transformer rejects latents below 540p
+        # (tensor-size mismatch at the sampler); 384p/480p are H3 cells.
+        resolutions=("540p", "720p", "1080p", "2K"),
+        aspect_ratios=("auto", "16:9", "9:16", "1:1", "4:3", "3:4"),
+        durations=tuple(range(2, 11)),
+        reference_count=1,
+        max_reference_images=4,
+        references_exclude_frames=True,
+        audio=AUDIO_OPTIONAL,
+        # LTX 2.5 accepts up to ~21 s of source footage. Retake can replace up
+        # to 16 s in one pass; extend adds up to 20 s per request.
+        max_source_video_seconds=21,
+        min_source_video_seconds=3,
+        retake_max_duration_seconds=16,
+        extend_max_duration_seconds=20,
+        max_context_seconds=20,
+        camera_motions=CAMERA_MOTIONS,
+        supports_keep_original_audio=True,
+        vram_gb=24,
+        recommended_vram_gb=32,
+        residency_group=f"{model_id}-group",
+        legacy_variants={"fast": "fast", "pro": "fast"},
+        min_comfyui="0.43.0",
     )
 
 
@@ -414,7 +504,7 @@ CATALOG: tuple[ModelSpec, ...] = (
     ),
     # ── video ──────────────────────────────────────────────────────────────
     _ltx("ltx-2.3", "ltx23", "2.3"),
-    _ltx("ltx-2.5", "ltx25", "2.5"),
+    _ltx25(),
     _pika(
         "pika-flex",
         "Pika H3 Flex",
@@ -627,6 +717,24 @@ def model_descriptor(spec: ModelSpec, *, default: bool) -> dict[str, Any]:
             descriptor["referencesExcludeFrames"] = spec.references_exclude_frames
         descriptor["durations"] = list(spec.durations)
         descriptor["audio"] = spec.audio
+        if spec.max_source_video_seconds and any(
+            mode in spec.capabilities for mode in (*SOURCE_VIDEO_MODES, "motion")
+        ):
+            descriptor["maxSourceVideoSeconds"] = spec.max_source_video_seconds
+            if spec.min_source_video_seconds:
+                descriptor["minSourceVideoSeconds"] = spec.min_source_video_seconds
+        if spec.retake_max_duration_seconds and "retake" in spec.capabilities:
+            descriptor["retakeMaxDurationSeconds"] = spec.retake_max_duration_seconds
+        if spec.extend_max_duration_seconds and "extend" in spec.capabilities:
+            descriptor["extendMaxDurationSeconds"] = spec.extend_max_duration_seconds
+        if spec.max_context_seconds and (
+            "retake" in spec.capabilities or "extend" in spec.capabilities
+        ):
+            descriptor["maxContextSeconds"] = spec.max_context_seconds
+        if spec.camera_motions:
+            descriptor["cameraMotions"] = list(spec.camera_motions)
+        if spec.supports_keep_original_audio:
+            descriptor["supportsKeepOriginalAudio"] = True
     descriptor["resolution"] = list(spec.resolutions)
     descriptor["aspectRatios"] = list(spec.aspect_ratios)
     descriptor["promptCharLimit"] = spec.prompt_char_limit
@@ -777,6 +885,14 @@ def validate_request_values(
     with_audio: bool = False,
     has_start_frame: bool = False,
     has_end_frame: bool = False,
+    has_source_video: bool = False,
+    reference_video_count: int = 0,
+    retake_start_seconds: float | int | None = None,
+    retake_duration_seconds: float | int | None = None,
+    extend_side: str | None = None,
+    context_seconds: float | int | None = None,
+    camera_motion: str | None = None,
+    keep_original_audio: bool = False,
 ) -> str | None:
     """Return a stable error code when a request is outside the model's caps.
 
@@ -788,6 +904,78 @@ def validate_request_values(
         return "MODE_UNSUPPORTED"
     if variant.capabilities is not None and mode not in variant.capabilities:
         return "MODE_UNSUPPORTED"
+
+    if camera_motion and camera_motion not in spec.camera_motions:
+        return "CAMERA_MOTION_UNSUPPORTED"
+
+    if keep_original_audio and (
+        not spec.supports_keep_original_audio or mode not in ("edit", "motion")
+    ):
+        return "KEEP_ORIGINAL_AUDIO_UNSUPPORTED"
+
+    if mode in SOURCE_VIDEO_MODES and not has_source_video:
+        return "SOURCE_VIDEO_REQUIRED"
+    if mode not in SOURCE_VIDEO_MODES and mode != "motion" and has_source_video:
+        return "SOURCE_VIDEO_UNSUPPORTED"
+    if mode == "motion":
+        if not has_start_frame:
+            return "START_FRAME_REQUIRED"
+        if reference_video_count != 1:
+            return "REFERENCE_VIDEO_REQUIRED"
+
+    if mode in SOURCE_VIDEO_MODES:
+        if not spec.max_source_video_seconds:
+            return "SOURCE_VIDEO_UNSUPPORTED"
+        if mode == "retake":
+            if not spec.retake_max_duration_seconds:
+                return "MODE_UNSUPPORTED"
+            if retake_start_seconds is None or retake_duration_seconds is None:
+                return "RETAKE_RANGE_INVALID"
+            try:
+                start = float(retake_start_seconds)
+                length = float(retake_duration_seconds)
+            except (TypeError, ValueError):
+                return "RETAKE_RANGE_INVALID"
+            if start < 0 or length < 2 or length > spec.retake_max_duration_seconds:
+                return "RETAKE_RANGE_INVALID"
+            if start + length > spec.max_source_video_seconds:
+                return "RETAKE_RANGE_INVALID"
+        if mode == "extend":
+            if not spec.extend_max_duration_seconds:
+                return "MODE_UNSUPPORTED"
+            if (extend_side or "end").lower() not in ("start", "end"):
+                return "EXTEND_SIDE_INVALID"
+            if context_seconds is not None:
+                try:
+                    context = float(context_seconds)
+                except (TypeError, ValueError):
+                    return "CONTEXT_UNSUPPORTED"
+                if context < 0 or context > spec.max_context_seconds:
+                    return "CONTEXT_UNSUPPORTED"
+                if duration is not None:
+                    try:
+                        if context + float(duration) > spec.max_source_video_seconds:
+                            return "CONTEXT_UNSUPPORTED"
+                    except (TypeError, ValueError):
+                        return "DURATION_UNSUPPORTED"
+        if mode in ("edit", "retake", "extend") and duration is not None:
+            try:
+                seconds = float(duration)
+            except (TypeError, ValueError):
+                return "DURATION_UNSUPPORTED"
+            upper = (
+                spec.retake_max_duration_seconds
+                if mode == "retake"
+                else spec.extend_max_duration_seconds
+                if mode == "extend"
+                else spec.max_source_video_seconds
+            )
+            if seconds <= 0 or seconds > upper:
+                return "DURATION_UNSUPPORTED"
+        # Source-video modes carry no first/last-frame or reference-image
+        # conditioning in this reference implementation.
+        if mode in SOURCE_VIDEO_MODES and (has_start_frame or has_end_frame or reference_count > 0):
+            return "REFERENCES_UNSUPPORTED"
 
     if spec.modality == "music":
         if duration is not None:
@@ -814,7 +1002,9 @@ def validate_request_values(
     if aspect_ratio and aspect_ratio not in spec.aspect_ratios:
         return "ASPECT_RATIO_UNSUPPORTED"
 
-    if duration is not None and spec.durations:
+    # Source-video modes validate their own duration windows above; the
+    # generation duration list describes output clips, not retake length.
+    if duration is not None and spec.durations and mode not in SOURCE_VIDEO_MODES:
         try:
             seconds = round(float(duration))
         except (TypeError, ValueError):

@@ -4,11 +4,11 @@ The manifest is derived dynamically from the model registry (`models.py`):
 enable a model in ``config.yaml`` and its descriptor appears; omit a section
 when the server has no workflows for that modality.
 
-Shape (schemaVersion 2)::
+Shape (schemaVersion 3)::
 
     {
-      "schemaVersion": 2,
-      "version": "0.5.0",
+      "schemaVersion": 3,
+      "version": "0.6.0",
       "hardware": {"gpuName": "RTX 5090", "vramGb": 32},   # optional
       "models": {
         "images":    [ {id, label, capabilities, variants, ...}, ... ],
@@ -43,7 +43,7 @@ from .models import (
     shared_models_config,
 )
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # YuE2 reference: full songs up to ~240s; style prompt cap mirrors the
 # app-side 2000-char music prompt bound.

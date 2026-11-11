@@ -51,7 +51,11 @@ The Loovie app speaks these capability modes. The "Reference workflow" column sh
 | Text → single‑shot video | `t2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
 | Image → single‑shot video | `i2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
 | First‑and‑last‑frame → video | `fl2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
-| Reference → single‑shot video | `ref2v` | Pika H3 Flex official / turbo (**shipped**; up to 9 references) |
+| Reference → single‑shot video | `ref2v` | LTX 2.5 ingredients fast (**shipped**; up to 4 references); Pika H3 Flex official / turbo (**shipped**; up to 9 references) |
+| Video edit | `edit` | LTX 2.5 fast (**shipped**; full-clip restyle) |
+| Video retake | `retake` | LTX 2.5 fast (**shipped**; regenerate a time window) |
+| Video extend | `extend` | LTX 2.5 fast (**shipped**; start or end continuation) |
+| Motion control | `motion` | LTX 2.5 fast (**shipped**; follows a reference clip) |
 | Text → music | `t2m` | YuE2 (**shipped**) |
 | Text → sound effect | `t2s` | Stable Audio 3 Small SFX (**shipped**) |
 
@@ -65,7 +69,7 @@ catalogue models need their graphs added. See
 
 ### Multiple models on one server
 
-`schemaVersion: 2` of `/loovie/capabilities` advertises a **model list per
+`schemaVersion: 3` of `/loovie/capabilities` advertises a **model list per
 modality** (`models.images`, `models.ss_videos`, `models.music`, `models.sfx`).
 The app picks a model and one of its model-scoped variants; a server can offer
 Pika H3 Flex (official / turbo / HD), LTX 2.5 (fast), Qwen-Image 2.1, FLUX 3
@@ -101,7 +105,7 @@ which models fit your card.
 | Krea 2 | image | t2i | 16 / 24 GB |
 | MOSS-Image | image | t2i, i2i | 8 / 16 GB |
 | LTX 2.3 (legacy) | video | t2v, i2v, fl2v | 24 / 32 GB |
-| LTX 2.5 (**default**) | video | t2v, i2v, fl2v | 24 / 32 GB |
+| LTX 2.5 (**default**) | video | t2v, i2v, fl2v, ref2v, edit, retake, extend, motion | 24 / 32 GB |
 | Pika H3 Flex | video | t2v, i2v, fl2v, ref2v | 24 / 32 GB |
 | Pika H3 Flex HD | video | t2v, i2v, fl2v | 24 / 32 GB |
 | YuE2 | music | t2m | 4 / 8 GB |
@@ -152,7 +156,7 @@ The Loovie backend **never** calls your server. The mobile app does. Direct devi
 | Path | What it is |
 | --- | --- |
 | [`openapi/`](openapi/) | The normative HTTP contract (OpenAPI 3.1). **Start here if you're writing your own server.** |
-| [`comfyui-loovie/`](comfyui-loovie/) | Reference ComfyUI implementation with the model catalogue (FLUX.2 Klein, LTX 2.5, Pika H3 Flex/HD, YuE2 and Stable Audio 3 SFX shipped; LTX‑2.3 legacy; Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MOSS-Image catalogue entries). 233 unit tests. |
+| [`comfyui-loovie/`](comfyui-loovie/) | Reference ComfyUI implementation with the model catalogue (FLUX.2 Klein, LTX 2.5, Pika H3 Flex/HD, YuE2 and Stable Audio 3 SFX shipped; LTX‑2.3 legacy; Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MOSS-Image catalogue entries). 279 unit tests. |
 | [`examples/minimal-server/`](examples/minimal-server/) | Framework‑agnostic FastAPI reference, runnable without a GPU. Used as the schemathesis target in CI. |
 | [`docker/`](docker/) | Dockerfile, RunPod template, model downloader (with HuggingFace + gated‑model handling). |
 | [`docs/`](docs/) | Account creation, hosting paths, Cloudflare tunnel, security, troubleshooting, contribution recipes, the contract human‑readable, model licences. |
@@ -169,7 +173,7 @@ Your BYO server URL and bearer token live in the **Loovie app on your device onl
 
 While we are on the `0.x` line, **the BYO HTTP contract may introduce breaking changes between minor versions.** Every change is documented in [CHANGELOG.md](CHANGELOG.md) and reflected in `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). **Pin to a specific tag or commit SHA** if you depend on it. The contract becomes strict semver at `1.0.0`.
 
-Current capabilities `schemaVersion` is **2** (per-model lists for images,
+Current capabilities `schemaVersion` is **3** (per-model lists for images,
 video and music). Servers that only speak v1 are still supported by the app;
 v2 servers also emit the v1 compatibility sections for released app builds.
 

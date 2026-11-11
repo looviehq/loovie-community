@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Loovie BYO Server Contract
-  version: 0.5.0-beta.1
+  version: 0.6.0-beta.1
   summary: >-
     The HTTP contract a third-party server implements to be drivable by the
     Loovie mobile app.
@@ -56,12 +56,14 @@ info:
 
     `info.version` follows semver and is independent of any individual
     implementation's version. The capabilities manifest's `schemaVersion`
-    is currently `2`; it bumps only when the manifest SHAPE changes.
-    Version 2 adds the per-model `models` map (`images`, `ss_videos`) with
-    model-level capabilities, variants, VRAM hints and `ref2v`. The flat
-    `images` / `ss_videos` blocks remain as a v1 compatibility view for
-    released app builds and may be omitted when the default model cannot be
-    expressed with the v1 closed enums.
+    is currently `3`; it bumps only when the manifest SHAPE changes.
+    Version 2 added the per-model `models` map (`images`, `ss_videos`) with
+    model-level capabilities, variants, VRAM hints and `ref2v`. Version 3
+    adds the LTX 2.5 edit/retake/extend/motion modes, source-video and
+    camera-motion request fields, and the corresponding video-model limits.
+    The flat `images` / `ss_videos` blocks remain as a v1 compatibility view
+    for released app builds and may be omitted when the default model cannot
+    be expressed with the v1 closed enums.
   contact:
     name: Loovie HQ
     url: https://github.com/looviehq/loovie-community
@@ -146,10 +148,37 @@ components:
         - i2v
         - fl2v
         - ref2v
+        - edit
+        - retake
+        - extend
+        - motion
       description: >-
         `t2v` = text-to-video; `i2v` = image-to-video; `fl2v` =
         first+last-frame-to-video; `ref2v` = reference-image-to-video (adds
-        `reference_image_urls`, excludes first/last frames on models that say so).
+        `reference_image_urls`, excludes first/last frames on models that say so);
+        `edit` = full-clip video-to-video restyle from `source_video_url`;
+        `retake` = regenerate a time window of `source_video_url`; `extend` =
+        continue `source_video_url` at the start or end; `motion` = follow a
+        reference video from a start frame.
+    CameraMotion:
+      type: string
+      enum:
+        - static
+        - dolly_in
+        - dolly_out
+        - dolly_left
+        - dolly_right
+        - jib_up
+        - jib_down
+        - pan_left
+        - pan_right
+        - tilt_up
+        - tilt_down
+        - focus_shift
+      description: >-
+        Camera move applied to a video generation. Servers advertise the subset
+        they support in a video model's `cameraMotions`; a request outside that
+        subset is rejected with `CAMERA_MOTION_UNSUPPORTED`.
     Variant:
       type: string
       enum:
@@ -356,6 +385,47 @@ components:
           description: >-
             When true, reference images and first/last frames cannot be combined
             in one request (H3 Ref2VA is a separate checkpoint from FL2VA).
+        maxSourceVideoSeconds:
+          type: integer
+          minimum: 1
+          description: >-
+            Longest source clip accepted by `edit`, `retake`, `extend` and
+            `motion`, in whole seconds. Omit or set 0 when the model has no
+            source-video modes.
+        minSourceVideoSeconds:
+          type: integer
+          minimum: 1
+          description: Shortest source clip accepted by the source-video modes.
+        retakeMaxDurationSeconds:
+          type: integer
+          minimum: 2
+          description: >-
+            Longest window `retake` can regenerate in one request. Omit when the
+            model does not support retake.
+        extendMaxDurationSeconds:
+          type: integer
+          minimum: 1
+          description: >-
+            Longest extension `extend` can add in one request. Omit when the
+            model does not support extend.
+        maxContextSeconds:
+          type: integer
+          minimum: 1
+          description: >-
+            Longest source context `extend` can read from the input clip.
+        cameraMotions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CameraMotion'
+          description: >-
+            Camera moves this model supports. Omit or send an empty array when
+            camera control is unavailable.
+        supportsKeepOriginalAudio:
+          type: boolean
+          description: >-
+            When true, `edit` and `motion` accept `keep_original_audio` and mux
+            the source clip's audio into the output instead of the generated
+            track.
         resolution:
           type: array
           minItems: 1
@@ -518,7 +588,7 @@ components:
       properties:
         schemaVersion:
           type: integer
-          const: 2
+          const: 3
           description: Contract version. Bumps only when the manifest SHAPE changes.
         version:
           type: string
@@ -1054,7 +1124,70 @@ components:
           description: >-
             Images for `ref2v`. Capped by `maxReferenceImages`. Mutually
             exclusive with first/last frames when `referencesExcludeFrames` is
-            true (H3).
+            true (H3). On LTX 2.5 these are ingredient images: the reference
+            implementation tiles them into one reference sheet.
+        source_video_url:
+          type: string
+          format: uri
+          description: >-
+            Source clip for `edit`, `retake` and `extend`. Capped by the model's
+            `maxSourceVideoSeconds`. Mutually exclusive with first/last frames
+            and image references.
+        reference_video_urls:
+          type: array
+          maxItems: 1
+          items:
+            type: string
+            format: uri
+          description: >-
+            A single motion-reference clip for `motion`. Requires
+            `start_frame_url`; the model follows the clip's motion from that
+            frame.
+        retake_start_seconds:
+          type: number
+          minimum: 0
+          description: >-
+            Start of the retake window in `source_video_url`, in seconds.
+            Required for `retake`.
+        retake_duration_seconds:
+          type: number
+          minimum: 2
+          description: >-
+            Length of the retake window, in seconds. Required for `retake`.
+            Bounded by the model's `retakeMaxDurationSeconds`.
+        extend_side:
+          type: string
+          enum:
+            - start
+            - end
+          default: end
+          description: >-
+            Which end of `source_video_url` to extend. Used by `extend` only.
+        context_seconds:
+          type: number
+          minimum: 0
+          description: >-
+            Seconds of the source clip to use as context when extending or
+            retaking. Defaults to a server-chosen value; bounded by the model's
+            `maxContextSeconds`.
+        camera_motion:
+          $ref: '#/components/schemas/CameraMotion'
+        source_strength:
+          type: number
+          minimum: 0
+          maximum: 10
+          description: >-
+            How strongly the source clip conditions the output. Higher values
+            preserve more of the input; lower values allow a freer edit.
+            Servers choose a sensible default per mode.
+        keep_original_audio:
+          type: boolean
+          default: false
+          description: >-
+            Keep the source clip's audio in `edit` and `motion` instead of the
+            generated track. Requires the model to advertise
+            `supportsKeepOriginalAudio`; other modes reject it with
+            `KEEP_ORIGINAL_AUDIO_UNSUPPORTED`.
         with_audio:
           type: boolean
           description: >-
@@ -1253,7 +1386,7 @@ paths:
                 imageAndVideo:
                   summary: Image + single-shot video
                   value:
-                    schemaVersion: 2
+                    schemaVersion: 3
                     version: 0.1.0
                     images:
                       capabilities:
@@ -1312,7 +1445,7 @@ paths:
                 imageOnly:
                   summary: Server with no video workflows installed
                   value:
-                    schemaVersion: 2
+                    schemaVersion: 3
                     version: 0.1.0
                     images:
                       capabilities:
