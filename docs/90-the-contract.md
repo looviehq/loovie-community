@@ -271,6 +271,21 @@ with one of `MODEL_NOT_ENABLED`, `MODE_UNSUPPORTED`, `VARIANT_UNSUPPORTED`,
 `REFERENCES_UNSUPPORTED`, `REFERENCES_REQUIRED`, `AUDIO_UNSUPPORTED`,
 `START_FRAME_REQUIRED`, `END_FRAME_REQUIRED`.
 
+Server-side failures on create use the same envelope, and the split matters:
+**4xx means "this request cannot succeed, do not retry"**, **5xx means "the
+server is temporarily unable to accept work, retry"**. The two 4xx codes every
+server should try to produce are:
+
+- `MODEL_FILES_MISSING`: a workflow needs a checkpoint this server has not
+  downloaded. Name the files (and the folder) in `msg`; failing here saves the
+  app a pointless retry loop.
+- `WORKFLOW_REJECTED`: the inference backend refused the prompt before
+  queueing it (renamed node, input out of range). Name the node in `msg`.
+
+Both are final: a well-behaved client must not retry them, and should surface
+the code (the app renders `BYO_MODEL_FILES_MISSING` as "download the model on
+your server").
+
 ### `POST /music/create` (Bearer, conditional on `music`)
 
 ```jsonc

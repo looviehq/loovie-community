@@ -790,6 +790,14 @@ components:
         - `SUBMISSION_ERROR`: server failed to enqueue the job with its
         inference backend (e.g. ComfyUI returned 4xx/5xx on `/prompt`).
 
+        - `MODEL_FILES_MISSING`: the workflow needs a checkpoint that is not
+        installed on this server. `failMsg` names the files and the folder they
+        belong in. Emitted before anything is queued, so it is final.
+
+        - `WORKFLOW_REJECTED`: the inference backend refused the prompt before
+        queueing it (unknown node, input out of range, renamed node). `failMsg`
+        names the node and the reason.
+
         - `EXECUTION_ERROR`: a node in the workflow raised an exception during
         execution. `failMsg` SHOULD include the operator readable traceback
         summary (missing model, CUDA OOM, etc.).

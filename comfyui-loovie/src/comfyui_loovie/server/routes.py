@@ -31,6 +31,7 @@ from server import PromptServer
 
 from ..capabilities import build_capabilities_manifest
 from ..helpers.aspect_ratio import target_video_dimensions, video_dimensions
+from ..helpers.model_files import describe_missing_files, missing_model_files
 from ..models import (
     available_models,
     default_model,
@@ -42,7 +43,7 @@ from ..models import (
 )
 from ..monitor import start_monitor
 from ..task_store import TaskState, TaskStore
-from ..workflow_manager import WorkflowManager
+from ..workflow_manager import WorkflowManager, WorkflowRejected
 
 logger = logging.getLogger("comfyui_loovie.routes")
 
@@ -657,7 +658,41 @@ async def _setup_and_submit(
     try:
         workflow_json = wf_manager.load_workflow(workflow_name)
         inject(workflow_json, body)
+        # ComfyUI validates model dropdowns at queue time, which turns a
+        # missing download into an opaque rejection after the app has already
+        # retried. Answer once, with the filenames.
+        missing = missing_model_files(workflow_json)
+        if missing:
+            message = describe_missing_files(missing)
+            store.update_task(
+                task.task_id,
+                state=TaskState.FAILED,
+                fail_code="MODEL_FILES_MISSING",
+                error_message=message,
+            )
+            logger.warning(
+                "Workflow %s needs model files that are not installed: %s",
+                workflow_name,
+                ", ".join(item.filename for item in missing),
+            )
+            return None, web.json_response(
+                {"code": 400, "msg": message, "fail_code": "MODEL_FILES_MISSING"},
+                status=400,
+            )
         comfy_prompt_id = await wf_manager.submit_workflow(workflow_json)
+    except WorkflowRejected as exc:
+        message = str(exc) or "ComfyUI rejected the workflow"
+        store.update_task(
+            task.task_id,
+            state=TaskState.FAILED,
+            fail_code="WORKFLOW_REJECTED",
+            error_message=message,
+        )
+        logger.warning("ComfyUI rejected workflow %s: %s", workflow_name, message)
+        return None, web.json_response(
+            {"code": 400, "msg": message, "fail_code": "WORKFLOW_REJECTED"},
+            status=400,
+        )
     except FileNotFoundError as exc:
         store.update_task(
             task.task_id,

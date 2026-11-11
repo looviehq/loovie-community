@@ -23,6 +23,41 @@ logger = logging.getLogger("comfyui_loovie.workflow_manager")
 CONFIG_FILENAME = "config.yaml"
 
 
+class WorkflowRejected(RuntimeError):
+    """ComfyUI refused the prompt before queueing it.
+
+    Covers what ComfyUI calls `prompt_outputs_failed_validation`: a node input
+    that is out of range, a model file that is not installed, a graph that
+    references a renamed node. Deterministic, so the route layer answers 400
+    with the reason instead of letting the app retry a request that can never
+    succeed.
+    """
+
+
+def describe_prompt_rejection(result: dict[str, Any]) -> str:
+    """Turn a ComfyUI `/prompt` error body into one readable sentence."""
+
+    node_errors = result.get("node_errors")
+    if isinstance(node_errors, dict):
+        for node_id, node_error in node_errors.items():
+            if not isinstance(node_error, dict):
+                continue
+            class_type = str(node_error.get("class_type") or "node")
+            for error in node_error.get("errors") or []:
+                if not isinstance(error, dict):
+                    continue
+                details = str(error.get("details") or error.get("message") or "").strip()
+                if details:
+                    return f"ComfyUI rejected the workflow: {class_type} ({node_id}): {details}"
+
+    error = result.get("error")
+    if isinstance(error, dict):
+        message = str(error.get("message") or "").strip()
+        if message:
+            return f"ComfyUI rejected the workflow: {message}"
+    return "ComfyUI rejected the workflow"
+
+
 def _package_root() -> Path:
     """Return the package root (the directory containing `config.yaml`)."""
     # src/comfyui_loovie/workflow_manager.py -> repo root (comfyui-loovie/)
@@ -214,6 +249,8 @@ class WorkflowManager:
             result = await resp.json()
             prompt_id = result.get("prompt_id")
             if not prompt_id:
+                if isinstance(result, dict) and result.get("error"):
+                    raise WorkflowRejected(describe_prompt_rejection(result))
                 raise RuntimeError(f"ComfyUI /prompt returned no prompt_id: {result}")
             logger.info("Submitted workflow, prompt_id=%s", prompt_id)
             return str(prompt_id)
