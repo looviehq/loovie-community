@@ -226,12 +226,19 @@ and the registry's `residency_group`.
   "model": "qwen-image-2.1",       // from models.images; omit = default model
   "mode": "t2i",                   // or "i2i"
   "variant": "turbo",              // model-scoped; fast/pro still accepted
+  "resolution": "2K",              // from the model's resolution list
   "aspect_ratio": "16:9",
   "image_urls": ["https://..."],   // for i2i; up to referenceCount
   "mask_url": "https://...",       // optional
   "seed": -1                       // -1 = random
 }
 ```
+
+`resolution` is a canvas hint for images: models that advertise a scaled canvas
+(MiniMax H3 Image: `1K` = 1 MP, `2K` = 4 MP, `4K` = 16 MP) render at that area;
+other models keep the size their workflow was tuned for and only validate the
+value against their list. `aspect_ratio` is applied in both cases, so a `16:9`
+request returns a 16:9 picture either way.
 
 Response (taskId is opaque):
 

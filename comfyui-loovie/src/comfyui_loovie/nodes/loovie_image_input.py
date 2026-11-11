@@ -86,7 +86,7 @@ class LoovieImageInput:
             "required": {
                 "width": ("INT", {"default": 768, "min": 64, "max": 8192, "step": 8}),
                 "height": ("INT", {"default": 768, "min": 64, "max": 8192, "step": 8}),
-                "latent_type": (["sd3", "flux2", "qwen21"], {"default": "sd3"}),
+                "latent_type": (["sd3", "flux2", "qwen21", "h3image"], {"default": "sd3"}),
             },
             "optional": {
                 "vae": ("VAE",),
@@ -143,6 +143,11 @@ class LoovieImageInput:
         if latent_type == "qwen21":
             samples = torch.zeros([1, 64, height // 16, width // 16], device=device)
             return {"samples": samples, "downscale_ratio_spacial": 16}
+        if latent_type == "h3image":
+            # MiniMax H3 Image samples one 24-channel still frame at 16x
+            # downsampling, so the latent carries a leading frame axis.
+            samples = torch.zeros([1, 24, 1, height // 16, width // 16], device=device)
+            return {"samples": samples}
         samples = torch.zeros([1, 16, height // 8, width // 8], device=device)
         return {"samples": samples, "downscale_ratio_spacial": 8}
 
@@ -224,6 +229,8 @@ class LoovieImageInput:
             first = loaded[0]
             encoded = vae.encode(first[:, :, :, :3])
             if has_mask:
+                # `latent` is replaced below for h3image, but the mask
+                # interpolation still needs the image's pixel size.
                 img_h, img_w = first.shape[1], first.shape[2]
                 mask2d = mask_tensor[0] if mask_tensor.ndim == 3 else mask_tensor
                 if mask2d.shape[0] != img_h or mask2d.shape[1] != img_w:
@@ -241,6 +248,12 @@ class LoovieImageInput:
                 latent = {"samples": encoded}
         else:
             latent = {"samples": torch.zeros((1, 4, height // 8, width // 8))}
+
+        if latent_type == "h3image":
+            # An H3 Image edit always starts from noise: the reference pictures
+            # ride `MiniMaxH3ImageConditioning`'s reference latents, not the
+            # target latent, so encoding the first image here would be wrong.
+            latent = self._empty_latent(latent_type, height, width)
 
         return (
             stacked,

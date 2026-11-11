@@ -14,10 +14,10 @@ This guide walks through the **ComfyUI reference implementation** ([`comfyui-loo
 
 ### 1. Install ComfyUI
 
-We pin to the same upstream ref the Docker image uses (currently `v0.21.1`).
+We pin to the same upstream ref the Docker image uses (currently `v0.45.0`; MiniMax H3 Image needs the `MiniMaxH3ImageConditioning` node, which landed in 0.45.0).
 
 ```sh
-git clone --branch v0.21.1 --depth 1 https://github.com/comfyanonymous/ComfyUI.git
+git clone --branch v0.45.0 --depth 1 https://github.com/comfyanonymous/ComfyUI.git
 cd ComfyUI
 
 python3 -m venv .venv
@@ -25,6 +25,13 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install --extra-index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
 pip install -r requirements.txt
+```
+
+Sanity-check that the shipped graphs match this ComfyUI build (start the server
+first; it prints the port):
+
+```sh
+python comfyui-loovie/scripts/validate_workflows.py http://127.0.0.1:8188
 ```
 
 ### 2. Install the Loovie reference custom-node pack

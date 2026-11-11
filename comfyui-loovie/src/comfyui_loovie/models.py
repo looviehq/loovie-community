@@ -83,6 +83,11 @@ class ModelSpec:
     supports_vocals: bool = True
     supports_instrumental: bool = True
     supports_negative_prompt: bool = True
+    # Image models only: honour the requested 1K/2K/4K resolution by scaling
+    # the canvas (see `helpers.aspect_ratio.IMAGE_RESOLUTION_AREAS`) instead of
+    # using the legacy 768 px table. Off by default so existing graphs keep
+    # rendering at the size they were tuned for.
+    resolution_scales_canvas: bool = False
     # Optional frame-grid constraint (H3: 17n + 5 at 24 fps). 0 disables.
     frame_step: int = 0
     frame_offset: int = 0
@@ -343,6 +348,41 @@ CATALOG: tuple[ModelSpec, ...] = (
         residency_group="krea2",
         legacy_variants={"fast": "turbo", "pro": "raw"},
         min_comfyui="0.32.0",
+    ),
+    ModelSpec(
+        id="minimax-h3-image",
+        modality="image",
+        label="MiniMax H3 Image",
+        description=(
+            "33B H3 image model: 6-step text-to-image and reference-driven "
+            "editing, native from 1 to 16 megapixels."
+        ),
+        capabilities=("t2i", "i2i"),
+        variants=(
+            VariantSpec(
+                "default",
+                "Default",
+                "6-step distilled schedule, guidance 1.",
+                default=True,
+            ),
+        ),
+        workflows={
+            ("t2i", "default"): "minimax-h3-image-t2i",
+            ("i2i", "default"): "minimax-h3-image-i2i",
+        },
+        resolutions=("1K", "2K", "4K"),
+        aspect_ratios=("auto", "1:1", "4:3", "3:4", "3:2", "2:3", "16:9", "9:16"),
+        # H3 Image takes up to 16 references; `LoovieImageInput` exposes 4
+        # IMAGE_N slots, so that is what the shipped graphs can carry.
+        reference_count=4,
+        # Guidance is fixed at 1, so the model has no negative-prompt pass.
+        supports_negative_prompt=False,
+        prompt_char_limit=6000,
+        vram_gb=36,
+        recommended_vram_gb=64,
+        residency_group="h3-image",
+        min_comfyui="0.45.0",
+        resolution_scales_canvas=True,
     ),
     ModelSpec(
         id="moss-image",
@@ -763,6 +803,28 @@ def resolve_workflow(
 
 def residency_group(spec: ModelSpec, mode: str) -> str:
     return spec.residency_by_mode.get(mode, spec.residency_group)
+
+
+#: Canvas an opted-in image model falls back to when the caller sends no
+#: resolution. 4 MP is the documented sweet spot for MiniMax H3 Image: 1 MP is
+#: visibly soft and 16 MP costs roughly six times the sampling time.
+DEFAULT_SCALED_IMAGE_RESOLUTION = "2K"
+
+
+def image_canvas_resolution(spec: ModelSpec, requested: str | None) -> str:
+    """Resolution to hand `LoovieSettings` for an image request.
+
+    `auto` keeps the legacy 768 px table, which is what every graph that was
+    tuned before the resolution field existed expects. Only models that set
+    `resolution_scales_canvas` get a real 1K/2K/4K canvas.
+    """
+
+    if not spec.resolution_scales_canvas:
+        return "auto"
+    cleaned = (requested or "").strip()
+    if cleaned in spec.resolutions:
+        return cleaned
+    return DEFAULT_SCALED_IMAGE_RESOLUTION
 
 
 def validate_request_values(

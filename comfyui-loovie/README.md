@@ -88,12 +88,17 @@ fetch a baseline set.
 | `flux-2-klein` | FLUX.2 Klein UNet, T5-XXL + CLIP-L text encoders, FLUX VAE |
 | `ltx23-*-fast` | LTX 2.3 distilled checkpoint, Gemma-3-12B text encoder |
 | `ltx23-*-pro` | LTX 2.3 checkpoint + spatial upscaler, Gemma-3-12B text encoder |
+| `minimax-h3-image-*` | MiniMax H3 Image INT8 DiT + image VAE, Qwen3-VL-32B H3 text encoder |
 
 `hyperflow-h3-flash-*` additionally needs the
 [`ComfyUI-GGUF`](https://github.com/city96/ComfyUI-GGUF) and
 [`ComfyUI-HyperFlow-Flash`](https://github.com/Video-Rebirth/ComfyUI-HyperFlow-Flash)
 custom-node packs in `custom_nodes/`. The Docker image installs both at pinned
 refs; bare-metal installs must clone them next to `loovie`.
+
+`minimax-h3-image-*` runs entirely on core ComfyUI nodes, but needs **ComfyUI
+0.45.0** or newer for `MiniMaxH3ImageConditioning`; the Docker image and the
+quickstart both pin `v0.45.0`.
 
 ## Extending
 

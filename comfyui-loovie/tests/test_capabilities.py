@@ -284,6 +284,7 @@ def test_repo_config_advertises_the_shipped_models() -> None:
         "qwen-image-2.1",
         "flux-3-klein",
         "krea-2",
+        "minimax-h3-image",
     ]
     assert [m["id"] for m in manifest["models"]["ss_videos"]] == [
         "ltx-2.5",
@@ -370,4 +371,29 @@ def test_various_workflow_subsets_all_conform(
         else (PIKA_CONFIG if workflow_set == PIKA_WORKFLOWS else None)
     )
     manifest = build_capabilities_manifest(workflow_set, version="x", config=config)
+    _validate(manifest, capabilities_validator)
+
+
+def test_minimax_h3_image_is_advertised_from_its_workflows() -> None:
+    """The H3 Image entry must describe the canvas the app can actually ask for."""
+
+    manifest = build_capabilities_manifest(
+        ["minimax-h3-image-t2i", "minimax-h3-image-i2i"], version="x"
+    )
+    model = manifest["models"]["images"][0]
+    assert model["id"] == "minimax-h3-image"
+    assert model["capabilities"] == ["t2i", "i2i"]
+    assert model["resolution"] == ["1K", "2K", "4K"]
+    assert model["referenceCount"] == 4
+    assert model["vramGb"] == 36
+    assert model["recommendedVramGb"] == 64
+    assert [v["id"] for v in model["variants"]] == ["default"]
+
+
+def test_minimax_h3_image_manifest_conforms_to_openapi(
+    capabilities_validator: Draft202012Validator,
+) -> None:
+    manifest = build_capabilities_manifest(
+        ["minimax-h3-image-t2i", "minimax-h3-image-i2i"], version="0.1.0"
+    )
     _validate(manifest, capabilities_validator)

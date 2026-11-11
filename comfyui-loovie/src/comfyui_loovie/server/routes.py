@@ -35,6 +35,7 @@ from ..models import (
     available_models,
     default_model,
     detect_hardware,
+    image_canvas_resolution,
     residency_group,
     resolve_workflow,
     shared_models_config,
@@ -199,6 +200,9 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
         elif cls == "LoovieSettings":
             inputs["aspect_ratio"] = body.get("aspect_ratio", "1:1")
             inputs["seed"] = int(body.get("seed", -1))
+            # Opt-in models get a real 1K/2K/4K canvas; everything else
+            # stays on the legacy table via the node default.
+            inputs["resolution"] = str(body.get("_loovie_image_resolution", "auto"))
 
         elif cls == "LoovieImageInput":
             max_images = 9 if mask_url else 10
@@ -599,6 +603,10 @@ async def _setup_and_submit(
             reference_count = len(body.get("image_urls") or [])
         if modality == "video" and not body.get("resolution"):
             body["resolution"] = spec.resolutions[0] if spec.resolutions else "720p"
+        if modality == "image":
+            body["_loovie_image_resolution"] = image_canvas_resolution(
+                spec, str(body.get("resolution", "") or "")
+            )
 
         error_code = validate_request_values(
             spec,

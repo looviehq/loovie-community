@@ -23,6 +23,22 @@ the OpenAPI `Capabilities` schema. The YuE2 music capability is the worked
 example: `music` mode `t2m`, `/music/create` + `/music/status`, and the
 `LoovieMusicInput` injection node.
 
+## Before you bump ComfyUI
+
+`comfyui-loovie/scripts/validate_workflows.py` loads every JSON in
+`comfyui-loovie/workflows/` against a running ComfyUI and checks that each node
+class, input and link still exists. Run it against the release you plan to pin
+before touching `COMFYUI_REF` in `docker/Dockerfile`:
+
+```sh
+python comfyui-loovie/scripts/validate_workflows.py http://127.0.0.1:8188
+```
+
+Node renames land in core and in the custom-node packs alike; a graph that still
+references the old name fails only when a user hits it. The 0.45.0 bump also
+required moving `COMFYUI_LTX_REF` forward, because the previous LTXVideo pin
+imported `interleaved_freqs_cis`, which core removed.
+
 ## Model catalogue and variants
 
 A server advertises **models**, not workflows. The built-in catalogue lives in
@@ -35,6 +51,7 @@ and already describes the models we have validated in ComfyUI:
 | `qwen-image-2.1` | image | t2i, i2i | turbo, base | 12 / 24 GB |
 | `flux-3-klein` | image | t2i, i2i | distilled, base | 12 / 16 GB |
 | `krea-2` | image | t2i | turbo, raw | 16 / 24 GB |
+| `minimax-h3-image` | image | t2i, i2i | default | 36 / 64 GB |
 | `moss-image` | image | t2i, i2i | sft, base | 8 / 16 GB |
 | `ltx-2.3` (legacy) | video | t2v, i2v, fl2v | fast, pro | 24 / 32 GB |
 | `stable-audio-3` | sfx | t2s | small | 4 / 8 GB |
@@ -60,6 +77,14 @@ models:
     music: yue2
   switch_policy: auto
 ```
+
+Image models render at the legacy 768 px table by default. A model that
+advertises 1K/2K/4K *and* is trained for large canvases sets
+`resolution_scales_canvas=True`; the route layer then injects the request's
+`resolution` into `LoovieSettings`, which sizes the canvas to 1/4/16 megapixels
+on the 32 px grid (`1K`, `2K`, `4K`; `auto` keeps the legacy table). Your
+workflow needs a `resolution` input on `LoovieSettings` for that to reach the
+graph — every shipped graph carries one.
 
 The registry resolves `(model, mode, variant)` to a workflow through the
 catalogue's `workflows` map. The conventional names are
