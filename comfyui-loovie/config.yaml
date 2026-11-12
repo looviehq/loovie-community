@@ -144,6 +144,11 @@ workflows:
     description: "LTX 2.5 motion control: follow a reference clip from a start frame (fast)."
     max_wait_seconds: 840
 
+  ltx25-upscale-fast:
+    file: "workflows/ltx25_upscale_fast.json"
+    description: "LTX 2.5 video upscale: 2x latent upscale plus a short refine pass (fast)."
+    max_wait_seconds: 840
+
   ltx23-t2v-pro:
     file: "workflows/ltx23_t2v_pro.json"
     description: "LTX 2.3 text-to-video, two-stage with spatial upscaler (pro quality)."

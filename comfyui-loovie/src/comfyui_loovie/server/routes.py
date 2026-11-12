@@ -225,6 +225,10 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
     if strength is None:
         strength = _DEFAULT_SOURCE_STRENGTH.get(mode)
     keep_original_audio = bool(body.get("keep_original_audio", False))
+    if mode == "upscale":
+        # An upscale must carry the source track; there is no generated audio
+        # to fall back to in the VAE-only graph.
+        keep_original_audio = True
 
     prompt = str(body.get("prompt", "") or "")
     camera = str(body.get("camera_motion", "") or "").strip()

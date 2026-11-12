@@ -99,7 +99,7 @@ class LoovieVideoEdit:
                 "duration_seconds": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 600.0}),
                 "context_seconds": ("FLOAT", {"default": 4.0, "min": 0.0, "max": 20.0}),
                 "extend_side": (["end", "start"], {"default": "end"}),
-                "mode": (["edit", "retake", "extend", "motion"], {"default": "edit"}),
+                "mode": (["edit", "retake", "extend", "motion", "upscale"], {"default": "edit"}),
                 "fps": ("FLOAT", {"default": 24.0, "min": 1.0, "max": 120.0}),
                 "force_resize_short_side": (
                     "INT",

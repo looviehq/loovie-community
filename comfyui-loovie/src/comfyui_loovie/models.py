@@ -34,8 +34,18 @@ AUDIO_ALWAYS = "always"
 # regenerates a time window, `extend` lengthens a clip, and `motion` follows a
 # reference video. Ingredients reuse `ref2v`. Camera control is a request field
 # on any of these modes, not a mode of its own.
-VIDEO_MODES = ("t2v", "i2v", "fl2v", "ref2v", "edit", "retake", "extend", "motion")
-SOURCE_VIDEO_MODES = ("edit", "retake", "extend")
+VIDEO_MODES = (
+    "t2v",
+    "i2v",
+    "fl2v",
+    "ref2v",
+    "edit",
+    "retake",
+    "extend",
+    "motion",
+    "upscale",
+)
+SOURCE_VIDEO_MODES = ("edit", "retake", "extend", "upscale")
 IMAGE_MODES = ("t2i", "i2i")
 SFX_MODES = ("t2s",)
 
@@ -106,6 +116,9 @@ class ModelSpec:
     retake_max_duration_seconds: int = 0
     extend_max_duration_seconds: int = 0
     max_context_seconds: int = 0
+    # Upscale targets and the largest factor the model can apply.
+    upscale_resolutions: tuple[str, ...] = ()
+    max_upscale_factor: int = 0
     # Camera moves this model can follow; empty = no camera control.
     camera_motions: tuple[str, ...] = ()
     # Whether edit/motion can keep the source clip's audio track.
@@ -199,6 +212,7 @@ def _ltx25() -> ModelSpec:
         ("retake", "fast"): "ltx25-retake-fast",
         ("extend", "fast"): "ltx25-extend-fast",
         ("motion", "fast"): "ltx25-motion-fast",
+        ("upscale", "fast"): "ltx25-upscale-fast",
     }
     return ModelSpec(
         id=model_id,
@@ -229,6 +243,8 @@ def _ltx25() -> ModelSpec:
         retake_max_duration_seconds=16,
         extend_max_duration_seconds=20,
         max_context_seconds=20,
+        upscale_resolutions=("1080p", "2K", "4K"),
+        max_upscale_factor=2,
         camera_motions=CAMERA_MOTIONS,
         supports_keep_original_audio=True,
         vram_gb=24,
@@ -731,6 +747,10 @@ def model_descriptor(spec: ModelSpec, *, default: bool) -> dict[str, Any]:
             "retake" in spec.capabilities or "extend" in spec.capabilities
         ):
             descriptor["maxContextSeconds"] = spec.max_context_seconds
+        if spec.upscale_resolutions and "upscale" in spec.capabilities:
+            descriptor["upscaleResolutions"] = list(spec.upscale_resolutions)
+            if spec.max_upscale_factor:
+                descriptor["maxUpscaleFactor"] = spec.max_upscale_factor
         if spec.camera_motions:
             descriptor["cameraMotions"] = list(spec.camera_motions)
         if spec.supports_keep_original_audio:
@@ -909,7 +929,7 @@ def validate_request_values(
         return "CAMERA_MOTION_UNSUPPORTED"
 
     if keep_original_audio and (
-        not spec.supports_keep_original_audio or mode not in ("edit", "motion")
+        not spec.supports_keep_original_audio or mode not in ("edit", "motion", "upscale")
     ):
         return "KEEP_ORIGINAL_AUDIO_UNSUPPORTED"
 
@@ -996,7 +1016,9 @@ def validate_request_values(
             return "DURATION_UNSUPPORTED"
         return None
 
-    if resolution and resolution not in spec.resolutions:
+    if mode == "upscale" and resolution and resolution not in spec.upscale_resolutions:
+        return "RESOLUTION_UNSUPPORTED"
+    if mode != "upscale" and resolution and resolution not in spec.resolutions:
         return "RESOLUTION_UNSUPPORTED"
 
     if aspect_ratio and aspect_ratio not in spec.aspect_ratios:

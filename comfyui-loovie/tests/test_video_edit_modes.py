@@ -30,6 +30,7 @@ LTX25_WORKFLOWS = [
     "ltx25-retake-fast",
     "ltx25-extend-fast",
     "ltx25-motion-fast",
+    "ltx25-upscale-fast",
 ]
 
 
@@ -53,6 +54,7 @@ def test_ltx25_advertises_advanced_modes_and_limits() -> None:
         "retake",
         "extend",
         "motion",
+        "upscale",
     )
     assert spec.max_source_video_seconds == 21
     assert spec.retake_max_duration_seconds == 16
@@ -60,6 +62,8 @@ def test_ltx25_advertises_advanced_modes_and_limits() -> None:
     assert spec.camera_motions == CAMERA_MOTIONS
     assert spec.max_reference_images == 4
     assert spec.supports_keep_original_audio is True
+    assert spec.upscale_resolutions == ("1080p", "2K", "4K")
+    assert spec.max_upscale_factor == 2
 
 
 def test_partial_install_narrows_advanced_modes() -> None:
@@ -234,6 +238,45 @@ def test_camera_motion_is_model_scoped() -> None:
             camera_motion="dolly_in",
         )
         == "CAMERA_MOTION_UNSUPPORTED"
+    )
+
+
+def test_upscale_requires_a_source_and_a_supported_target() -> None:
+    spec = _ltx25()
+    variant = _variant(spec)
+    assert (
+        validate_request_values(spec, variant, mode="upscale", resolution="1080p")
+        == "SOURCE_VIDEO_REQUIRED"
+    )
+    assert (
+        validate_request_values(
+            spec,
+            variant,
+            mode="upscale",
+            has_source_video=True,
+            resolution="1080p",
+        )
+        is None
+    )
+    assert (
+        validate_request_values(
+            spec,
+            variant,
+            mode="upscale",
+            has_source_video=True,
+            resolution="4K",
+        )
+        is None
+    )
+    assert (
+        validate_request_values(
+            spec,
+            variant,
+            mode="upscale",
+            has_source_video=True,
+            resolution="720p",
+        )
+        == "RESOLUTION_UNSUPPORTED"
     )
 
 
@@ -488,6 +531,26 @@ def test_ingredient_prompt_already_in_the_two_part_format_is_left_alone() -> Non
     assert workflow["10"]["inputs"]["prompt"] == prompt
 
 
+def test_upscale_injection_sets_the_mode_and_keeps_source_audio() -> None:
+    workflow = _workflow("ltx25_upscale_fast.json")
+    _inject_inputs(
+        workflow,
+        {
+            "mode": "upscale",
+            "prompt": "sharpen and upscale",
+            "source_video_url": "https://example.com/source.mp4",
+            "resolution": "1080p",
+            "duration": 2,
+            "fps": 24,
+        },
+    )
+    inputs = workflow["12"]["inputs"]
+    assert inputs["video_url"] == "https://example.com/source.mp4"
+    assert inputs["mode"] == "upscale"
+    assert workflow["27"]["inputs"]["keep_original"] is True
+    assert workflow["27"]["inputs"]["original_audio"] == ["12", 4]
+
+
 def test_motion_injection_uses_the_reference_video() -> None:
     workflow = _workflow("ltx25_motion_fast.json")
     _inject_inputs(
@@ -514,6 +577,10 @@ def test_motion_injection_uses_the_reference_video() -> None:
         ("ltx25_extend_fast.json", {"LoovieVideoEdit", "LTXVAddGuide"}),
         ("ltx25_ref2v_fast.json", {"LoovieReferenceSheet", "LTXVAddGuide"}),
         ("ltx25_motion_fast.json", {"LoovieVideoEdit", "LoovieImageInput", "LTXVAddGuide"}),
+        (
+            "ltx25_upscale_fast.json",
+            {"LoovieVideoEdit", "LTXVLatentUpsampler", "LoovieAudioGate"},
+        ),
     ],
 )
 def test_advanced_workflows_have_the_required_nodes_and_links(
@@ -540,6 +607,7 @@ def test_config_registers_the_advanced_workflows() -> None:
         "ltx25-retake-fast",
         "ltx25-extend-fast",
         "ltx25-motion-fast",
+        "ltx25-upscale-fast",
     ):
         assert name in registered
         assert (REPO_ROOT / "comfyui-loovie" / registered[name]["file"]).exists()

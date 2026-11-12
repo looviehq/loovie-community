@@ -152,6 +152,7 @@ components:
         - retake
         - extend
         - motion
+        - upscale
       description: >-
         `t2v` = text-to-video; `i2v` = image-to-video; `fl2v` =
         first+last-frame-to-video; `ref2v` = reference-image-to-video (adds
@@ -159,7 +160,9 @@ components:
         `edit` = full-clip video-to-video restyle from `source_video_url`;
         `retake` = regenerate a time window of `source_video_url`; `extend` =
         continue `source_video_url` at the start or end; `motion` = follow a
-        reference video from a start frame.
+        reference video from a start frame; `upscale` = enlarge
+        `source_video_url` to `resolution` (bounded by `upscaleResolutions` and
+        `maxUpscaleFactor`).
     CameraMotion:
       type: string
       enum:
@@ -423,9 +426,21 @@ components:
         supportsKeepOriginalAudio:
           type: boolean
           description: >-
-            When true, `edit` and `motion` accept `keep_original_audio` and mux
-            the source clip's audio into the output instead of the generated
-            track.
+            When true, `edit`, `motion` and `upscale` accept
+            `keep_original_audio` and mux the source clip's audio into the
+            output instead of the generated track.
+        upscaleResolutions:
+          type: array
+          items:
+            $ref: '#/components/schemas/VideoResolution'
+          description: >-
+            Target resolutions `upscale` can produce. Omit when the model has
+            no upscale mode.
+        maxUpscaleFactor:
+          type: integer
+          minimum: 1
+          description: >-
+            Largest scale factor `upscale` can apply in one pass.
         resolution:
           type: array
           minItems: 1
@@ -1184,8 +1199,8 @@ components:
           type: boolean
           default: false
           description: >-
-            Keep the source clip's audio in `edit` and `motion` instead of the
-            generated track. Requires the model to advertise
+            Keep the source clip's audio in `edit`, `motion` and `upscale`
+            instead of the generated track. Requires the model to advertise
             `supportsKeepOriginalAudio`; other modes reject it with
             `KEEP_ORIGINAL_AUDIO_UNSUPPORTED`.
         with_audio:

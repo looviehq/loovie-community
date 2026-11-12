@@ -139,6 +139,8 @@ The single most important endpoint. Tells the app what your server can do.
         "maxContextSeconds": 20,
         "cameraMotions": ["static", "dolly_in", "dolly_out", "dolly_left", "dolly_right", "jib_up", "jib_down", "focus_shift"],
         "supportsKeepOriginalAudio": true,
+        "upscaleResolutions": ["1080p", "2K", "4K"],
+        "maxUpscaleFactor": 2,
         "resolution": ["540p", "720p", "1080p", "2K"],
         "durations": [2, 3, 4, 5, 6, 7, 8, 9, 10],
         "audio": "optional",
@@ -298,6 +300,7 @@ exposes the operations as modes so the app can gate them per model:
 | `retake` | `source_video_url`, `retake_start_seconds`, `retake_duration_seconds` | Regenerate one time window; the rest of the clip is preserved. |
 | `extend` | `source_video_url`, `extend_side`, `duration`, `context_seconds` | Continue the clip before or after the source. `duration` is the length added, not the final total. |
 | `motion` | `start_frame_url`, `reference_video_urls` (one) | Follow the reference clip's motion from the start frame. |
+| `upscale` | `source_video_url`, `resolution` | Enlarge the source to a target from `upscaleResolutions` (2× on the reference LTX 2.5 graph), keeping the source audio. |
 
 `camera_motion` is a request field, not a mode: the server advertises the
 moves it supports in `cameraMotions` and turns the value into explicit camera
@@ -313,8 +316,8 @@ Source-video modes reject `start_frame_url`, `end_frame_url` and
 `CAMERA_MOTION_UNSUPPORTED` and `KEEP_ORIGINAL_AUDIO_UNSUPPORTED` for the
 corresponding model-level rejections.
 
-`keep_original_audio` is only valid for `edit` and `motion` on models that
-advertise `supportsKeepOriginalAudio`. It muxes the source clip's audio into the
+`keep_original_audio` is only valid for `edit`, `motion` and `upscale` on
+models that advertise `supportsKeepOriginalAudio`. It muxes the source clip's audio into the
 output; `with_audio` still controls whether the generated track is used when the
 flag is off.
 

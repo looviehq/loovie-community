@@ -37,6 +37,7 @@ Workflows shipped (one JSON per file under `workflows/`):
 | Video | `ltx25-retake-fast` | regenerate a time window of a source clip |
 | Video | `ltx25-extend-fast` | continue a source clip at the start or end |
 | Video | `ltx25-motion-fast` | follow a reference clip from a start frame |
+| Video | `ltx25-upscale-fast` | 2× latent upscale plus a short refine pass |
 | Video | `hyperflow-h3-flash-{t2v,i2v,fl2v,ref2v}-{fast,flash,hq}` | HyperFlow H3 Flash (needs ComfyUI-GGUF) |
 
 The capabilities manifest is built dynamically from the workflows you

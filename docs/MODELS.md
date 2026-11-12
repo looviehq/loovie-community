@@ -78,8 +78,9 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
   VAE and audio VAE, and `latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors`.
   These are the exact names in `comfyui-loovie/workflows/ltx25_*.json` and
   `docker/models.manifest`.
-- **Modes:** t2v, i2v, fl2v, ref2v (ingredients), edit, retake, extend and
-  motion, with synchronized audio and camera-move prompt conditioning; pro is
+- **Modes:** t2v, i2v, fl2v, ref2v (ingredients), edit, retake, extend,
+  motion and upscale, with synchronized audio and camera-move prompt
+  conditioning; pro is
   still served by the LTX 2.3 legacy workflows until a 2.5 pro graph lands.
 - **Advanced modes:** the shipped `ltx25-{edit,retake,extend,motion}-fast`
   graphs condition on a source clip with ComfyUI's core `LTXVAddGuide` node.

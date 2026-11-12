@@ -56,6 +56,7 @@ The Loovie app speaks these capability modes. The "Reference workflow" column sh
 | Video retake | `retake` | LTX 2.5 fast (**shipped**; regenerate a time window) |
 | Video extend | `extend` | LTX 2.5 fast (**shipped**; start or end continuation) |
 | Motion control | `motion` | LTX 2.5 fast (**shipped**; follows a reference clip) |
+| Video upscale | `upscale` | LTX 2.5 fast (**shipped**; 2× latent upscale + refine, keeps source audio) |
 | Text → music | `t2m` | YuE2 (**shipped**) |
 | Text → sound effect | `t2s` | Stable Audio 3 Small SFX (**shipped**) |
 
@@ -105,7 +106,7 @@ which models fit your card.
 | Krea 2 | image | t2i | 16 / 24 GB |
 | MOSS-Image | image | t2i, i2i | 8 / 16 GB |
 | LTX 2.3 (legacy) | video | t2v, i2v, fl2v | 24 / 32 GB |
-| LTX 2.5 (**default**) | video | t2v, i2v, fl2v, ref2v, edit, retake, extend, motion | 24 / 32 GB |
+| LTX 2.5 (**default**) | video | t2v, i2v, fl2v, ref2v, edit, retake, extend, motion, upscale | 24 / 32 GB |
 | Pika H3 Flex | video | t2v, i2v, fl2v, ref2v | 24 / 32 GB |
 | Pika H3 Flex HD | video | t2v, i2v, fl2v | 24 / 32 GB |
 | YuE2 | music | t2m | 4 / 8 GB |

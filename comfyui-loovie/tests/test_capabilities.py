@@ -38,6 +38,7 @@ ALL_WORKFLOWS = [
     "ltx25-retake-fast",
     "ltx25-extend-fast",
     "ltx25-motion-fast",
+    "ltx25-upscale-fast",
     "yue2-t2m-fast",
 ]
 
@@ -298,6 +299,9 @@ def test_a_v3_client_sees_the_advanced_video_modes() -> None:
     assert "retake" in ltx["capabilities"]
     assert "extend" in ltx["capabilities"]
     assert "motion" in ltx["capabilities"]
+    assert "upscale" in ltx["capabilities"]
+    assert ltx["upscaleResolutions"] == ["1080p", "2K", "4K"]
+    assert ltx["maxUpscaleFactor"] == 2
     assert ltx["cameraMotions"]
 
 
