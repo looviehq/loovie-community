@@ -47,7 +47,7 @@ from ..workflow_manager import WorkflowManager, WorkflowRejected
 
 logger = logging.getLogger("comfyui_loovie.routes")
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 
 # Music prompt cap, mirroring the app-side music DTO bound. Distinct from the
 # 3000-char image/video cap so a long style prompt is rejected at the contract
@@ -63,6 +63,28 @@ _DEFAULT_MUSIC_WORKFLOW = "yue2-t2m-fast"
 
 # Default text-to-sound-effect workflow.
 _DEFAULT_SFX_WORKFLOW = "stable-audio-3-t2s-small"
+
+# LTX 2.5 camera moves, expressed as explicit camera language. The model is
+# trained on cinematography terms, so a short clause steers the shot without a
+# separate control graph. Keys mirror the contract's `camera_motion` enum.
+_CAMERA_PROMPTS: dict[str, str] = {
+    "static": "static locked-off camera, no camera movement",
+    "dolly_in": "the camera slowly dollies in toward the subject",
+    "dolly_out": "the camera slowly dollies out away from the subject",
+    "dolly_left": "the camera dollies to the left",
+    "dolly_right": "the camera dollies to the right",
+    "jib_up": "the camera jibs upward, rising above the subject",
+    "jib_down": "the camera jibs downward, lowering toward the subject",
+    "pan_left": "the camera pans left",
+    "pan_right": "the camera pans right",
+    "tilt_up": "the camera tilts upward",
+    "tilt_down": "the camera tilts downward",
+    "focus_shift": "the camera holds steady and racks focus to the background",
+}
+
+# How strongly the source clip conditions LTX's advanced modes. Editing needs
+# more freedom than retake/extend, which must preserve their context.
+_DEFAULT_SOURCE_STRENGTH = {"edit": 0.5, "motion": 0.9, "retake": 1.0, "extend": 1.0}
 
 
 # --- auth -------------------------------------------------------------------
@@ -162,7 +184,15 @@ def _log_safe_body(body: dict[str, Any]) -> dict[str, Any]:
         out["image_urls"] = [_redact(u) for u in out["image_urls"]]
     if isinstance(out.get("reference_image_urls"), list):
         out["reference_image_urls"] = [_redact(u) for u in out["reference_image_urls"]]
-    for key in ("mask_url", "start_frame_url", "end_frame_url"):
+    if isinstance(out.get("reference_video_urls"), list):
+        out["reference_video_urls"] = [_redact(u) for u in out["reference_video_urls"]]
+    for key in (
+        "mask_url",
+        "start_frame_url",
+        "end_frame_url",
+        "source_video_url",
+        "motion_video_url",
+    ):
         v = out.get(key)
         if isinstance(v, str) and v:
             out[key] = _redact(v)
@@ -181,6 +211,31 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
     reference_urls = [
         str(url).strip() for url in (body.get("reference_image_urls") or []) if str(url).strip()
     ]
+    reference_videos = [
+        str(url).strip() for url in (body.get("reference_video_urls") or []) if str(url).strip()
+    ]
+    source_video = (body.get("source_video_url") or "").strip()
+    motion_video = reference_videos[0] if reference_videos else ""
+    source_strength = body.get("source_strength")
+    try:
+        strength = float(source_strength) if source_strength is not None else None
+    except (TypeError, ValueError):
+        strength = None
+    mode = str(body.get("mode", "") or "").strip()
+    if strength is None:
+        strength = _DEFAULT_SOURCE_STRENGTH.get(mode)
+    keep_original_audio = bool(body.get("keep_original_audio", False))
+    if mode == "upscale":
+        # An upscale must carry the source track; there is no generated audio
+        # to fall back to in the VAE-only graph.
+        keep_original_audio = True
+
+    prompt = str(body.get("prompt", "") or "")
+    camera = str(body.get("camera_motion", "") or "").strip()
+    camera_clause = _CAMERA_PROMPTS.get(camera, "")
+    if camera_clause and camera_clause.lower() not in prompt.lower():
+        prompt = f"{prompt.rstrip('. ')}. {camera_clause}"
+
     if reference_urls and not start_frame:
         # ref2v: references ride the same image slots as i2i.
         image_urls = reference_urls
@@ -194,8 +249,16 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
         inputs = node.setdefault("inputs", {})
 
         if cls == "LoovieTextInput":
-            inputs["prompt"] = body.get("prompt", "")
-            inputs["negative_prompt"] = body.get("negative_prompt", "")
+            injected_prompt = prompt
+            if mode == "ref2v" and "generated video:" not in prompt.lower():
+                injected_prompt = (
+                    "Reference sheet: the attached reference sheet shows the "
+                    "characters, props and setting.\n"
+                    f"Generated video: {prompt}"
+                )
+            inputs["prompt"] = injected_prompt
+            if body.get("negative_prompt") is not None:
+                inputs["negative_prompt"] = body.get("negative_prompt")
 
         elif cls == "LoovieSettings":
             inputs["aspect_ratio"] = body.get("aspect_ratio", "1:1")
@@ -207,6 +270,38 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
                 inputs[f"image_url_{i}"] = url
             if mask_url:
                 inputs["mask_url"] = mask_url
+
+        elif cls == "LoovieReferenceSheet":
+            # Ingredients: up to four references tiled into one sheet.
+            for i, url in enumerate((reference_urls or image_urls)[:4], 1):
+                inputs[f"image_url_{i}"] = url
+
+        elif cls in ("LoovieVideoInput", "LoovieVideoEdit"):
+            inputs["video_url"] = (
+                motion_video if mode == "motion" else (source_video or motion_video)
+            )
+            fps = int(body.get("fps", inputs.get("fps", 24)) or 24)
+            max_seconds = int(body.get("_loovie_max_source_video_seconds", 0) or 0)
+            if mode in ("motion", "edit") and body.get("duration"):
+                max_frames = max(1, int(float(body["duration"]) * fps) + 1)
+            else:
+                max_frames = int(min(505, max(1, max_seconds * fps))) if max_seconds else 505
+            inputs["max_frames"] = max_frames
+            if cls == "LoovieVideoEdit":
+                inputs["fps"] = float(fps)
+                inputs["start_seconds"] = float(body.get("retake_start_seconds", 0) or 0)
+                inputs["duration_seconds"] = float(
+                    body.get("retake_duration_seconds", body.get("duration", 0)) or 0
+                )
+                inputs["context_seconds"] = float(body.get("context_seconds", 4) or 4)
+                inputs["extend_side"] = str(body.get("extend_side", "end") or "end")
+                inputs["mode"] = mode or "edit"
+
+        elif cls == "LTXVAddGuide" and strength is not None:
+            inputs["strength"] = float(strength)
+
+        elif cls == "LoovieAudioGate":
+            inputs["keep_original"] = keep_original_audio
 
         elif cls == "LoovieLoraStack":
             for i, lora in enumerate(loras[:5], 1):
@@ -334,6 +429,14 @@ _MODEL_ERROR_MESSAGES: dict[str, str] = {
     "REFERENCES_REQUIRED": "This mode requires at least one reference image.",
     "START_FRAME_REQUIRED": "This mode requires a start frame.",
     "END_FRAME_REQUIRED": "This mode requires an end frame.",
+    "SOURCE_VIDEO_REQUIRED": "This mode requires a source video.",
+    "SOURCE_VIDEO_UNSUPPORTED": "That model cannot edit a source video.",
+    "REFERENCE_VIDEO_REQUIRED": "This mode requires exactly one reference video.",
+    "RETAKE_RANGE_INVALID": "The retake time window is outside this model's limits.",
+    "EXTEND_SIDE_INVALID": "extend_side must be 'start' or 'end'.",
+    "CONTEXT_UNSUPPORTED": "That context length is outside this model's limits.",
+    "CAMERA_MOTION_UNSUPPORTED": "That camera move is not supported by this model.",
+    "KEEP_ORIGINAL_AUDIO_UNSUPPORTED": "Only edit and motion can keep the source audio.",
 }
 
 
@@ -360,6 +463,16 @@ def _request_mode(body: dict[str, Any], modality: str) -> str:
         return "t2s"
     if modality == "image":
         return "i2i" if (body.get("image_urls") or body.get("mask_url")) else "t2i"
+    # LTX 2.5 advanced operations. Explicit fields are unambiguous, so infer
+    # them before the older first/reference-frame heuristics.
+    if body.get("retake_start_seconds") is not None or body.get("retake_duration_seconds"):
+        return "retake"
+    if body.get("extend_side"):
+        return "extend"
+    if body.get("reference_video_urls") and body.get("start_frame_url"):
+        return "motion"
+    if body.get("source_video_url"):
+        return "edit"
     if (
         body.get("reference_image_urls")
         or body.get("reference_video_urls")
@@ -572,6 +685,8 @@ async def _setup_and_submit(
             spec, variant, workflow_name, mode = _resolve_model_request(
                 body, default_workflow, modality
             )
+            if mode is not None:
+                body["mode"] = mode
         except ModelRequestError as exc:
             return None, web.json_response(
                 {"code": 400, "msg": exc.message, "fail_code": exc.code},
@@ -596,6 +711,7 @@ async def _setup_and_submit(
         start = str(body.get("start_frame_url", "") or "").strip()
         end = str(body.get("end_frame_url", "") or "").strip()
         reference_count = len(body.get("reference_image_urls") or [])
+        reference_video_count = len(body.get("reference_video_urls") or [])
         if modality == "image":
             reference_count = len(body.get("image_urls") or [])
         if modality == "video" and not body.get("resolution"):
@@ -612,6 +728,14 @@ async def _setup_and_submit(
             with_audio=bool(body.get("with_audio", False)),
             has_start_frame=bool(start),
             has_end_frame=bool(end),
+            has_source_video=bool(str(body.get("source_video_url", "") or "").strip()),
+            reference_video_count=reference_video_count,
+            retake_start_seconds=body.get("retake_start_seconds"),
+            retake_duration_seconds=body.get("retake_duration_seconds"),
+            extend_side=body.get("extend_side"),
+            context_seconds=body.get("context_seconds"),
+            camera_motion=body.get("camera_motion"),
+            keep_original_audio=bool(body.get("keep_original_audio", False)),
         )
         if error_code:
             return None, web.json_response(
@@ -645,6 +769,9 @@ async def _setup_and_submit(
         if spec.frame_step > 0:
             body["_loovie_frame_step"] = spec.frame_step
             body["_loovie_frame_offset"] = spec.frame_offset
+
+        if spec.max_source_video_seconds:
+            body["_loovie_max_source_video_seconds"] = spec.max_source_video_seconds
 
         _ensure_resident_group(residency_group(spec, mode), spec)
 
@@ -870,6 +997,89 @@ async def create_video(request: web.Request) -> web.Response:
             status=400,
         )
 
+    source_video = str(body.get("source_video_url", "") or "").strip()
+    reference_videos = body.get("reference_video_urls") or []
+    retake_requested = (
+        body.get("retake_start_seconds") is not None
+        or body.get("retake_duration_seconds") is not None
+    )
+    extend_requested = bool(body.get("extend_side"))
+
+    if source_video and references:
+        return web.json_response(
+            {
+                "code": 400,
+                "msg": "source_video_url cannot be combined with reference_image_urls",
+                "fail_code": "REFERENCES_UNSUPPORTED",
+            },
+            status=400,
+        )
+    if source_video and end_frame:
+        return web.json_response(
+            {
+                "code": 400,
+                "msg": "source_video_url modes do not take an end frame",
+                "fail_code": "REFERENCES_UNSUPPORTED",
+            },
+            status=400,
+        )
+    if source_video and reference_videos:
+        return web.json_response(
+            {
+                "code": 400,
+                "msg": "use source_video_url or reference_video_urls, not both",
+                "fail_code": "REFERENCES_UNSUPPORTED",
+            },
+            status=400,
+        )
+    if (retake_requested or extend_requested) and not source_video:
+        return web.json_response(
+            {
+                "code": 400,
+                "msg": "retake and extend require source_video_url",
+                "fail_code": "SOURCE_VIDEO_REQUIRED",
+            },
+            status=400,
+        )
+    if retake_requested and extend_requested:
+        return web.json_response(
+            {
+                "code": 400,
+                "msg": "retake and extend are separate modes",
+                "fail_code": "MODE_UNSUPPORTED",
+            },
+            status=400,
+        )
+    if reference_videos:
+        if len(reference_videos) > 1:
+            return web.json_response(
+                {
+                    "code": 400,
+                    "msg": "at most one reference video is supported",
+                    "fail_code": "REFERENCES_UNSUPPORTED",
+                },
+                status=400,
+            )
+        if references or end_frame:
+            return web.json_response(
+                {
+                    "code": 400,
+                    "msg": "a reference video cannot be combined with image "
+                    "references or an end frame",
+                    "fail_code": "REFERENCES_UNSUPPORTED",
+                },
+                status=400,
+            )
+        if not start_frame:
+            return web.json_response(
+                {
+                    "code": 400,
+                    "msg": "motion control requires start_frame_url and reference_video_urls",
+                    "fail_code": "START_FRAME_REQUIRED",
+                },
+                status=400,
+            )
+
     return await _create_task_handler(
         request,
         default_workflow="ltx23-t2v-fast",
@@ -1016,11 +1226,19 @@ async def health(_request: web.Request) -> web.Response:
 
 
 @PromptServer.instance.routes.get("/loovie/capabilities")
-async def capabilities(_request: web.Request) -> web.Response:
+async def capabilities(request: web.Request) -> web.Response:
     """Capability manifest probe. ALWAYS public; never auth-checked."""
     wf_manager = WorkflowManager.get_instance()
+    raw_contract = (request.headers.get("x-loovie-byo-contract") or "").strip()
+    try:
+        contract_version = int(raw_contract) if raw_contract else 0
+    except ValueError:
+        contract_version = 0
     manifest = build_capabilities_manifest(
-        wf_manager.get_workflow_names(), VERSION, wf_manager.config
+        wf_manager.get_workflow_names(),
+        VERSION,
+        wf_manager.config,
+        contract_version=contract_version,
     )
     return web.json_response(manifest)
 

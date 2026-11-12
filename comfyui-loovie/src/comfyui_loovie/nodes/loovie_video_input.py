@@ -89,9 +89,25 @@ def _decode_frames(path: Path, max_frames: int) -> tuple[np.ndarray[Any, Any], f
     return np.stack(frames, axis=0).astype(np.uint8), fps
 
 
+def _ffmpeg_exe() -> str:
+    """Resolve ffmpeg on PATH, falling back to imageio-ffmpeg's bundled binary."""
+
+    import shutil
+
+    found = shutil.which("ffmpeg")
+    if found:
+        return found
+    try:
+        import imageio_ffmpeg
+
+        return str(imageio_ffmpeg.get_ffmpeg_exe())
+    except Exception:
+        return "ffmpeg"
+
+
 def _extract_audio(path: Path) -> dict[str, object] | None:
     cmd = [
-        "ffmpeg",
+        _ffmpeg_exe(),
         "-v",
         "error",
         "-i",

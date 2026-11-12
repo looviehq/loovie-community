@@ -39,6 +39,7 @@ video	Lightricks/LTX-2.5	text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safeten
 video	Lightricks/LTX-2.5	vae/ltx-2.5-video-vae-conv-bf16.safetensors	ltx-2.5-video-vae-conv-bf16.safetensors	vae	ltx-2.5
 video	Lightricks/LTX-2.5	vae/ltx-2.5-audio-vae-bf16.safetensors	ltx-2.5-audio-vae-bf16.safetensors	vae	ltx-2.5
 video	Lightricks/LTX-2.5	latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors	ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors	latent_upscale_models	ltx-2.5
+video	Lightricks/LTX-2.3-22b-IC-LoRA-Ingredients	ltx-2.3-22b-ic-lora-ingredients-0.9.safetensors	ltx-2.3-22b-ic-lora-ingredients-0.9.safetensors	loras	ltx-2.5
 
 # --- Video: Pika H3 Flex (~46 GB shared base + adapters) --------------------
 video	Comfy-Org/MiniMax-H3	diffusion_models/minimax_h3_fl2va_pruned_fp8_scaled.safetensors	minimax_h3_fl2va_pruned_fp8_scaled.safetensors	diffusion_models	pika-flex

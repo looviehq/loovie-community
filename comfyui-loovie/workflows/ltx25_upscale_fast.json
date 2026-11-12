@@ -1,0 +1,292 @@
+{
+  "10": {
+    "class_type": "LoovieTextInput",
+    "inputs": {
+      "prompt": "high quality detailed cinematic video, sharp focus, natural texture",
+      "negative_prompt": "blurry, soft, low detail"
+    }
+  },
+  "11": {
+    "class_type": "LoovieVideoSettings",
+    "inputs": {
+      "width": 1920,
+      "height": 1088,
+      "num_frames": 49,
+      "fps": 24,
+      "audio_frames": 49,
+      "audio_fps": 25,
+      "with_audio": true,
+      "seed": 7
+    }
+  },
+  "12": {
+    "class_type": "LoovieVideoEdit",
+    "inputs": {
+      "video_url": "http://spark-734c:8000/ltx25_test_00008_.mp4",
+      "max_frames": 505,
+      "start_seconds": 0.0,
+      "duration_seconds": 0.0,
+      "context_seconds": 4.0,
+      "extend_side": "end",
+      "mode": "upscale",
+      "fps": 24.0,
+      "force_resize_short_side": 0
+    }
+  },
+  "20": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "ltx-2.5-video-vae-conv-bf16.safetensors"
+    }
+  },
+  "21": {
+    "class_type": "LatentUpscaleModelLoader",
+    "inputs": {
+      "model_name": "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors"
+    }
+  },
+  "22": {
+    "class_type": "VAEEncode",
+    "inputs": {
+      "pixels": [
+        "12",
+        0
+      ],
+      "vae": [
+        "20",
+        0
+      ]
+    }
+  },
+  "23": {
+    "class_type": "LTXVLatentUpsampler",
+    "inputs": {
+      "samples": [
+        "22",
+        0
+      ],
+      "upscale_model": [
+        "21",
+        0
+      ],
+      "vae": [
+        "20",
+        0
+      ]
+    }
+  },
+  "30": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "ltx-2.5-22b-distilled-transformer-nvfp4.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "31": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
+      "type": "ltxv",
+      "device": "default"
+    }
+  },
+  "32": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "31",
+        0
+      ],
+      "text": [
+        "10",
+        0
+      ]
+    }
+  },
+  "33": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "31",
+        0
+      ],
+      "text": [
+        "10",
+        1
+      ]
+    }
+  },
+  "34": {
+    "class_type": "LTXVConditioning",
+    "inputs": {
+      "positive": [
+        "32",
+        0
+      ],
+      "negative": [
+        "33",
+        0
+      ],
+      "frame_rate": 24.0
+    }
+  },
+  "35": {
+    "class_type": "LTXVDualCFGGuider",
+    "inputs": {
+      "model": [
+        "30",
+        0
+      ],
+      "positive": [
+        "34",
+        0
+      ],
+      "negative": [
+        "34",
+        1
+      ],
+      "video_cfg": 1.0,
+      "audio_cfg": 1.0
+    }
+  },
+  "36": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": [
+        "11",
+        7
+      ]
+    }
+  },
+  "37": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "euler"
+    }
+  },
+  "38": {
+    "class_type": "ManualSigmas",
+    "inputs": {
+      "sigmas": "0.4, 0.25, 0.0"
+    }
+  },
+  "39": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "36",
+        0
+      ],
+      "guider": [
+        "35",
+        0
+      ],
+      "sampler": [
+        "37",
+        0
+      ],
+      "sigmas": [
+        "38",
+        0
+      ],
+      "latent_image": [
+        "23",
+        0
+      ]
+    }
+  },
+  "24": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "39",
+        0
+      ],
+      "vae": [
+        "20",
+        0
+      ]
+    }
+  },
+  "25": {
+    "class_type": "ResizeImageMaskNode",
+    "inputs": {
+      "input": [
+        "24",
+        0
+      ],
+      "resize_type": "scale dimensions",
+      "resize_type.width": [
+        "11",
+        0
+      ],
+      "resize_type.height": [
+        "11",
+        1
+      ],
+      "resize_type.crop": "disabled",
+      "scale_method": "bicubic"
+    }
+  },
+  "26": {
+    "class_type": "ImageCrop",
+    "inputs": {
+      "image": [
+        "25",
+        0
+      ],
+      "width": 1920,
+      "height": 1080,
+      "x": 0,
+      "y": 0
+    }
+  },
+  "27": {
+    "class_type": "LoovieAudioGate",
+    "inputs": {
+      "enabled": [
+        "11",
+        6
+      ],
+      "audio": [
+        "12",
+        4
+      ],
+      "original_audio": [
+        "12",
+        4
+      ],
+      "keep_original": true
+    }
+  },
+  "28": {
+    "class_type": "CreateVideo",
+    "inputs": {
+      "images": [
+        "26",
+        0
+      ],
+      "audio": [
+        "27",
+        0
+      ],
+      "fps": [
+        "12",
+        12
+      ],
+      "bit_depth": "auto",
+      "color_space": "sRGB"
+    }
+  },
+  "29": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "video": [
+        "28",
+        0
+      ],
+      "filename_prefix": "loovie/ltx25_upscale",
+      "format": "mp4"
+    }
+  }
+}

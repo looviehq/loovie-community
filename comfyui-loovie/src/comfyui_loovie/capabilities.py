@@ -4,11 +4,11 @@ The manifest is derived dynamically from the model registry (`models.py`):
 enable a model in ``config.yaml`` and its descriptor appears; omit a section
 when the server has no workflows for that modality.
 
-Shape (schemaVersion 2)::
+Shape (schemaVersion 3)::
 
     {
-      "schemaVersion": 2,
-      "version": "0.5.0",
+      "schemaVersion": 3,
+      "version": "0.6.0",
       "hardware": {"gpuName": "RTX 5090", "vramGb": 32},   # optional
       "models": {
         "images":    [ {id, label, capabilities, variants, ...}, ... ],
@@ -43,7 +43,10 @@ from .models import (
     shared_models_config,
 )
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
+# Old clients only understand the v2 mode vocabulary. A manifest built for them
+# advertises the legacy modes (and the v2 shape) instead of failing their parse.
+_V2_VIDEO_MODES = ("t2v", "i2v", "fl2v", "ref2v")
 
 # YuE2 reference: full songs up to ~240s; style prompt cap mirrors the
 # app-side 2000-char music prompt bound.
@@ -79,10 +82,44 @@ def _hardware_section(config: Mapping[str, Any] | None) -> dict[str, Any] | None
     return detect_hardware()
 
 
+def _for_contract(manifest: dict[str, Any], contract_version: int) -> dict[str, Any]:
+    """Downgrade a v3 manifest for a client that only speaks v2.
+
+    The v3 manifest added `edit`/`retake`/`extend`/`motion` to the closed video
+    mode enum. A client built before those values existed rejects the WHOLE
+    manifest, which reads as "server incompatible" and hides the BYO tier.
+    When the caller does not advertise contract 3, advertise only the legacy
+    modes (and the v2 shape) so old apps keep working.
+    """
+
+    if contract_version >= 3:
+        return manifest
+
+    manifest["schemaVersion"] = 2
+    for model in manifest.get("models", {}).get("ss_videos", []):
+        model["capabilities"] = [
+            mode for mode in model.get("capabilities", []) if mode in _V2_VIDEO_MODES
+        ]
+        for key in (
+            "maxSourceVideoSeconds",
+            "minSourceVideoSeconds",
+            "retakeMaxDurationSeconds",
+            "extendMaxDurationSeconds",
+            "maxContextSeconds",
+            "upscaleResolutions",
+            "maxUpscaleFactor",
+            "cameraMotions",
+            "supportsKeepOriginalAudio",
+        ):
+            model.pop(key, None)
+    return manifest
+
+
 def build_capabilities_manifest(
     workflow_names: list[str],
     version: str,
     config: Mapping[str, Any] | None = None,
+    contract_version: int = SCHEMA_VERSION,
 ) -> dict[str, Any]:
     """Return the capabilities manifest for the given workflow set.
 
@@ -151,7 +188,7 @@ def build_capabilities_manifest(
         if music is not None:
             manifest["music"] = music
 
-    return manifest
+    return _for_contract(manifest, contract_version)
 
 
 __all__ = ["SCHEMA_VERSION", "build_capabilities_manifest"]
