@@ -78,8 +78,21 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
   VAE and audio VAE, and `latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors`.
   These are the exact names in `comfyui-loovie/workflows/ltx25_*.json` and
   `docker/models.manifest`.
-- **Modes:** t2v, i2v, fl2v fast; synchronized audio. No ref2v, and pro is
+- **Modes:** t2v, i2v, fl2v, ref2v (ingredients), edit, retake, extend,
+  motion and upscale, with synchronized audio and camera-move prompt
+  conditioning; pro is
   still served by the LTX 2.3 legacy workflows until a 2.5 pro graph lands.
+- **Advanced modes:** the shipped `ltx25-{edit,retake,extend,motion}-fast`
+  graphs condition on a source clip with ComfyUI's core `LTXVAddGuide` node.
+  `ref2v` composes up to four ingredient images into one reference sheet with
+  `LoovieReferenceSheet`, repeats the sheet across the clip and applies the
+  Ingredients IC-LoRA (`ltx-2.3-22b-ic-lora-ingredients-0.9.safetensors`,
+  strength 1.3) through `LoraLoaderModelOnly`. The 2.5 adapter is preferred
+  when your HuggingFace account has access to
+  `Lightricks/LTX-2.5-22b-IC-LoRA-Ingredients`; swap the `lora_name` in the
+  graph. An installed LTXVideo IC-LoRA (union control, ingredients,
+  colourisation, …) can also be added through `LoovieLoraStack` for stronger
+  identity or structure control on the other modes.
 - **Planning VRAM:** 24 GB minimum, 32 GB recommended.
 - **ComfyUI:** native LTX 2.5 templates; the shipped `ltx25_*` graphs are
   API-format with the Loovie node injection and were validated on a GB10.

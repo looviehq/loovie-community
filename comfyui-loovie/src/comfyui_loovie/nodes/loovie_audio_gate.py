@@ -1,8 +1,10 @@
-"""`LoovieAudioGate` node: pass AUDIO through only when enabled.
+"""`LoovieAudioGate` node: choose generated audio, source audio, or silence.
 
-When `enabled` is False the node emits None, so the downstream
-CreateVideo / SaveVideo nodes produce a track-less video. When True the
-AUDIO input is passed straight through.
+`enabled` mirrors the request's `with_audio` toggle. `keep_original` is the
+edit/motion flag: when set and a source AUDIO is wired, the original track is
+returned unchanged and the generated track is discarded. Otherwise the
+generated AUDIO passes through only when `enabled` is True, so the downstream
+CreateVideo / SaveVideo nodes produce a track-less video.
 """
 
 from __future__ import annotations
@@ -19,6 +21,8 @@ class LoovieAudioGate:
             },
             "optional": {
                 "audio": ("AUDIO",),
+                "original_audio": ("AUDIO",),
+                "keep_original": ("BOOLEAN", {"default": False}),
             },
         }
 
@@ -27,5 +31,13 @@ class LoovieAudioGate:
     FUNCTION = "process"
     CATEGORY = "loovie"
 
-    def process(self, enabled: bool, audio: Any = None) -> tuple[Any]:
+    def process(
+        self,
+        enabled: bool,
+        audio: Any = None,
+        original_audio: Any = None,
+        keep_original: bool = False,
+    ) -> tuple[Any]:
+        if keep_original and original_audio is not None:
+            return (original_audio,)
         return (audio if enabled else None,)

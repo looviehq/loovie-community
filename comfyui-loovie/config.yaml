@@ -119,6 +119,36 @@ workflows:
     description: "LTX 2.5 first+last frame to video, distilled transformer (fast)."
     max_wait_seconds: 840
 
+  ltx25-ref2v-fast:
+    file: "workflows/ltx25_ref2v_fast.json"
+    description: "LTX 2.5 ingredient references to video, distilled transformer (fast)."
+    max_wait_seconds: 840
+
+  ltx25-edit-fast:
+    file: "workflows/ltx25_edit_fast.json"
+    description: "LTX 2.5 full-clip video edit/restyle from a source clip (fast)."
+    max_wait_seconds: 840
+
+  ltx25-retake-fast:
+    file: "workflows/ltx25_retake_fast.json"
+    description: "LTX 2.5 retake: regenerate a time window of a source clip (fast)."
+    max_wait_seconds: 840
+
+  ltx25-extend-fast:
+    file: "workflows/ltx25_extend_fast.json"
+    description: "LTX 2.5 extend: continue a source clip at the start or end (fast)."
+    max_wait_seconds: 840
+
+  ltx25-motion-fast:
+    file: "workflows/ltx25_motion_fast.json"
+    description: "LTX 2.5 motion control: follow a reference clip from a start frame (fast)."
+    max_wait_seconds: 840
+
+  ltx25-upscale-fast:
+    file: "workflows/ltx25_upscale_fast.json"
+    description: "LTX 2.5 video upscale: 2x latent upscale plus a short refine pass (fast)."
+    max_wait_seconds: 840
+
   ltx23-t2v-pro:
     file: "workflows/ltx23_t2v_pro.json"
     description: "LTX 2.3 text-to-video, two-stage with spatial upscaler (pro quality)."

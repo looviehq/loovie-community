@@ -46,7 +46,7 @@ from pydantic import BaseModel, Field
 # --- Constants ---------------------------------------------------------
 
 VERSION = "0.1.0"
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 PROMPT_CHAR_LIMIT = 3000
 # Tiny, content-addressable placeholders that the device will still
 # treat as valid PNG / MP4 (magic bytes are correct).

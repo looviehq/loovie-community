@@ -29,9 +29,15 @@ Workflows shipped (one JSON per file under `workflows/`):
 | Family | Workflow | Modes |
 | --- | --- | --- |
 | Image | `flux-2-klein` | t2i, i2i (up to 4 reference images) |
-| Video | `ltx23-t2v-{fast,pro}` | text-to-video |
-| Video | `ltx23-i2v-{fast,pro}` | image-to-video |
-| Video | `ltx23-fl2v-{fast,pro}` | first+last frame to video |
+| Video | `ltx25-t2v-{fast,pro}` | text-to-video |
+| Video | `ltx25-i2v-{fast,pro}` | image-to-video |
+| Video | `ltx25-fl2v-{fast,pro}` | first+last frame to video |
+| Video | `ltx25-ref2v-fast` | ingredient references to video |
+| Video | `ltx25-edit-fast` | full-clip video edit/restyle |
+| Video | `ltx25-retake-fast` | regenerate a time window of a source clip |
+| Video | `ltx25-extend-fast` | continue a source clip at the start or end |
+| Video | `ltx25-motion-fast` | follow a reference clip from a start frame |
+| Video | `ltx25-upscale-fast` | 2× latent upscale plus a short refine pass |
 | Video | `hyperflow-h3-flash-{t2v,i2v,fl2v,ref2v}-{fast,flash,hq}` | HyperFlow H3 Flash (needs ComfyUI-GGUF) |
 
 The capabilities manifest is built dynamically from the workflows you
@@ -88,6 +94,9 @@ fetch a baseline set.
 | `flux-2-klein` | FLUX.2 Klein UNet, T5-XXL + CLIP-L text encoders, FLUX VAE |
 | `ltx23-*-fast` | LTX 2.3 distilled checkpoint, Gemma-3-12B text encoder |
 | `ltx23-*-pro` | LTX 2.3 checkpoint + spatial upscaler, Gemma-3-12B text encoder |
+| `ltx25-{t2v,i2v,fl2v}-fast` | LTX 2.5 distilled transformer, Gemma-4-12B text encoder, video + audio VAE |
+| `ltx25-{edit,retake,extend,motion}-fast` | the same LTX 2.5 base weights; source clips are downloaded at request time |
+| `ltx25-ref2v-fast` | the LTX 2.5 base weights plus the Ingredients IC-LoRA (`ltx-2.3-22b-ic-lora-ingredients-0.9.safetensors`, gated) |
 
 `hyperflow-h3-flash-*` additionally needs the
 [`ComfyUI-GGUF`](https://github.com/city96/ComfyUI-GGUF) and
