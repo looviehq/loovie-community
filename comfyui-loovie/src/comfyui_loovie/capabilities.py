@@ -106,6 +106,8 @@ def _for_contract(manifest: dict[str, Any], contract_version: int) -> dict[str, 
             "retakeMaxDurationSeconds",
             "extendMaxDurationSeconds",
             "maxContextSeconds",
+            "upscaleResolutions",
+            "maxUpscaleFactor",
             "cameraMotions",
             "supportsKeepOriginalAudio",
         ):
