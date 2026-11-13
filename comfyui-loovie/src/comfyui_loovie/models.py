@@ -89,6 +89,8 @@ class VariantSpec:
     # Optional narrowing for this variant only (e.g. Pika HD cannot take refs).
     capabilities: tuple[str, ...] | None = None
     max_reference_images: int | None = None
+    # None inherits the model's max_reference_audios.
+    max_reference_audios: int | None = None
     # Optional per-variant workflow-name suffix override; defaults to the id.
     workflow_suffix: str | None = None
 
@@ -108,6 +110,12 @@ class ModelSpec:
     durations: tuple[int, ...] = ()
     reference_count: int = 0
     max_reference_images: int = 0
+    # Reference audio clips accepted for ref2v (condition the generated
+    # soundtrack or performance, e.g. lip-sync). Leave at 0 unless the model's
+    # workflow graph has an audio-conditioning input that consumes
+    # `reference_audio_urls`. Setting it advertises the capability in the
+    # manifest, so a model must only set it once its graph can actually use it.
+    max_reference_audios: int = 0
     references_exclude_frames: bool = False
     audio: str = AUDIO_NONE
     # Source-video limits for edit/retake/extend/motion. 0 = unsupported.
@@ -729,6 +737,7 @@ def model_descriptor(spec: ModelSpec, *, default: bool) -> dict[str, Any]:
     else:
         descriptor["referenceCount"] = 1 if "i2v" in spec.capabilities else 0
         descriptor["maxReferenceImages"] = spec.max_reference_images
+        descriptor["maxReferenceAudios"] = spec.max_reference_audios
         if spec.max_reference_images > 0:
             descriptor["referencesExcludeFrames"] = spec.references_exclude_frames
         descriptor["durations"] = list(spec.durations)
@@ -773,6 +782,11 @@ def model_descriptor(spec: ModelSpec, *, default: bool) -> dict[str, Any]:
             **(
                 {"maxReferenceImages": variant.max_reference_images}
                 if variant.max_reference_images is not None
+                else {}
+            ),
+            **(
+                {"maxReferenceAudios": variant.max_reference_audios}
+                if variant.max_reference_audios is not None
                 else {}
             ),
         }
@@ -907,6 +921,7 @@ def validate_request_values(
     has_end_frame: bool = False,
     has_source_video: bool = False,
     reference_video_count: int = 0,
+    reference_audio_count: int = 0,
     retake_start_seconds: float | int | None = None,
     retake_duration_seconds: float | int | None = None,
     extend_side: str | None = None,
@@ -1052,7 +1067,19 @@ def validate_request_values(
     ):
         return "REFERENCES_UNSUPPORTED"
 
-    if mode == "ref2v" and reference_count == 0:
+    if reference_audio_count > 0:
+        max_audios = (
+            variant.max_reference_audios
+            if variant.max_reference_audios is not None
+            else spec.max_reference_audios
+        )
+        if mode != "ref2v" or reference_audio_count > max_audios:
+            return "REFERENCE_AUDIO_UNSUPPORTED"
+
+    # Audio-only ref2v is valid: reference audio rides its own budget, so it
+    # counts as a reference input here (the budget check above already refused
+    # audio on a model that advertises none).
+    if mode == "ref2v" and reference_count == 0 and reference_audio_count == 0:
         return "REFERENCES_REQUIRED"
     if mode in ("i2v", "fl2v") and not has_start_frame:
         return "START_FRAME_REQUIRED"
