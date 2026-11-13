@@ -120,6 +120,7 @@ CAPABILITIES: dict[str, Any] = {
                 "capabilities": ["t2v", "i2v", "fl2v"],
                 "referenceCount": 1,
                 "maxReferenceImages": 0,
+                "maxReferenceAudios": 0,
                 "resolution": ["720p", "1080p"],
                 "variants": [
                     {"id": "fast", "label": "Fast", "default": True},

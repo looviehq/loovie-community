@@ -426,6 +426,7 @@ _MODEL_ERROR_MESSAGES: dict[str, str] = {
     "DURATION_UNSUPPORTED": "That duration is not supported by this model.",
     "AUDIO_UNSUPPORTED": "That model does not generate audio.",
     "REFERENCES_UNSUPPORTED": "That model cannot take those references.",
+    "REFERENCE_AUDIO_UNSUPPORTED": "That model cannot take reference audio here.",
     "REFERENCES_REQUIRED": "This mode requires at least one reference image.",
     "START_FRAME_REQUIRED": "This mode requires a start frame.",
     "END_FRAME_REQUIRED": "This mode requires an end frame.",
@@ -476,6 +477,7 @@ def _request_mode(body: dict[str, Any], modality: str) -> str:
     if (
         body.get("reference_image_urls")
         or body.get("reference_video_urls")
+        or body.get("reference_audio_urls")
         or body.get("image_urls")
     ):
         return "ref2v"
@@ -712,6 +714,7 @@ async def _setup_and_submit(
         end = str(body.get("end_frame_url", "") or "").strip()
         reference_count = len(body.get("reference_image_urls") or [])
         reference_video_count = len(body.get("reference_video_urls") or [])
+        reference_audio_count = len(body.get("reference_audio_urls") or [])
         if modality == "image":
             reference_count = len(body.get("image_urls") or [])
         if modality == "video" and not body.get("resolution"):
@@ -730,6 +733,7 @@ async def _setup_and_submit(
             has_end_frame=bool(end),
             has_source_video=bool(str(body.get("source_video_url", "") or "").strip()),
             reference_video_count=reference_video_count,
+            reference_audio_count=reference_audio_count,
             retake_start_seconds=body.get("retake_start_seconds"),
             retake_duration_seconds=body.get("retake_duration_seconds"),
             extend_side=body.get("extend_side"),
@@ -983,6 +987,25 @@ async def create_video(request: web.Request) -> web.Response:
                 "code": 400,
                 "msg": "end_frame_url requires start_frame_url",
                 "fail_code": "START_FRAME_REQUIRED",
+            },
+            status=400,
+        )
+    reference_audios = body.get("reference_audio_urls") or []
+    if reference_audios and (
+        not isinstance(reference_audios, list)
+        or not all(
+            isinstance(url, str)
+            # Same acceptance as the image fetcher (http or https): the app
+            # may hand over a tunnel or LAN asset URL, so no stricter here.
+            and url.strip().lower().startswith(("https://", "http://"))
+            for url in reference_audios
+        )
+    ):
+        return web.json_response(
+            {
+                "code": 400,
+                "msg": "reference_audio_urls must be a list of http(s) URLs",
+                "fail_code": "REFERENCE_AUDIO_UNSUPPORTED",
             },
             status=400,
         )

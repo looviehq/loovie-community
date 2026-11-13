@@ -108,6 +108,7 @@ The single most important endpoint. Tells the app what your server can do.
         "capabilities": ["t2v", "i2v", "fl2v", "ref2v"],
         "referenceCount": 1,          // frames for i2v
         "maxReferenceImages": 9,      // images for ref2v
+        "maxReferenceAudios": 0,      // audio clips for ref2v (non-negative int, default 0)
         "referencesExcludeFrames": true,
         "resolution": ["480p", "768p"],
         "aspectRatios": ["auto", "16:9", "9:16", "1:1"],
@@ -120,7 +121,8 @@ The single most important endpoint. Tells the app what your server can do.
             "id": "hd",
             "label": "HD",
             "capabilities": ["t2v", "i2v", "fl2v"],
-            "maxReferenceImages": 0
+            "maxReferenceImages": 0,
+            "maxReferenceAudios": 0     // optional per variant, like maxReferenceImages
           }
         ],
         "promptCharLimit": 3000
@@ -269,6 +271,7 @@ Response (taskId is opaque):
   "start_frame_url": "https://...",   // required for i2v and fl2v
   "end_frame_url": "https://...",     // fl2v only; requires start_frame_url
   "reference_image_urls": ["https://..."],  // ref2v/ingredients; up to maxReferenceImages
+  "reference_audio_urls": ["https://..."],  // ref2v only; up to maxReferenceAudios
   "source_video_url": "https://...",  // edit, retake, extend
   "retake_start_seconds": 2,          // retake only
   "retake_duration_seconds": 4,       // retake only
@@ -287,6 +290,16 @@ Response (taskId is opaque):
 `referencesExcludeFrames: true` (H3's Ref2VA is a different checkpoint from
 FL2VA). A server MUST reject the combination with a `400` and a stable
 `fail_code`.
+
+`reference_audio_urls` is accepted only with `mode: "ref2v"`, up to the
+model's (or variant's) `maxReferenceAudios`. The app sends each WHOLE audio
+clip, never trimmed (the URLs are `https`, or the tunnel or public asset URL,
+exactly as for images). They condition the generated soundtrack
+or performance, for example lip-sync to the given audio. A model that
+advertises `maxReferenceAudios: 0` (or omits it) MUST reject any audio with
+`REFERENCE_AUDIO_UNSUPPORTED`; so MUST a request that is over budget, uses a
+mode other than `ref2v`, or carries URLs that are not http(s). Only advertise
+a non-zero value once the model's graph actually consumes the audio.
 
 ### LTX 2.5 advanced video modes
 
@@ -327,7 +340,7 @@ Model-level rejections use `{ "code": 400, "msg": "...", "fail_code": "..." }`
 with one of `MODEL_NOT_ENABLED`, `MODE_UNSUPPORTED`, `VARIANT_UNSUPPORTED`,
 `RESOLUTION_UNSUPPORTED`, `ASPECT_RATIO_UNSUPPORTED`, `DURATION_UNSUPPORTED`,
 `REFERENCES_UNSUPPORTED`, `REFERENCES_REQUIRED`, `AUDIO_UNSUPPORTED`,
-`START_FRAME_REQUIRED`, `END_FRAME_REQUIRED`.
+`START_FRAME_REQUIRED`, `END_FRAME_REQUIRED`, `REFERENCE_AUDIO_UNSUPPORTED`.
 
 Server-side failures on create use the same envelope, and the split matters:
 **4xx means "this request cannot succeed, do not retry"**, **5xx means "the

@@ -284,6 +284,9 @@ components:
         maxReferenceImages:
           type: integer
           minimum: 0
+        maxReferenceAudios:
+          type: integer
+          minimum: 0
     ImageModel:
       type: object
       required:
@@ -383,6 +386,12 @@ components:
           type: integer
           minimum: 0
           description: Images accepted by ref2v (0 when the model has no ref2v).
+        maxReferenceAudios:
+          type: integer
+          minimum: 0
+          default: 0
+          description: >-
+            Audio clips accepted by ref2v (default 0). Overridable per variant.
         referencesExcludeFrames:
           type: boolean
           description: >-
@@ -1141,6 +1150,18 @@ components:
             exclusive with first/last frames when `referencesExcludeFrames` is
             true (H3). On LTX 2.5 these are ingredient images: the reference
             implementation tiles them into one reference sheet.
+        reference_audio_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: >-
+            Audio clips for `ref2v` only, capped by `maxReferenceAudios`. The
+            app sends each whole clip, never trimmed; URLs are https or the
+            tunnel or public asset URL, as for images. They condition the generated soundtrack
+            or performance (for example lip-sync). Rejected with
+            `REFERENCE_AUDIO_UNSUPPORTED` when the model advertises 0, the count
+            is over budget, the mode is not `ref2v`, or a URL is not http(s).
         source_video_url:
           type: string
           format: uri
