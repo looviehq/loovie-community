@@ -94,6 +94,9 @@ models/
 .env.*
 !.env.example
 
+# Local BYO server config (see .byo-server.env.example)
+.byo-server.env
+
 # Docker build cache
 .docker/
 

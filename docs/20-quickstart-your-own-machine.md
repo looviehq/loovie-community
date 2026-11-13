@@ -152,6 +152,16 @@ python main.py --listen 0.0.0.0 --port 8188
 
 `--listen 0.0.0.0` makes it reachable from your phone on the same network. **The server is configured to fail closed when `LOOVIE_API_TOKEN` is unset and the bind host is non-loopback**, so this is safe, but make sure the token is exported in the same shell.
 
+If you used the layout from step 2 (the `loovie-community` clone lives inside ComfyUI), you can also let the repo run ComfyUI for you. From the repo root:
+
+```sh
+cd loovie-community
+cp .byo-server.env.example .byo-server.env   # first time only; see "Managing the server"
+make start
+```
+
+`make start` launches the same `python main.py` command in the background, logs to `/tmp/loovie-comfy-<port>.log`, and waits until `/loovie/health` is ready. See [Managing the server](#managing-the-server) for the full set of targets and configuration.
+
 ### 6. Verify it works
 
 In another terminal:
@@ -171,6 +181,47 @@ You have two reasonable options:
 - **From anywhere (cellular, café, hotel)**: set up [Cloudflare Tunnel](40-cloudflare-tunnel.md). You get HTTPS automatically.
 
 Then follow [`60-configure-the-app.md`](60-configure-the-app.md) to paste URL and token into the Loovie app.
+
+## Managing the server
+
+ComfyUI imports `comfyui-loovie` once at startup, so **new or edited plugin code only takes effect after a restart**. The repo ships Make targets that wrap start/stop/status around the same ComfyUI checkout, optionally detached from your terminal. Run them from the `loovie-community` repo root:
+
+| Command | What it does |
+|---|---|
+| `make start` | Starts ComfyUI in the background and waits for `/loovie/health`. Does nothing if something is already listening on the port. |
+| `make stop` | Sends `SIGTERM`, waits for the process to exit, then falls back to `SIGKILL`. |
+| `make restart` | `stop` then `start`. This is the command to run after `git pull` or editing `comfyui-loovie/`. |
+| `make status` | Prints the listening PID and the `/loovie/health` response. |
+| `make logs` | Follows the server log (`tail -f`). |
+
+### Configuration
+
+The targets read `.byo-server.env` at the repo root if it exists. Copy the example once and edit it:
+
+```sh
+cp .byo-server.env.example .byo-server.env
+```
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `COMFY_DIR` | Auto-detected: the repo's parent if it contains `main.py` (the layout from step 2), then `../ComfyUI` beside the repo. | ComfyUI checkout to run. |
+| `COMFY_PYTHON` | `$COMFY_DIR/.venv/bin/python`, then `python3`. | Interpreter with ComfyUI's dependencies installed. |
+| `HOST` | `0.0.0.0` | Bind address passed to `--listen`. |
+| `PORT` | `8188` | Port passed to `--port`; also used to find the running process. |
+| `LOG` | `/tmp/loovie-comfy-$PORT.log` | Append-only server output. |
+| `START_TIMEOUT` | `90` | Seconds `make start` waits for `/loovie/health` before failing. |
+
+Every value can also be overridden for a single run, which is handy if you keep ComfyUI elsewhere or run more than one server:
+
+```sh
+make restart COMFY_DIR=/models/ComfyUI COMFY_PYTHON=/models/.comfy-venv/bin/python PORT=8199
+```
+
+The same actions are available without Make as `scripts/byo-server.sh start|stop|restart|status|logs`; it reads the same environment variables.
+
+### What a restart does to in-flight work
+
+Restarting kills the ComfyUI process, and the task store is intentionally in-memory. Any generation that was running (or queued) is lost, and the app reports `BYO_HISTORY_MISSING`, which is safe to retry. Restart when the server is idle. `make status` is the quickest way to confirm the plugin actually loaded: a healthy `/loovie/health` plus `comfyui-loovie routes registered` in `make logs`.
 
 ## macOS or Apple Silicon
 

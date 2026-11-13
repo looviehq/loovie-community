@@ -40,6 +40,27 @@ export HF_TOKEN=hf_xxx LOOVIE_API_TOKEN=$(bash loovie-community/scripts/new-toke
 bash loovie-community/docker/download_models.sh && python main.py --listen 0.0.0.0 --port 8188
 ```
 
+### Restarting the server
+
+ComfyUI loads `comfyui-loovie` at startup, so code changes only take effect
+after a restart. The repo ships Make targets for that (they use the same
+ComfyUI checkout, just detached from your shell):
+
+```sh
+cp .byo-server.env.example .byo-server.env   # once: set COMFY_DIR, PORT, ...
+make start      # start in the background and wait for /loovie/health
+make restart    # stop, then start, picking up new code
+make stop
+make status     # pid + /loovie/health
+make logs       # tail the server log
+```
+
+`make restart` kills the ComfyUI process, so any in-flight generation is lost
+and the app reports `BYO_HISTORY_MISSING`; retry it afterwards. `status` and the
+health probe also tell you whether the Loovie plugin actually loaded. Full
+configuration, target reference and restart semantics:
+[`docs/20-quickstart-your-own-machine.md` → Managing the server](docs/20-quickstart-your-own-machine.md#managing-the-server).
+
 ## What you can do with it
 
 The Loovie app speaks these capability modes. The "Reference workflow" column shows what `comfyui-loovie/` ships out of the box and which models are in the catalogue; you can swap any of these for a different model (WAN, HunyuanVideo, CogVideoX, SDXL, YuE2, anything else) or write your own workflow, as long as it produces the same input/output shape as the contract requires.
