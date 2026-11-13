@@ -38,8 +38,16 @@ You put authentication in front of the probe path. Don't do that, `/loovie/healt
 
 The server is reachable, but `/loovie/capabilities` doesn't return a valid manifest.
 
-- **`comfyui-loovie` is too old.** Pull latest and restart ComfyUI.
+- **`comfyui-loovie` is too old.** Pull latest and restart ComfyUI (from the repo root: `make restart`, see [Managing the server](20-quickstart-your-own-machine.md#managing-the-server)).
 - **`comfyui-loovie` isn't installed.** Confirm `ComfyUI/custom_nodes/loovie` exists and ComfyUI loaded it (check ComfyUI startup logs for `Loovie:` lines).
+
+### Changes to `comfyui-loovie` don't take effect
+
+The node pack is imported once, when ComfyUI starts. Editing a file or running `git pull` does nothing until the process restarts.
+
+- **Restart the server.** From the `loovie-community` repo root run `make restart` (or `scripts/byo-server.sh restart`), then `make status`.
+- **Confirm the new code loaded.** `make logs` should show `comfyui-loovie routes registered` after the restart banner. If it shows the old behaviour, check that `COMFY_DIR` points at the ComfyUI checkout you are actually hitting, and that `custom_nodes/loovie` symlinks to this repo (`readlink -f "$COMFY_DIR/custom_nodes/loovie"`).
+- **The restart killed an in-flight run.** Expected: the task store is in-memory, so the app reports `BYO_HISTORY_MISSING`; retry the generation.
 
 ### "Server is reachable but has no Loovie image or video workflows installed"
 
