@@ -4,6 +4,24 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 > **Beta API stability.** While we are on the `0.x` line, the BYO HTTP contract (`openapi/loovie-server.openapi.yaml`) may introduce breaking changes between minor versions. Every breaking change is logged below and reflected in a bump of `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). Pin to a specific tag or commit SHA if you depend on the contract; strict semver kicks in at `1.0.0`.
 
+## [0.4.0-beta.1](https://github.com/looviehq/loovie-community/compare/v0.3.0-beta.1...v0.4.0-beta.1) (2026-11-14)
+
+
+### Features
+
+* **comfyui-loovie:** add HyperFlow H3 Flash video model ([#94](https://github.com/looviehq/loovie-community/issues/94)) ([2428536](https://github.com/looviehq/loovie-community/commit/2428536a68f7b9233ea34494da48efcf462acf19))
+* **comfyui-loovie:** add MiniMax H3 Image and bump ComfyUI to 0.45.0 ([#100](https://github.com/looviehq/loovie-community/issues/100)) ([f1b9892](https://github.com/looviehq/loovie-community/commit/f1b989231ddab34de804dc3e100f065ae6508ce6))
+* **comfyui-loovie:** add Qwen-Image 2.1, FLUX 3 Klein and Krea 2 ([#95](https://github.com/looviehq/loovie-community/issues/95)) ([2d0d6e9](https://github.com/looviehq/loovie-community/commit/2d0d6e9b0f5f1d7166413bdcb5b6512938d086e5))
+* **comfyui-loovie:** add reference audio to the BYO contract and manifest ([#103](https://github.com/looviehq/loovie-community/issues/103)) ([2979fd6](https://github.com/looviehq/loovie-community/commit/2979fd6448bb44b5470b3c78ff206801d5637622))
+* **comfyui-loovie:** answer 400 with the real reason instead of retrying ([#101](https://github.com/looviehq/loovie-community/issues/101)) ([2c7f4ae](https://github.com/looviehq/loovie-community/commit/2c7f4ae505d40adbed40e541ee0287f102953e87))
+* **comfyui-loovie:** multi-model BYO contract and Stable Audio 3 SFX ([#92](https://github.com/looviehq/loovie-community/issues/92)) ([761297b](https://github.com/looviehq/loovie-community/commit/761297ba3b107c8d7468765d899ab5739867c17c))
+* **comfyui-loovie:** runnable Pika H3 Flex graphs ([#93](https://github.com/looviehq/loovie-community/issues/93)) ([5f9df45](https://github.com/looviehq/loovie-community/commit/5f9df4535614a28600d626464062f96c70c07722))
+
+
+### Documentation
+
+* **mcp:** align bundled skills with the current MCP tool surface ([#90](https://github.com/looviehq/loovie-community/issues/90)) ([a699c53](https://github.com/looviehq/loovie-community/commit/a699c531b7dbfa342e449cbbba768bedf592b554))
+
 ## [0.3.0-beta.1](https://github.com/looviehq/loovie-community/compare/v0.2.3-beta.1...v0.3.0-beta.1) (2026-10-17)
 
 
