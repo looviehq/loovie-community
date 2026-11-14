@@ -72,7 +72,7 @@ The Loovie app speaks these capability modes. The "Reference workflow" column sh
 | Text → single‑shot video | `t2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
 | Image → single‑shot video | `i2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
 | First‑and‑last‑frame → video | `fl2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
-| Reference → single‑shot video | `ref2v` | LTX 2.5 ingredients fast (**shipped**; up to 4 references); Pika H3 Flex official / turbo (**shipped**; up to 9 references) |
+| Reference → single‑shot video | `ref2v` | LTX 2.5 ingredients fast (**shipped**; up to 4 references); Pika H3 Flex official / turbo (**shipped**; up to 9 images + 3 reference audio clips); HyperFlow H3 Flash (**shipped**; up to 9 images + 3 reference audio clips) |
 | Video edit | `edit` | LTX 2.5 fast (**shipped**; full-clip restyle) |
 | Video retake | `retake` | LTX 2.5 fast (**shipped**; regenerate a time window) |
 | Video extend | `extend` | LTX 2.5 fast (**shipped**; start or end continuation) |
