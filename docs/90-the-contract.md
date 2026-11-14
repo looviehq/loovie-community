@@ -72,7 +72,7 @@ The single most important endpoint. Tells the app what your server can do.
 
 ```jsonc
 {
-  "schemaVersion": 2,        // int, REQUIRED. Currently 2.
+  "schemaVersion": 3,        // int, REQUIRED. Currently 3.
   "version": "0.4.0",        // optional string, telemetry only.
   "hardware": {              // optional; lets the app show which models fit
     "gpuName": "RTX 5090",
@@ -108,6 +108,7 @@ The single most important endpoint. Tells the app what your server can do.
         "capabilities": ["t2v", "i2v", "fl2v", "ref2v"],
         "referenceCount": 1,          // frames for i2v
         "maxReferenceImages": 9,      // images for ref2v
+        "maxReferenceAudios": 0,      // audio clips for ref2v (non-negative int, default 0)
         "referencesExcludeFrames": true,
         "resolution": ["480p", "768p"],
         "aspectRatios": ["auto", "16:9", "9:16", "1:1"],
@@ -120,7 +121,8 @@ The single most important endpoint. Tells the app what your server can do.
             "id": "hd",
             "label": "HD",
             "capabilities": ["t2v", "i2v", "fl2v"],
-            "maxReferenceImages": 0
+            "maxReferenceImages": 0,
+            "maxReferenceAudios": 0     // optional per variant, like maxReferenceImages
           }
         ],
         "promptCharLimit": 3000
@@ -128,11 +130,23 @@ The single most important endpoint. Tells the app what your server can do.
       {
         "id": "ltx-2.5",
         "label": "LTX 2.5",
-        "capabilities": ["t2v", "i2v", "fl2v"],
+        "capabilities": ["t2v", "i2v", "fl2v", "ref2v", "edit", "retake", "extend", "motion"],
+        "referenceCount": 1,
+        "maxReferenceImages": 4,
+        "referencesExcludeFrames": true,
+        "maxSourceVideoSeconds": 21,
+        "minSourceVideoSeconds": 3,
+        "retakeMaxDurationSeconds": 16,
+        "extendMaxDurationSeconds": 20,
+        "maxContextSeconds": 20,
+        "cameraMotions": ["static", "dolly_in", "dolly_out", "dolly_left", "dolly_right", "jib_up", "jib_down", "focus_shift"],
+        "supportsKeepOriginalAudio": true,
+        "upscaleResolutions": ["1080p", "2K", "4K"],
+        "maxUpscaleFactor": 2,
         "resolution": ["540p", "720p", "1080p", "2K"],
         "durations": [2, 3, 4, 5, 6, 7, 8, 9, 10],
         "audio": "optional",
-        "variants": [{ "id": "fast", "default": true }, { "id": "pro" }]
+        "variants": [{ "id": "fast", "default": true }]
       }
     ],
     "music": [
@@ -189,11 +203,15 @@ The single most important endpoint. Tells the app what your server can do.
 **Hard rules.**
 
 - `models` is the v2 source of truth. The app reads it first.
+- Clients send `x-loovie-byo-contract: 3` on the capabilities probe to ask for
+  the v3 modes. A server SHOULD answer a probe without the header with the v2
+  vocabulary (schemaVersion 2, legacy modes only) so older app builds do not
+  reject the whole manifest when the server adds modes.
 - The flat `images` / `ss_videos` blocks are a **compatibility view** for app
   builds from before multi-model BYO. Keep them inside the v1 closed enums or
   omit them; an old app fails the whole parse on an unknown value. Omitting a
   block hides that BYO tier on old builds, which is the safe failure.
-- `schemaVersion` is `2`; bump only when the shape changes.
+- `schemaVersion` is `3`; bump only when the shape changes.
 - `id` is a stable slug (`^[a-z0-9][a-z0-9._-]{0,63}$`). The app never names a
   workflow; it sends `model` + `variant`, and the server maps them.
 - `variant` is **model-scoped**. `turbo` on Pika and `pro` on LTX are unrelated;
@@ -252,14 +270,24 @@ Response (taskId is opaque):
 {
   "prompt": "a slow zoom into a sunflower",
   "model": "pika-flex",            // from models.ss_videos
-  "mode": "t2v",                   // or "i2v", "fl2v", "ref2v"
+  "mode": "t2v",                   // or "i2v", "fl2v", "ref2v", "edit", "retake", "extend", "motion"
   "variant": "official",
   "resolution": "768p",
   "aspect_ratio": "16:9",
   "duration": 8,                   // must be in the model's durations
   "start_frame_url": "https://...",   // required for i2v and fl2v
   "end_frame_url": "https://...",     // fl2v only; requires start_frame_url
-  "reference_image_urls": ["https://..."],  // ref2v; up to maxReferenceImages
+  "reference_image_urls": ["https://..."],  // ref2v/ingredients; up to maxReferenceImages
+  "reference_audio_urls": ["https://..."],  // ref2v only; up to maxReferenceAudios
+  "source_video_url": "https://...",  // edit, retake, extend
+  "retake_start_seconds": 2,          // retake only
+  "retake_duration_seconds": 4,       // retake only
+  "extend_side": "end",               // extend only: "start" or "end"
+  "context_seconds": 4,               // retake/extend context window
+  "reference_video_urls": ["https://..."],  // motion only; exactly one
+  "camera_motion": "dolly_in",        // any mode that advertises it
+  "source_strength": 0.6,             // edit/retake/extend/motion guidance strength
+  "keep_original_audio": false,       // edit/motion only; mux the source track
   "with_audio": true,              // only meaningful for audio: optional
   "seed": -1
 }
@@ -270,13 +298,71 @@ Response (taskId is opaque):
 FL2VA). A server MUST reject the combination with a `400` and a stable
 `fail_code`.
 
+`reference_audio_urls` is accepted only with `mode: "ref2v"`, up to the
+model's (or variant's) `maxReferenceAudios`. The app sends each WHOLE audio
+clip, never trimmed (the URLs are `https`, or the tunnel or public asset URL,
+exactly as for images). They condition the generated soundtrack
+or performance, for example lip-sync to the given audio. A model that
+advertises `maxReferenceAudios: 0` (or omits it) MUST reject any audio with
+`REFERENCE_AUDIO_UNSUPPORTED`; so MUST a request that is over budget, uses a
+mode other than `ref2v`, or carries URLs that are not http(s). Only advertise
+a non-zero value once the model's graph actually consumes the audio.
+
+### LTX 2.5 advanced video modes
+
+The reference LTX 2.5 model goes beyond single-shot generation. The contract
+exposes the operations as modes so the app can gate them per model:
+
+| Mode | Input | Meaning |
+| --- | --- | --- |
+| `ref2v` | `reference_image_urls` | Ingredients: characters, props and locations composed into the shot. The reference implementation applies the Ingredients IC-LoRA; the app sends the individual images. |
+| `edit` | `source_video_url` | Full-clip restyle. `source_strength` trades fidelity for freedom. |
+| `retake` | `source_video_url`, `retake_start_seconds`, `retake_duration_seconds` | Regenerate one time window; the rest of the clip is preserved. |
+| `extend` | `source_video_url`, `extend_side`, `duration`, `context_seconds` | Continue the clip before or after the source. `duration` is the length added, not the final total. |
+| `motion` | `start_frame_url`, `reference_video_urls` (one) | Follow the reference clip's motion from the start frame. |
+| `upscale` | `source_video_url`, `resolution` | Enlarge the source to a target from `upscaleResolutions` (2× on the reference LTX 2.5 graph), keeping the source audio. |
+
+`camera_motion` is a request field, not a mode: the server advertises the
+moves it supports in `cameraMotions` and turns the value into explicit camera
+language in the prompt. An operator can add a camera LoRA to the graph for a
+stronger lock on the move; the reference implementation uses prompt language
+only. A model with source-video modes advertises `maxSourceVideoSeconds`;
+retake and extend also advertise their per-request windows.
+
+Source-video modes reject `start_frame_url`, `end_frame_url` and
+`reference_image_urls` (except `motion`, which requires a start frame). Use
+`SOURCE_VIDEO_REQUIRED`, `SOURCE_VIDEO_UNSUPPORTED`, `REFERENCE_VIDEO_REQUIRED`,
+`RETAKE_RANGE_INVALID`, `EXTEND_SIDE_INVALID`, `CONTEXT_UNSUPPORTED`,
+`CAMERA_MOTION_UNSUPPORTED` and `KEEP_ORIGINAL_AUDIO_UNSUPPORTED` for the
+corresponding model-level rejections.
+
+`keep_original_audio` is only valid for `edit`, `motion` and `upscale` on
+models that advertise `supportsKeepOriginalAudio`. It muxes the source clip's audio into the
+output; `with_audio` still controls whether the generated track is used when the
+flag is off.
+
 Same response envelope: `{ "code": 200, "data": { "taskId": "..." } }`.
 
 Model-level rejections use `{ "code": 400, "msg": "...", "fail_code": "..." }`
 with one of `MODEL_NOT_ENABLED`, `MODE_UNSUPPORTED`, `VARIANT_UNSUPPORTED`,
 `RESOLUTION_UNSUPPORTED`, `ASPECT_RATIO_UNSUPPORTED`, `DURATION_UNSUPPORTED`,
 `REFERENCES_UNSUPPORTED`, `REFERENCES_REQUIRED`, `AUDIO_UNSUPPORTED`,
-`START_FRAME_REQUIRED`, `END_FRAME_REQUIRED`.
+`START_FRAME_REQUIRED`, `END_FRAME_REQUIRED`, `REFERENCE_AUDIO_UNSUPPORTED`.
+
+Server-side failures on create use the same envelope, and the split matters:
+**4xx means "this request cannot succeed, do not retry"**, **5xx means "the
+server is temporarily unable to accept work, retry"**. The two 4xx codes every
+server should try to produce are:
+
+- `MODEL_FILES_MISSING`: a workflow needs a checkpoint this server has not
+  downloaded. Name the files (and the folder) in `msg`; failing here saves the
+  app a pointless retry loop.
+- `WORKFLOW_REJECTED`: the inference backend refused the prompt before
+  queueing it (renamed node, input out of range). Name the node in `msg`.
+
+Both are final: a well-behaved client must not retry them, and should surface
+the code (the app renders `BYO_MODEL_FILES_MISSING` as "download the model on
+your server").
 
 ### `POST /music/create` (Bearer, conditional on `music`)
 

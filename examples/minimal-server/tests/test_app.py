@@ -36,11 +36,11 @@ def test_health_returns_ready() -> None:
     assert body["data"]["phase"] == "ready"
 
 
-def test_capabilities_matches_schema_v2() -> None:
+def test_capabilities_matches_schema_v3() -> None:
     r = client.get("/loovie/capabilities")
     assert r.status_code == 200
     body = r.json()
-    assert body["schemaVersion"] == 2
+    assert body["schemaVersion"] == 3
     assert "models" in body
     assert [m["id"] for m in body["models"]["images"]] == ["placeholder-image"]
     assert [m["id"] for m in body["models"]["ss_videos"]] == ["placeholder-video"]

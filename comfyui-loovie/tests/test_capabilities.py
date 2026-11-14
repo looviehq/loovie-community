@@ -30,6 +30,15 @@ ALL_WORKFLOWS = [
     "ltx23-i2v-pro",
     "ltx23-fl2v-fast",
     "ltx23-fl2v-pro",
+    "ltx25-t2v-fast",
+    "ltx25-i2v-fast",
+    "ltx25-fl2v-fast",
+    "ltx25-ref2v-fast",
+    "ltx25-edit-fast",
+    "ltx25-retake-fast",
+    "ltx25-extend-fast",
+    "ltx25-motion-fast",
+    "ltx25-upscale-fast",
     "yue2-t2m-fast",
 ]
 
@@ -225,9 +234,9 @@ def test_full_workflow_set_emits_all_sections() -> None:
     assert manifest["version"] == "0.1.0"
 
 
-def test_schema_version_is_two() -> None:
+def test_schema_version_is_three() -> None:
     manifest = build_capabilities_manifest(["flux-2-klein"], version="x")
-    assert manifest["schemaVersion"] == 2
+    assert manifest["schemaVersion"] == 3
 
 
 def test_hardware_is_omitted_when_reporting_is_disabled() -> None:
@@ -271,6 +280,29 @@ def test_unknown_workflow_does_not_invent_a_model() -> None:
     manifest = build_capabilities_manifest(["ltx23-t2v-experimental"], version="x")
     assert "models" not in manifest
     assert "ss_videos" not in manifest
+
+
+def test_a_v2_client_only_sees_the_legacy_video_modes() -> None:
+    manifest = build_capabilities_manifest(ALL_WORKFLOWS, version="x", contract_version=2)
+    assert manifest["schemaVersion"] == 2
+    ltx = next(model for model in manifest["models"]["ss_videos"] if model["id"] == "ltx-2.5")
+    assert ltx["capabilities"] == ["t2v", "i2v", "fl2v", "ref2v"]
+    assert "cameraMotions" not in ltx
+    assert "maxSourceVideoSeconds" not in ltx
+
+
+def test_a_v3_client_sees_the_advanced_video_modes() -> None:
+    manifest = build_capabilities_manifest(ALL_WORKFLOWS, version="x", contract_version=3)
+    assert manifest["schemaVersion"] == 3
+    ltx = next(model for model in manifest["models"]["ss_videos"] if model["id"] == "ltx-2.5")
+    assert "edit" in ltx["capabilities"]
+    assert "retake" in ltx["capabilities"]
+    assert "extend" in ltx["capabilities"]
+    assert "motion" in ltx["capabilities"]
+    assert "upscale" in ltx["capabilities"]
+    assert ltx["upscaleResolutions"] == ["1080p", "2K", "4K"]
+    assert ltx["maxUpscaleFactor"] == 2
+    assert ltx["cameraMotions"]
 
 
 def test_repo_config_advertises_the_shipped_models() -> None:
