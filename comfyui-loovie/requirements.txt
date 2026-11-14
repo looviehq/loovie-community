@@ -45,7 +45,7 @@ multidict==7.1.0
     #   yarl
 numpy==2.2.6
     # via imageio
-pillow==12.2.0
+pillow==12.3.0
     # via imageio
 propcache==0.5.4
     # via
