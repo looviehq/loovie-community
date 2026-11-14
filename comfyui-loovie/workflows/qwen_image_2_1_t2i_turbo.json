@@ -1,6 +1,6 @@
 {
   "10": {
-    "inputs": { "aspect_ratio": "1:1", "seed": -1 },
+    "inputs": { "aspect_ratio": "1:1", "seed": -1, "resolution": "auto" },
     "class_type": "LoovieSettings",
     "_meta": { "title": "Loovie Settings" }
   },

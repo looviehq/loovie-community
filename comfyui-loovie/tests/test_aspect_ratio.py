@@ -89,3 +89,60 @@ def test_no_resolution_pair_returns_zero_dimensions() -> None:
         tgt = target_video_dimensions(*key)
         assert gen[0] > 0 and gen[1] > 0
         assert tgt[0] > 0 and tgt[1] > 0
+
+
+# ---------------------------------------------------------------------
+# Resolution-scaled image canvases (MiniMax H3 Image and friends).
+# ---------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("resolution", ["1K", "2K", "4K"])
+@pytest.mark.parametrize("ratio", SUPPORTED_IMAGE_RATIOS)
+def test_resolution_canvases_stay_on_the_32_px_grid(ratio: str, resolution: str) -> None:
+    width, height = image_dimensions(ratio, resolution)
+    assert width % 32 == 0
+    assert height % 32 == 0
+    assert width >= 32 and height >= 32
+
+
+@pytest.mark.parametrize("resolution,area", [("1K", 1024**2), ("2K", 2048**2), ("4K", 4096**2)])
+@pytest.mark.parametrize("ratio", SUPPORTED_IMAGE_RATIOS)
+def test_resolution_canvases_track_the_requested_area(
+    ratio: str, resolution: str, area: int
+) -> None:
+    width, height = image_dimensions(ratio, resolution)
+    # Rounding each edge to the 32 px grid cannot drift more than ~12%.
+    assert area * 0.85 <= width * height <= area * 1.15
+
+
+@pytest.mark.parametrize("ratio", SUPPORTED_IMAGE_RATIOS)
+def test_resolution_canvases_keep_the_aspect_ratio(ratio: str) -> None:
+    aspect_w, aspect_h = (int(part) for part in ratio.split(":"))
+    width, height = image_dimensions(ratio, "2K")
+    assert abs((width / height) - (aspect_w / aspect_h)) < 0.06
+
+
+def test_auto_resolution_keeps_the_legacy_table() -> None:
+    for ratio, expected in IMAGE_DIMENSIONS.items():
+        assert image_dimensions(ratio, "auto") == expected
+
+
+def test_unknown_resolution_falls_back_to_the_legacy_table() -> None:
+    assert image_dimensions("1:1", "8K") == IMAGE_DIMENSIONS["1:1"]
+
+
+def test_unknown_aspect_ratio_falls_back_to_square_at_the_requested_area() -> None:
+    assert image_dimensions("xx:yy", "1K") == image_dimensions("1:1", "1K")
+
+
+def test_unlisted_but_parseable_ratio_still_scales() -> None:
+    """21:9 is not in the legacy table but is perfectly usable at 1K/2K/4K."""
+
+    width, height = image_dimensions("21:9", "4K")
+    assert (width, height) == (6272, 2688)
+
+
+def test_square_canvases_are_exact_megapixels() -> None:
+    assert image_dimensions("1:1", "1K") == (1024, 1024)
+    assert image_dimensions("1:1", "2K") == (2048, 2048)
+    assert image_dimensions("1:1", "4K") == (4096, 4096)

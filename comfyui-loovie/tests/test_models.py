@@ -282,3 +282,48 @@ def test_sfx_duration_is_bounded_and_has_no_v1_view() -> None:
     assert validate_request_values(sfx, small, mode="t2s", duration=1) is None
     assert validate_request_values(sfx, small, mode="t2s", duration=61) == "DURATION_UNSUPPORTED"
     assert validate_request_values(sfx, small, mode="t2s", duration=0) == "DURATION_UNSUPPORTED"
+
+
+# ---------------------------------------------------------------------
+# MiniMax H3 Image.
+# ---------------------------------------------------------------------
+
+H3_IMAGE_WORKFLOWS = ["minimax-h3-image-t2i", "minimax-h3-image-i2i"]
+
+
+def test_minimax_h3_image_offers_text_to_image_and_editing() -> None:
+    models = available_models({}, H3_IMAGE_WORKFLOWS)
+    spec = next(m for m in models if m.id == "minimax-h3-image")
+    assert spec.modality == "image"
+    assert spec.capabilities == ("t2i", "i2i")
+    assert spec.workflows[("t2i", "default")] == "minimax-h3-image-t2i"
+    assert spec.workflows[("i2i", "default")] == "minimax-h3-image-i2i"
+    assert find_variant(spec, None).id == "default"
+    assert find_variant(spec, "pro") is None
+    assert spec.resolutions == ("1K", "2K", "4K")
+    assert spec.reference_count == 16
+    # Guidance is fixed at 1, so the app must not offer a negative prompt.
+    assert spec.supports_negative_prompt is False
+    assert spec.residency_group == "h3-image"
+    assert spec.min_comfyui == "0.45.0"
+
+
+def test_minimax_h3_image_scales_the_canvas_with_the_resolution() -> None:
+    models = available_models({}, H3_IMAGE_WORKFLOWS)
+    spec = next(m for m in models if m.id == "minimax-h3-image")
+    assert spec.resolution_scales_canvas is True
+
+
+def test_minimax_h3_image_partial_install_narrows_modes() -> None:
+    models = available_models({}, ["minimax-h3-image-t2i"])
+    spec = next(m for m in models if m.id == "minimax-h3-image")
+    assert spec.capabilities == ("t2i",)
+
+
+def test_other_catalogue_models_keep_the_legacy_canvas() -> None:
+    """Only models that opt in may resize the canvas from the resolution field."""
+
+    for spec in available_models({}, [*H3_IMAGE_WORKFLOWS, "krea-2-t2i-turbo", "flux-2-klein"]):
+        if spec.modality != "image" or spec.id == "minimax-h3-image":
+            continue
+        assert spec.resolution_scales_canvas is False, spec.id

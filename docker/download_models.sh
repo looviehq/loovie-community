@@ -152,10 +152,10 @@ mkdir -p "${MODELS_ROOT}"
 # ----------------------------------------------------------------------------
 log ""
 log "Approximate disk requirements:"
-log "  images          ~24 GB (FLUX.2 Klein + Qwen text encoder + VAE)"
+log "  images          ~61 GB (FLUX.2 Klein + MiniMax H3 Image + encoders/VAEs)"
 log "  videos          ~191 GB (LTX-2.3 + LTX-2.5 + Pika H3 + HyperFlow H3 Flash)"
 log "  music            ~7 GB (YuE2 3B int8 + Stable Audio 3 Small SFX + T5Gemma)"
-log "  all             ~225 GB"
+log "  all             ~262 GB"
 log ""
 
 # ----------------------------------------------------------------------------

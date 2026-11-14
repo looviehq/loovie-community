@@ -29,11 +29,11 @@ max_wait_seconds: 300
 # Model catalogue selection.
 #
 # The extension ships a built-in catalogue (see src/comfyui_loovie/models.py)
-# covering FLUX.2 Klein, Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MOSS-Image,
-# LTX 2.3, LTX 2.5, Pika H3 Flex, Pika H3 Flex HD and YuE2 music. A model is only advertised
-# when its workflow files are registered in `workflows:` below AND it is listed
-# (or no enabled list is given for its modality). Add the workflow JSONs first,
-# then enable the model here.
+# covering FLUX.2 Klein, Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MiniMax H3 Image,
+# MOSS-Image, LTX 2.3, LTX 2.5, Pika H3 Flex, Pika H3 Flex HD and YuE2 music.
+# A model is only advertised when its workflow files are registered in
+# `workflows:` below AND it is listed (or no enabled list is given for its
+# modality). Add the workflow JSONs first, then enable the model here.
 #
 # switch_policy:
 #   auto   unload the previous model group only when it does not fit alongside
@@ -50,6 +50,7 @@ models:
       - qwen-image-2.1
       - flux-3-klein
       - krea-2
+      - minimax-h3-image
     video:
       - ltx-2.5
       - pika-flex
@@ -98,6 +99,16 @@ workflows:
   krea-2-t2i-turbo:
     file: "workflows/krea_2_t2i_turbo.json"
     description: "Krea 2 Turbo text-to-image, 8-step distilled."
+
+  minimax-h3-image-t2i:
+    file: "workflows/minimax_h3_image_t2i.json"
+    description: "MiniMax H3 Image, 6-step text-to-image at 1-16 MP (guidance 1)."
+    max_wait_seconds: 600
+
+  minimax-h3-image-i2i:
+    file: "workflows/minimax_h3_image_i2i.json"
+    description: "MiniMax H3 Image, 6-step reference-driven editing (up to 4 pictures)."
+    max_wait_seconds: 600
 
   ltx23-t2v-fast:
     file: "workflows/ltx23_t2v_fast.json"

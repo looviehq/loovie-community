@@ -30,7 +30,7 @@ open https://github.com/looviehq/loovie-community/blob/main/docs/30-runpod.md
 #    Pick only the models your card can hold (one large video model at a
 #    time on 24–32 GB):
 #      python loovie-community/comfyui-loovie/scripts/models.py recommend --vram 32
-git clone --branch v0.21.1 --depth 1 https://github.com/comfyanonymous/ComfyUI.git
+git clone --branch v0.45.0 --depth 1 https://github.com/comfyanonymous/ComfyUI.git
 cd ComfyUI && python3 -m venv .venv && source .venv/bin/activate
 pip install --extra-index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
 pip install -r requirements.txt
@@ -67,8 +67,8 @@ The Loovie app speaks these capability modes. The "Reference workflow" column sh
 
 | Capability | Mode | Reference workflow (one of many possible) |
 | --- | --- | --- |
-| Text → image | `t2i` | FLUX.2 Klein (**shipped**); Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MOSS-Image (catalogue) |
-| Image → image (refs + edit) | `i2i` | FLUX.2 Klein (**shipped**); Qwen-Image 2.1, FLUX 3 Klein, MOSS-Image (catalogue) |
+| Text → image | `t2i` | FLUX.2 Klein (**default**); Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MiniMax H3 Image (**shipped**); MOSS-Image (catalogue) |
+| Image → image (refs + edit) | `i2i` | FLUX.2 Klein (**default**); Qwen-Image 2.1, FLUX 3 Klein, MiniMax H3 Image (**shipped**); MOSS-Image (catalogue) |
 | Text → single‑shot video | `t2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
 | Image → single‑shot video | `i2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
 | First‑and‑last‑frame → video | `fl2v` | LTX 2.5 fast (**shipped**); Pika H3 Flex official / turbo / HD (**shipped**); LTX‑2.3 fast / pro (legacy) |
@@ -84,10 +84,19 @@ The Loovie app speaks these capability modes. The "Reference workflow" column sh
 **Catalogue vs shipped.** A catalogue entry carries the model's modes, variants,
 reference limits, audio policy and VRAM hint, but `comfyui-loovie` only
 *advertises* it when its workflow JSONs are registered and the model is enabled
-in `config.yaml`. The shipped defaults are FLUX.2 Klein, LTX 2.5, Pika H3 Flex, YuE2 and Stable
-Audio 3 Small SFX; LTX‑2.3 is kept as a legacy/pro opt-in, and the other
-catalogue models need their graphs added. See
-[`docs/80-adding-a-workflow.md`](docs/80-adding-a-workflow.md) for the recipe.
+in `config.yaml`. Graphs ship for every model in the checked-in `config.yaml`
+(FLUX.2 Klein, Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MiniMax H3 Image, LTX 2.5,
+Pika H3 Flex / HD, HyperFlow H3 Flash, YuE2, Stable Audio 3); the `defaults`
+block picks FLUX.2 Klein and LTX 2.5. LTX‑2.3 stays a legacy/pro opt-in and
+MOSS-Image still needs a graph. Each model needs its own weights on disk —
+`python comfyui-loovie/scripts/models.py list` shows what the catalogue knows.
+See [`docs/80-adding-a-workflow.md`](docs/80-adding-a-workflow.md) for the
+recipe.
+
+> **ComfyUI 0.45.0.** The pinned ComfyUI ref (Docker and quickstart) is now
+> `v0.45.0`, which is what MiniMax H3 Image needs (`MiniMaxH3ImageConditioning`).
+> Every graph shipped here was validated against that release; if you pinned an
+> older ComfyUI yourself, H3 Image is the model that will fail to load.
 
 ### Multiple models on one server
 
@@ -125,6 +134,7 @@ which models fit your card.
 | Qwen-Image 2.1 | image | t2i, i2i | 12 / 24 GB |
 | FLUX 3 Klein | image | t2i, i2i | 12 / 16 GB |
 | Krea 2 | image | t2i | 16 / 24 GB |
+| MiniMax H3 Image | image | t2i, i2i | 36 / 64 GB |
 | MOSS-Image | image | t2i, i2i | 8 / 16 GB |
 | LTX 2.3 (legacy) | video | t2v, i2v, fl2v | 24 / 32 GB |
 | LTX 2.5 (**default**) | video | t2v, i2v, fl2v, ref2v, edit, retake, extend, motion, upscale | 24 / 32 GB |
@@ -136,6 +146,13 @@ which models fit your card.
 These are planning figures; a 24 GB card running two large video models will
 swap. Keep one video model resident at a time below ~48 GB.
 
+> **MiniMax H3 Image licensing.** The weights use the MiniMax H3 Image
+> Community License, which is **not** the same as the H3 video licence: it is
+> limited to the Applicable Territory (worldwide **excluding the EU, UK, South
+> Korea and the US**), and it requires MiniMax's **prior written authorization**
+> if you provide a Hosted Service to third parties or exceed $1M annual revenue.
+> Read [`docs/MODELS.md`](docs/MODELS.md) before operating it for others.
+>
 > **YuE2 model licensing.** The YuE2 *reference workflow* runs on the user's own
 > machine, and the YuE2 **model weights are CC BY‑NC 4.0** with an
 > individual‑creator permission that does **not** grant companies commercial

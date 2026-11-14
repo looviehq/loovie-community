@@ -1,6 +1,6 @@
 {
   "10": {
-    "inputs": { "aspect_ratio": "1:1", "seed": -1 },
+    "inputs": { "aspect_ratio": "1:1", "seed": -1, "resolution": "auto" },
     "class_type": "LoovieSettings",
     "_meta": { "title": "Loovie Settings" }
   },
@@ -25,7 +25,13 @@
       "image_url_7": "",
       "image_url_8": "",
       "image_url_9": "",
-      "image_url_10": ""
+      "image_url_10": "",
+      "image_url_11": "",
+      "image_url_12": "",
+      "image_url_13": "",
+      "image_url_14": "",
+      "image_url_15": "",
+      "image_url_16": ""
     },
     "class_type": "LoovieImageInput",
     "_meta": { "title": "Loovie Image Input" }
@@ -77,6 +83,36 @@
     "class_type": "ReferenceLatent",
     "_meta": { "title": "ReferenceLatent 4" }
   },
+  "44": {
+    "inputs": { "conditioning": ["43", 0], "latent": ["12", 14] },
+    "class_type": "ReferenceLatent",
+    "_meta": { "title": "ReferenceLatent 5" }
+  },
+  "45": {
+    "inputs": { "conditioning": ["44", 0], "latent": ["12", 16] },
+    "class_type": "ReferenceLatent",
+    "_meta": { "title": "ReferenceLatent 6" }
+  },
+  "46": {
+    "inputs": { "conditioning": ["45", 0], "latent": ["12", 18] },
+    "class_type": "ReferenceLatent",
+    "_meta": { "title": "ReferenceLatent 7" }
+  },
+  "47": {
+    "inputs": { "conditioning": ["46", 0], "latent": ["12", 20] },
+    "class_type": "ReferenceLatent",
+    "_meta": { "title": "ReferenceLatent 8" }
+  },
+  "48": {
+    "inputs": { "conditioning": ["47", 0], "latent": ["12", 22] },
+    "class_type": "ReferenceLatent",
+    "_meta": { "title": "ReferenceLatent 9" }
+  },
+  "49": {
+    "inputs": { "conditioning": ["48", 0], "latent": ["12", 24] },
+    "class_type": "ReferenceLatent",
+    "_meta": { "title": "ReferenceLatent 10" }
+  },
   "50": {
     "inputs": { "conditioning": ["43", 0] },
     "class_type": "ConditioningZeroOut",
@@ -90,7 +126,7 @@
       "cfg": 1.0,
       "sampler_name": "er_sde",
       "scheduler": "simple",
-      "positive": ["43", 0],
+      "positive": ["49", 0],
       "negative": ["50", 0],
       "latent_image": ["12", 1],
       "denoise": 1.0

@@ -20,8 +20,13 @@ from ..helpers.image_cache import cache_image
 
 logger = logging.getLogger("comfyui_loovie.nodes.image_input")
 
-_MAX_SLOTS = 10
-_REF_SLOTS = 4
+#: Image URL slots and per-slot outputs. Sixteen covers the largest
+#: reference budget in the catalogue (MiniMax H3 Image), and every graph wires
+#: exactly as many slots as its model advertises in `ModelSpec.reference_count`.
+#: Output indices are stable, so a graph that only uses `IMAGE_1..4` keeps
+#: working against a node that exposes sixteen.
+_MAX_SLOTS = 16
+_REF_SLOTS = 16
 _TARGET_PIXELS = 1_048_576  # 1 megapixel; matches ImageScaleToTotalPixels
 
 
@@ -86,7 +91,7 @@ class LoovieImageInput:
             "required": {
                 "width": ("INT", {"default": 768, "min": 64, "max": 8192, "step": 8}),
                 "height": ("INT", {"default": 768, "min": 64, "max": 8192, "step": 8}),
-                "latent_type": (["sd3", "flux2", "qwen21"], {"default": "sd3"}),
+                "latent_type": (["sd3", "flux2", "qwen21", "h3image"], {"default": "sd3"}),
             },
             "optional": {
                 "vae": ("VAE",),
@@ -103,14 +108,7 @@ class LoovieImageInput:
         "INT",
         "MASK",
         "BOOLEAN",
-        "IMAGE",
-        "LATENT",
-        "IMAGE",
-        "LATENT",
-        "IMAGE",
-        "LATENT",
-        "IMAGE",
-        "LATENT",
+        *(output_type for _ in range(_REF_SLOTS) for output_type in ("IMAGE", "LATENT")),
     )
     RETURN_NAMES = (
         "IMAGES",
@@ -118,14 +116,11 @@ class LoovieImageInput:
         "IMAGE_COUNT",
         "MASK",
         "HAS_MASK",
-        "IMAGE_1",
-        "LATENT_1",
-        "IMAGE_2",
-        "LATENT_2",
-        "IMAGE_3",
-        "LATENT_3",
-        "IMAGE_4",
-        "LATENT_4",
+        *(
+            output_name
+            for slot in range(1, _REF_SLOTS + 1)
+            for output_name in (f"IMAGE_{slot}", f"LATENT_{slot}")
+        ),
     )
     FUNCTION = "process"
     CATEGORY = "loovie"
@@ -143,11 +138,24 @@ class LoovieImageInput:
         if latent_type == "qwen21":
             samples = torch.zeros([1, 64, height // 16, width // 16], device=device)
             return {"samples": samples, "downscale_ratio_spacial": 16}
+        if latent_type == "h3image":
+            # MiniMax H3 Image samples one 24-channel still frame at 16x
+            # downsampling, so the latent carries a leading frame axis.
+            samples = torch.zeros([1, 24, 1, height // 16, width // 16], device=device)
+            return {"samples": samples}
         samples = torch.zeros([1, 16, height // 8, width // 8], device=device)
         return {"samples": samples, "downscale_ratio_spacial": 8}
 
     def _empty_image(self, height: int = 64, width: int = 64) -> torch.Tensor:
         return torch.zeros((1, height, width, 3), dtype=torch.float32)
+
+    def _slot_outputs(
+        self,
+        images: list[torch.Tensor],
+        latents: list[dict[str, torch.Tensor]],
+    ) -> tuple[object, ...]:
+        """Interleave IMAGE_n / LATENT_n for every reference slot."""
+        return tuple(value for slot in range(_REF_SLOTS) for value in (images[slot], latents[slot]))
 
     def process(
         self,
@@ -189,14 +197,7 @@ class LoovieImageInput:
                 0,
                 mask_tensor,
                 has_mask,
-                ref_images[0],
-                ref_latents[0],
-                ref_images[1],
-                ref_latents[1],
-                ref_images[2],
-                ref_latents[2],
-                ref_images[3],
-                ref_latents[3],
+                *self._slot_outputs(ref_images, ref_latents),
             )
 
         logger.info("Loading %d reference image(s)", len(urls))
@@ -224,6 +225,8 @@ class LoovieImageInput:
             first = loaded[0]
             encoded = vae.encode(first[:, :, :, :3])
             if has_mask:
+                # `latent` is replaced below for h3image, but the mask
+                # interpolation still needs the image's pixel size.
                 img_h, img_w = first.shape[1], first.shape[2]
                 mask2d = mask_tensor[0] if mask_tensor.ndim == 3 else mask_tensor
                 if mask2d.shape[0] != img_h or mask2d.shape[1] != img_w:
@@ -242,18 +245,17 @@ class LoovieImageInput:
         else:
             latent = {"samples": torch.zeros((1, 4, height // 8, width // 8))}
 
+        if latent_type == "h3image":
+            # An H3 Image edit always starts from noise: the reference pictures
+            # ride `MiniMaxH3ImageConditioning`'s reference latents, not the
+            # target latent, so encoding the first image here would be wrong.
+            latent = self._empty_latent(latent_type, height, width)
+
         return (
             stacked,
             latent,
             len(urls),
             mask_tensor,
             has_mask,
-            ref_images[0],
-            ref_latents[0],
-            ref_images[1],
-            ref_latents[1],
-            ref_images[2],
-            ref_latents[2],
-            ref_images[3],
-            ref_latents[3],
+            *self._slot_outputs(ref_images, ref_latents),
         )

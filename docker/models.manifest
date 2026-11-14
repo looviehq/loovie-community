@@ -26,6 +26,14 @@ image	black-forest-labs/FLUX.2-klein-4B	flux-2-klein-4b.safetensors	flux-2-klein
 image	Comfy-Org/flux2-dev	split_files/vae/flux2-vae.safetensors	flux2-vae.safetensors	vae	flux-2-klein
 image	Comfy-Org/flux2-klein-4B	split_files/text_encoders/qwen_3_4b.safetensors	qwen_3_4b_flux2.safetensors	text_encoders	flux-2-klein
 
+# --- Image: MiniMax H3 Image (~37 GB, shares the H3 text encoder) -----------
+# INT8 DiT + image VAE from the Comfy-Org repack; the Qwen3-VL-32B text encoder
+# is the one the Pika H3 Flex / HyperFlow rows already pull, so a server that
+# runs both families downloads it once.
+image	Comfy-Org/MiniMax-H3-Image	diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors	minimax_h3_image_pruned_int8_convrot.safetensors	diffusion_models	minimax-h3-image
+image	Comfy-Org/MiniMax-H3-Image	vae/minimax_h3_image_vae_fp16.safetensors	minimax_h3_image_vae_fp16.safetensors	vae	minimax-h3-image
+image	Comfy-Org/MiniMax-H3	text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors	qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors	text_encoders	minimax-h3-image
+
 # --- Video: LTX-2.3 (~70 GB) ------------------------------------------------
 video	Comfy-Org/ltx-2	split_files/text_encoders/gemma_3_12B_it_fp8_scaled.safetensors	gemma_3_12B_it_fp8_scaled.safetensors	text_encoders	ltx-2.3
 video	Lightricks/LTX-2.3-fp8	ltx-2.3-22b-dev-fp8.safetensors	ltx-2.3-22b-dev-fp8.safetensors	checkpoints	ltx-2.3

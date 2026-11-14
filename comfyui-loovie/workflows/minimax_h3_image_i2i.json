@@ -1,0 +1,135 @@
+{
+  "10": {
+    "inputs": {
+      "aspect_ratio": "1:1",
+      "seed": -1,
+      "resolution": "2K"
+    },
+    "class_type": "LoovieSettings",
+    "_meta": { "title": "Loovie Settings" }
+  },
+  "11": {
+    "inputs": {
+      "prompt": "",
+      "negative_prompt": ""
+    },
+    "class_type": "LoovieTextInput",
+    "_meta": { "title": "Loovie Text Input" }
+  },
+  "12": {
+    "inputs": {
+      "width": ["10", 0],
+      "height": ["10", 1],
+      "latent_type": "h3image",
+      "mask_url": "",
+      "image_url_1": "",
+      "image_url_2": "",
+      "image_url_3": "",
+      "image_url_4": "",
+      "image_url_5": "",
+      "image_url_6": "",
+      "image_url_7": "",
+      "image_url_8": "",
+      "image_url_9": "",
+      "image_url_10": "",
+      "image_url_11": "",
+      "image_url_12": "",
+      "image_url_13": "",
+      "image_url_14": "",
+      "image_url_15": "",
+      "image_url_16": ""
+    },
+    "class_type": "LoovieImageInput",
+    "_meta": { "title": "Loovie Image Input" }
+  },
+  "20": {
+    "inputs": {
+      "unet_name": "minimax_h3_image_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": { "title": "Load MiniMax H3 Image (INT8)" }
+  },
+  "21": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": { "title": "Load CLIP (Qwen3-VL 32B for H3)" }
+  },
+  "22": {
+    "inputs": {
+      "vae_name": "minimax_h3_image_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": { "title": "Load H3 Image VAE" }
+  },
+  "30": {
+    "inputs": {
+      "clip": ["21", 0],
+      "vae": ["22", 0],
+      "prompt": ["11", 0],
+      "width": ["10", 0],
+      "height": ["10", 1],
+      "images.image_1": ["12", 5],
+      "images.image_2": ["12", 7],
+      "images.image_3": ["12", 9],
+      "images.image_4": ["12", 11],
+      "images.image_5": ["12", 13],
+      "images.image_6": ["12", 15],
+      "images.image_7": ["12", 17],
+      "images.image_8": ["12", 19],
+      "images.image_9": ["12", 21],
+      "images.image_10": ["12", 23],
+      "images.image_11": ["12", 25],
+      "images.image_12": ["12", 27],
+      "images.image_13": ["12", 29],
+      "images.image_14": ["12", 31],
+      "images.image_15": ["12", 33],
+      "images.image_16": ["12", 35]
+    },
+    "class_type": "MiniMaxH3ImageConditioning",
+    "_meta": { "title": "MiniMax H3 Image Conditioning (Picture 1-4)" }
+  },
+  "31": {
+    "inputs": {
+      "conditioning": ["30", 0]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": { "title": "Zero Out Negative" }
+  },
+  "32": {
+    "inputs": {
+      "model": ["20", 0],
+      "seed": ["10", 2],
+      "steps": 6,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": ["30", 0],
+      "negative": ["31", 0],
+      "latent_image": ["30", 1],
+      "denoise": 1.0
+    },
+    "class_type": "KSampler",
+    "_meta": { "title": "KSampler (6 steps, guidance 1)" }
+  },
+  "33": {
+    "inputs": {
+      "samples": ["32", 0],
+      "vae": ["22", 0]
+    },
+    "class_type": "VAEDecode",
+    "_meta": { "title": "VAE Decode" }
+  },
+  "34": {
+    "inputs": {
+      "filename_prefix": "loovie/minimax-h3-image_i2i",
+      "images": ["33", 0]
+    },
+    "class_type": "SaveImage",
+    "_meta": { "title": "Save Image" }
+  }
+}

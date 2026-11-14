@@ -2,7 +2,8 @@
   "10": {
     "inputs": {
       "aspect_ratio": "1:1",
-      "seed": -1
+      "seed": -1,
+      "resolution": "auto"
     },
     "class_type": "LoovieSettings",
     "_meta": {
@@ -40,7 +41,13 @@
       "image_url_7": "",
       "image_url_8": "",
       "image_url_9": "",
-      "image_url_10": ""
+      "image_url_10": "",
+      "image_url_11": "",
+      "image_url_12": "",
+      "image_url_13": "",
+      "image_url_14": "",
+      "image_url_15": "",
+      "image_url_16": ""
     },
     "class_type": "LoovieImageInput",
     "_meta": {
@@ -111,11 +118,35 @@
       "images.image_4": [
         "12",
         11
+      ],
+      "images.image_5": [
+        "12",
+        13
+      ],
+      "images.image_6": [
+        "12",
+        15
+      ],
+      "images.image_7": [
+        "12",
+        17
+      ],
+      "images.image_8": [
+        "12",
+        19
+      ],
+      "images.image_9": [
+        "12",
+        21
+      ],
+      "images.image_10": [
+        "12",
+        23
       ]
     },
     "class_type": "TextEncodeQwenImage21",
     "_meta": {
-      "title": "Qwen 2.1 Edit Encode (4 references)"
+      "title": "Qwen 2.1 Edit Encode (10 references)"
     }
   },
   "50": {

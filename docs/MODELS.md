@@ -4,6 +4,30 @@ This page lists every model the **reference implementation** ([`comfyui-loovie/`
 
 > **You are not required to use these models.** They are the ones we tested and currently ship workflows for. BYO is model-agnostic at the contract level: as long as your workflow's input shape matches what `/images/create`, `/videos/create`, or `/music/create` sends, and its output shape matches what `/{images,videos,music}/status` returns, you can run **any** image, video, or music model you have rights to run. Examples people have used or asked about: WAN 2.x, HunyuanVideo, CogVideoX, Mochi, AnimateDiff variants for video; SDXL, SD3.5, Stable Cascade, Lumina, HiDream for image; ACE-Step, YuE2, MusicGen for music; Stable Audio 3, AudioGen for sound effects. We don't promise to test all of them, but the contract doesn't care which one you use.
 
+## Licence summary
+
+Every model below is third-party work. This table is a convenience index, not a
+substitute for the licence text you accept on HuggingFace; the sections that
+follow carry the detail and the links.
+
+| Model | Modality | Licence | Gated | Commercial notes |
+|---|---|---|---|---|
+| FLUX.2 Klein (4B) | image | Black Forest Labs FLUX.2 Klein | yes | Read the FLUX.2 terms before selling outputs. |
+| Qwen-3 4B encoder (FLUX.2) | image (encoder) | Apache-2.0 (Qwen) | yes (via FLUX.2 repo) | Redistributed inside the gated FLUX.2 repo. |
+| Qwen-Image 2.1 | image | Apache-2.0 | no | Permissive; keep the notice. |
+| FLUX 3 Image Klein | image | FLUX Kommunity License | yes | Community licence with its own commercial terms; read it. |
+| Krea 2 | image | Krea AI Community License | yes | Commercial use allowed under the community terms. |
+| MiniMax H3 Image | image | MiniMax H3 Image Community License | no | **Territory-limited** (not EU/UK/KR/US). Hosted service to third parties or >$1M revenue needs MiniMax's written authorization. |
+| MOSS-Image | image | Apache-2.0 | no | Permissive. |
+| LTX-2.3 (22B) | video | Lightricks LTX community licence | no | Commercial restrictions depend on the variant; read the terms. |
+| LTX-2.5 (22B) | video | LTX-2.x Community License | yes | Free under $10M annual revenue; paid licence above that. |
+| Pika H3 Flex (+ HD) | video | MiniMax H3 Community License + Pika adapters | yes (adapters) | Territory-limited (not EU/UK/KR/US) and commercial conditions; read it. |
+| HyperFlow H3 Flash | video | MiniMax H3 Community License | no | Same territory and commercial conditions as H3. |
+| Gemma-3 12B encoder (LTX-2.3) | video (encoder) | Google Gemma Terms of Use | yes | Gemma acceptable-use policy applies. |
+| RealESRGAN x2plus | video (upscaler) | BSD-3-Clause | no | Permissive. |
+| Stable Audio 3 Small SFX | sfx | Stability AI community licence | no | Check the current Stability terms for your revenue band. |
+| YuE2 3B | music | CC BY-NC 4.0 + individual-creator permission | no | **Non-commercial**: fine for a person on their own machine, not for a company-operated service. |
+
 The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](../docker/models.manifest) and pulls the files from the HuggingFace repos below. Some of these are **gated**, meaning HuggingFace requires you to accept the licence on the web UI while logged in before the download will succeed. See [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
 
 > **This list reflects the current `v0.1.x-beta` line.** Adding a model in a PR also means adding it here. If you want to add a new reference workflow built on a different model, see [`80-adding-a-workflow.md`](80-adding-a-workflow.md).
@@ -38,7 +62,8 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 
 - **HuggingFace:** `black-forest-labs/flux-3-image-klein-comfy` (gated).
 - **Licence:** FLUX Kommunity License. Accept it on that exact HF repo.
-- **Modes:** t2i, i2i, up to 4 references in the ComfyUI template (10 in the model card).
+- **Modes:** t2i, i2i, up to 10 references (`LoovieImageInput` slots 1-10; the
+  15-step distilled graph chains ten `ReferenceLatent` nodes).
 - **Planning VRAM:** int8 fits an 8–12 GB card; 16 GB recommended.
 - **ComfyUI:** native since 0.41.0.
 
@@ -57,6 +82,52 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 - **Modes:** t2i, i2i, layout control, strong text rendering.
 - **Planning VRAM:** 8–12 GB minimum, 16 GB recommended.
 - **ComfyUI:** native.
+
+### MiniMax H3 Image (33B)
+
+- **Purpose:** the high-fidelity image model. One checkpoint covers text-to-image
+  and reference-driven editing, native from 1 MP up to ~16 MP (4096x4096,
+  5472x3072 for 16:9, 6272x2688 for 21:9).
+- **HuggingFace:** [`Comfy-Org/MiniMax-H3-Image`](https://huggingface.co/Comfy-Org/MiniMax-H3-Image)
+  (INT8 DiT + image VAE) and [`MiniMaxAI/MiniMax-H3-Image`](https://huggingface.co/MiniMaxAI/MiniMax-H3-Image)
+  (upstream BF16 release and model card). The Qwen3-VL-32B text encoder is the
+  one the H3 video models already use (`Comfy-Org/MiniMax-H3`).
+- **Upstream:** [MiniMax AI](https://github.com/MiniMax-AI/MiniMax-H3).
+- **Licence:** **MiniMax H3 Image Community License**, which differs from the H3
+  video licence. It is limited to the Applicable Territory, defined as worldwide
+  **excluding the European Union, the United Kingdom, the Republic of Korea and
+  the United States**; outputs may not be used outside it. You must obtain
+  MiniMax's **prior written authorization** if you provide a Hosted Service to
+  third parties or if your annualized revenue exceeds $1M, and you must bind
+  users to equivalent terms with safeguards and a violation-reporting channel.
+  Read the [LICENSE](https://huggingface.co/MiniMaxAI/MiniMax-H3-Image/blob/main/LICENSE)
+  before operating it for anyone else.
+- **Files:** `minimax_h3_image_pruned_int8_convrot.safetensors` (21 GB),
+  `minimax_h3_image_vae_fp16.safetensors` (1.2 GB), plus the shared
+  `qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors` (15.7 GB). The BF16 DiT (40 GB)
+  and the int8 encoder (27 GB) are optional; the `w4a8` DiT (12.5 GB) trades
+  quality for a smaller footprint.
+- **Modes:** `t2i` and `i2i`. Images are addressed as `<Picture 1>`,
+  `<Picture 2>`, ... in the prompt, with **image 1 being the picture to edit**.
+  The model accepts up to 16 references and the shipped graph wires all
+  sixteen (`LoovieImageInput` exposes `IMAGE_1..16`).
+- **Recipe:** 6 distilled steps, `cfg = 1`, euler, simple scheduler, denoise 1.
+  **No negative prompt** — write every exclusion into the positive prompt.
+- **Resolutions:** the Loovie workflow honours `resolution` as a canvas size —
+  `1K` = 1024x1024 (1 MP), `2K` = 2048x2048 (4 MP, the default), `4K` =
+  4096x4096 (16 MP) — always on the 32 px grid, at every aspect ratio in the
+  image enum. Below 4 MP the model is noticeably softer; 16 MP is where the
+  detail is.
+- **Measured on a GB10 (INT8 DiT + nvfp4 encoder):** 15 s for 4 MP, 84 s for
+  16 MP, ~36 GB resident, with 6 steps in both cases. Same seed reproduces the
+  same pixels. Reference pictures ride through every sampling step, so they
+  dominate latency: one reference at 1K is ~90 s, three references ~6 min.
+- **ComfyUI:** needs **0.45.0** or newer (`MiniMaxH3ImageConditioning`, the
+  `minimax_h3_image` model type and the PDD sigma grid that ships in the
+  checkpoint metadata). The shipped graphs are `minimax_h3_image_t2i.json` and
+  `minimax_h3_image_i2i.json`; `LoovieImageInput` uses `latent_type: "h3image"`
+  so the edit lane samples the conditioning node's latent instead of an encoded
+  copy of the first picture.
 
 ## Video generation (single-shot)
 
@@ -154,9 +225,9 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
   [`ComfyUI-HyperFlow-Flash`](https://github.com/Video-Rebirth/ComfyUI-HyperFlow-Flash)
   (`HyperFlowGGUFLoader` + `HyperFlowSigmas`). The shipped
   `hyperflow-h3-flash-{t2v,i2v,fl2v,ref2v}-{fast,flash,hq}.json` graphs use
-  the same `Loovie*` nodes as the Pika H3 workflows. Requires ComfyUI >=
-  0.43.0; the repo's current Docker/quickstart pin (`v0.21.1`) predates the
-  MiniMax H3 nodes and must be bumped before enabling either H3 family.
+  the same `Loovie*` nodes as the Pika H3 workflows. Requires ComfyUI >= 0.43.0;
+  the repo's Docker/quickstart pin is now `v0.45.0`, which covers both H3
+  families (0.45.0 is the floor for MiniMax H3 Image).
 
 ### Gemma-3 12B text encoder (fp8 scaled)
 
@@ -220,14 +291,15 @@ These are **downloaded sizes**. Add roughly 5 to 10 GB of headroom for ComfyUI's
 | `LOOVIE_KIND` | Downloaded | Plan for at least |
 |---|---|---|
 | `images` (FLUX.2 Klein bundle) | ~24 GB | 30 GB |
+| `images` + MiniMax H3 Image (shares the H3 encoder) | ~61 GB | 70 GB |
 | `videos` (LTX-2.3 main + LoRA + Gemma encoder + upscaler + ESRGAN) | ~70 GB | 80 GB |
 | `videos` + Pika H3 Flex + HD | ~166 GB | 180 GB |
 | `videos` + Pika H3 Flex + HD + HyperFlow H3 Flash | ~191 GB | 210 GB |
 | `music` (YuE2 3B int8) | ~4 GB | 8 GB |
 | `sfx` (Stable Audio 3 Small SFX + T5Gemma) | ~3.4 GB | 8 GB |
-| `all` (current video manifest + image + audio) | ~225 GB | 245 GB |
+| `all` (current video manifest + image + audio) | ~262 GB | 285 GB |
 
-Per-file approximate sizes used above: FLUX.2 Klein bundle ~24 GB (main + VAE + Qwen encoder), LTX-2.3 22B main fp8 ~22 GB, LTX-2.3 22B distilled LoRA ~35 GB, Gemma-3 12B fp8 ~12 GB, LTX-2.3 spatial upscaler ~1 GB, RealESRGAN ~64 MB, Pika H3 base + adapters ~46 GB, HyperFlow H3 Flash Q4_K_M transformers ~18 GB plus the shared 15.7 GB text encoder and ~10 GB of VAEs, YuE2 3B int8 ~3.7 GB. These are rough figures from Comfy-Org's published builds; the exact bytes on disk depend on which point release of each repo you fetch. The truthful source of truth is what HuggingFace serves to your token; treat the numbers above as planning aids, not contracts.
+Per-file approximate sizes used above: FLUX.2 Klein bundle ~24 GB (main + VAE + Qwen encoder), LTX-2.3 22B main fp8 ~22 GB, LTX-2.3 22B distilled LoRA ~35 GB, Gemma-3 12B fp8 ~12 GB, LTX-2.3 spatial upscaler ~1 GB, RealESRGAN ~64 MB, Pika H3 base + adapters ~46 GB, HyperFlow H3 Flash Q4_K_M transformers ~18 GB plus the shared 15.7 GB text encoder and ~10 GB of VAEs, MiniMax H3 Image INT8 DiT + image VAE ~22 GB (the Qwen3-VL encoder is the shared 15.7 GB H3 one), YuE2 3B int8 ~3.7 GB. These are rough figures from Comfy-Org's published builds; the exact bytes on disk depend on which point release of each repo you fetch. The truthful source of truth is what HuggingFace serves to your token; treat the numbers above as planning aids, not contracts.
 
 ## Adding a new model in a PR
 
