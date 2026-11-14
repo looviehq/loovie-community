@@ -1,17 +1,27 @@
 """Loovie H3 reference node.
 
-`MiniMaxH3ReferenceToVideo` takes an autogrow map of individually named
-reference images (`ref_images.ref_image_0` …). A ComfyUI graph is static, so a
-workflow cannot know at author time how many references a request will carry.
-This adapter takes the stacked IMAGES batch + IMAGE_COUNT emitted by
-`LoovieImageInput` and builds exactly that many entries, then delegates to the
+`MiniMaxH3ReferenceToVideo` takes autogrow maps of individually named
+references (`ref_images.ref_image_1` …, `ref_audios.ref_audio_1` …). A ComfyUI
+graph is static, so a workflow cannot know at author time how many references a
+request will carry. This adapter takes the stacked IMAGES batch + IMAGE_COUNT
+from `LoovieImageInput`, and the AUDIO list + AUDIO_COUNT from
+`LoovieAudioInput`, then builds exactly that many entries and delegates to the
 native H3 reference node. No empty/black placeholders are ever counted as
 references.
+
+Reference AUDIO is a first-class H3 capability (up to 3 clips, 2-15 s each,
+15 s combined): the model conditions the generated soundtrack or a performance
+on it, so it is what makes lip-sync and voice/timbre references work. The
+`audio_vae` input is required for that conditioning; without it H3 only uses the
+audio to condition the text encoder. Both graphs wire it from the same
+`minimax_h3_audio_vae` loader the generated-audio path uses.
 """
 
 from __future__ import annotations
 
 from typing import Any
+
+_MAX_REFERENCE_AUDIOS = 3
 
 
 class LoovieH3ReferenceToVideo:
@@ -32,6 +42,13 @@ class LoovieH3ReferenceToVideo:
                 "image_count": ("INT", {"default": 0, "min": 0, "max": 9}),
                 "ref_image_size": (["match", "max"], {"default": "match"}),
             },
+            "optional": {
+                # Wired from `LoovieAudioInput`. Optional so a graph that carries
+                # no audio-reference node still validates (and older graphs keep
+                # loading unchanged).
+                "audios": ("LOOVIE_AUDIO_LIST",),
+                "audio_count": ("INT", {"default": 0, "min": 0, "max": 3}),
+            },
         }
 
     RETURN_TYPES = ("CONDITIONING", "LATENT")
@@ -51,11 +68,18 @@ class LoovieH3ReferenceToVideo:
         images: Any,
         image_count: int,
         ref_image_size: str = "match",
+        audios: list[dict[str, Any]] | None = None,
+        audio_count: int = 0,
     ) -> tuple[Any, Any]:
         from comfy_extras.nodes_minimax_h3 import MiniMaxH3ReferenceToVideo
 
         count = max(0, min(int(image_count), int(images.shape[0]), 9))
         ref_images = {f"ref_image_{index}": images[index : index + 1] for index in range(count)}
+
+        audio_list = list(audios or [])
+        audio_total = max(0, min(int(audio_count), len(audio_list), _MAX_REFERENCE_AUDIOS))
+        ref_audios = {f"ref_audio_{index + 1}": audio_list[index] for index in range(audio_total)}
+
         output = MiniMaxH3ReferenceToVideo.execute(
             clip=clip,
             prompt=prompt,
@@ -66,6 +90,7 @@ class LoovieH3ReferenceToVideo:
             vae=vae,
             audio_vae=audio_vae,
             ref_images=ref_images,
+            ref_audios=ref_audios,
         )
         result = output.result
         if not isinstance(result, tuple) or len(result) < 2:

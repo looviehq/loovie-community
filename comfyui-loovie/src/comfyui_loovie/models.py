@@ -115,6 +115,8 @@ class ModelSpec:
     # workflow graph has an audio-conditioning input that consumes
     # `reference_audio_urls`. Setting it advertises the capability in the
     # manifest, so a model must only set it once its graph can actually use it.
+    # The H3 ref2va graphs do: `LoovieAudioInput` -> `LoovieH3ReferenceToVideo`
+    # `ref_audios` (H3 takes up to 3, 2-15 s each, 15 s combined, 15 MB each).
     max_reference_audios: int = 0
     references_exclude_frames: bool = False
     audio: str = AUDIO_NONE
@@ -306,6 +308,11 @@ def _pika(model_id: str, label: str, description: str, *, hd: bool = False) -> M
         durations=tuple(range(5, 16)),
         max_reference_images=0 if hd else 9,
         references_exclude_frames=not hd,
+        # H3 ref2va takes up to three standalone reference audio clips (2-15 s
+        # each, 15 s combined) and both ref2v graphs consume them: the
+        # `LoovieAudioInput` node feeds `LoovieH3ReferenceToVideo`'s
+        # `ref_audios`. HD has no ref2v mode, so it advertises none.
+        max_reference_audios=0 if hd else 3,
         audio=AUDIO_ALWAYS,
         frame_step=17,
         frame_offset=5,
@@ -362,6 +369,10 @@ def _hyperflow_flash() -> ModelSpec:
         durations=tuple(range(5, 16)),
         max_reference_images=9,
         references_exclude_frames=True,
+        # H3 ref2va: three standalone reference audio clips. The ref2v graphs
+        # wire `LoovieAudioInput` into `LoovieH3ReferenceToVideo`'s
+        # `ref_audios`, so a voice/timbre reference actually reaches the model.
+        max_reference_audios=3,
         audio=AUDIO_ALWAYS,
         frame_step=17,
         frame_offset=5,
@@ -1137,11 +1148,22 @@ def validate_request_values(
         )
         if mode != "ref2v" or reference_audio_count > max_audios:
             return "REFERENCE_AUDIO_UNSUPPORTED"
+        # MiniMax H3 requires a picture or a clip alongside reference audio
+        # ("Reference audio cannot be used alone, it must be accompanied by a
+        # reference image or video"). Audio-only ref2v is NOT a valid request
+        # for any model here: it used to be allowed on the theory that audio
+        # rides its own budget, and the vendor then answered 400 well after the
+        # job had been queued.
+        if reference_count == 0 and reference_video_count == 0:
+            return "REFERENCE_AUDIO_UNSUPPORTED"
 
-    # Audio-only ref2v is valid: reference audio rides its own budget, so it
-    # counts as a reference input here (the budget check above already refused
-    # audio on a model that advertises none).
-    if mode == "ref2v" and reference_count == 0 and reference_audio_count == 0:
+    # Some reference input is required once the mode is ref2v.
+    if (
+        mode == "ref2v"
+        and reference_count == 0
+        and reference_audio_count == 0
+        and reference_video_count == 0
+    ):
         return "REFERENCES_REQUIRED"
     if mode in ("i2v", "fl2v") and not has_start_frame:
         return "START_FRAME_REQUIRED"

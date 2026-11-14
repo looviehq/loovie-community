@@ -10,6 +10,7 @@ graph is submitted to ComfyUI's queue.
 from __future__ import annotations
 
 from .loovie_audio_gate import LoovieAudioGate
+from .loovie_audio_input import LoovieAudioInput
 from .loovie_h3_reference import LoovieH3ReferenceToVideo
 from .loovie_image_input import LoovieImageInput
 from .loovie_lora_stack import LoovieLoraStack
@@ -26,6 +27,7 @@ NODE_CLASS_MAPPINGS: dict[str, type] = {
     "LoovieSettings": LoovieSettings,
     "LoovieTextInput": LoovieTextInput,
     "LoovieImageInput": LoovieImageInput,
+    "LoovieAudioInput": LoovieAudioInput,
     "LoovieH3ReferenceToVideo": LoovieH3ReferenceToVideo,
     "LoovieLoraStack": LoovieLoraStack,
     "LoovieVideoSettings": LoovieVideoSettings,
@@ -41,6 +43,7 @@ NODE_DISPLAY_NAME_MAPPINGS: dict[str, str] = {
     "LoovieSettings": "Loovie Settings",
     "LoovieTextInput": "Loovie Text Input",
     "LoovieImageInput": "Loovie Image Input",
+    "LoovieAudioInput": "Loovie Audio Input",
     "LoovieH3ReferenceToVideo": "Loovie H3 Reference to Video",
     "LoovieLoraStack": "Loovie LoRA Stack",
     "LoovieVideoSettings": "Loovie Video Settings",

@@ -108,7 +108,7 @@ The single most important endpoint. Tells the app what your server can do.
         "capabilities": ["t2v", "i2v", "fl2v", "ref2v"],
         "referenceCount": 1,          // frames for i2v
         "maxReferenceImages": 9,      // images for ref2v
-        "maxReferenceAudios": 0,      // audio clips for ref2v (non-negative int, default 0)
+        "maxReferenceAudios": 3,      // audio clips for ref2v (non-negative int, default 0)
         "referencesExcludeFrames": true,
         "resolution": ["480p", "768p"],
         "aspectRatios": ["auto", "16:9", "9:16", "1:1"],
@@ -307,6 +307,16 @@ advertises `maxReferenceAudios: 0` (or omits it) MUST reject any audio with
 `REFERENCE_AUDIO_UNSUPPORTED`; so MUST a request that is over budget, uses a
 mode other than `ref2v`, or carries URLs that are not http(s). Only advertise
 a non-zero value once the model's graph actually consumes the audio.
+
+Reference audio is never valid on its own: MiniMax H3 requires at least one
+reference image or video alongside it, so a server MUST reject an audio-only
+`ref2v` with `REFERENCE_AUDIO_UNSUPPORTED`. On H3 the published limits are up
+to 9 reference images, 3 reference videos and 3 reference audio clips per
+request (2-15 s each, 15 s combined per kind, at most 12 files in total). The
+reference implementation ships the audio path on the two H3 `ref2v` models
+(`LoovieAudioInput` → `LoovieH3ReferenceToVideo`'s `ref_audios`), so those
+advertise `maxReferenceAudios: 3`; LTX 2.5's `ref2v` graph has no
+audio-conditioning input and advertises `0`.
 
 ### LTX 2.5 advanced video modes
 

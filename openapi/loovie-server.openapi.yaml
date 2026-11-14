@@ -1161,7 +1161,9 @@ components:
             tunnel or public asset URL, as for images. They condition the generated soundtrack
             or performance (for example lip-sync). Rejected with
             `REFERENCE_AUDIO_UNSUPPORTED` when the model advertises 0, the count
-            is over budget, the mode is not `ref2v`, or a URL is not http(s).
+            is over budget, the mode is not `ref2v`, no reference image or video
+            accompanies the audio (H3 does not accept audio on its own), or a
+            URL is not http(s).
         source_video_url:
           type: string
           format: uri

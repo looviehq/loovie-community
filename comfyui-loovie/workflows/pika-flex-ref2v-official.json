@@ -37,6 +37,14 @@
       "image_url_10": ""
     }
   },
+  "13": {
+    "class_type": "LoovieAudioInput",
+    "inputs": {
+      "audio_url_1": "",
+      "audio_url_2": "",
+      "audio_url_3": ""
+    }
+  },
   "20": {
     "class_type": "UNETLoader",
     "inputs": {
@@ -232,7 +240,15 @@
         "12",
         2
       ],
-      "ref_image_size": "match"
+      "ref_image_size": "match",
+      "audios": [
+        "13",
+        0
+      ],
+      "audio_count": [
+        "13",
+        1
+      ]
     }
   }
 }

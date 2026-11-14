@@ -279,6 +279,20 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
             if mask_url:
                 inputs["mask_url"] = mask_url
 
+        elif cls == "LoovieAudioInput":
+            # H3 ref2va: up to three standalone reference audio clips. The
+            # validator has already refused a count over the model's budget and
+            # any use outside `ref2v`, so this only has to hand the URLs over;
+            # the node downloads and decodes them, and the H3 reference adapter
+            # builds the numbered `ref_audios` entries.
+            reference_audios = [
+                str(url).strip()
+                for url in (body.get("reference_audio_urls") or [])
+                if str(url).strip()
+            ]
+            for i, url in enumerate(reference_audios[:3], 1):
+                inputs[f"audio_url_{i}"] = url
+
         elif cls == "LoovieReferenceSheet":
             # Ingredients: up to four references tiled into one sheet.
             for i, url in enumerate((reference_urls or image_urls)[:4], 1):
