@@ -88,6 +88,5 @@ def test_clips_and_frames_are_exclusive_where_references_exclude_frames() -> Non
     spec = _pika(max_reference_videos=3)
     assert spec.references_exclude_frames
     assert (
-        _validate(spec, reference_video_count=1, has_start_frame=True)
-        == "REFERENCES_UNSUPPORTED"
+        _validate(spec, reference_video_count=1, has_start_frame=True) == "REFERENCES_UNSUPPORTED"
     )
