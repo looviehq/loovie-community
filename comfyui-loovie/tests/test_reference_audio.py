@@ -19,6 +19,7 @@ rather than at a user's first request.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import sys
 import types
@@ -123,7 +124,9 @@ def test_audio_alongside_an_image_is_accepted() -> None:
 
 
 def test_audio_alongside_a_reference_video_is_accepted() -> None:
-    pika = _video("pika-flex")
+    # The shipped graphs do not consume reference clips yet, so model one that
+    # advertises them: the rule under test is audio's, not the clip budget's.
+    pika = dataclasses.replace(_video("pika-flex"), max_reference_videos=3)
     official = find_variant(pika, "official")
 
     assert (

@@ -121,6 +121,7 @@ CAPABILITIES: dict[str, Any] = {
                 "referenceCount": 1,
                 "maxReferenceImages": 0,
                 "maxReferenceAudios": 0,
+                "maxReferenceVideos": 0,
                 "resolution": ["720p", "1080p"],
                 "variants": [
                     {"id": "fast", "label": "Fast", "default": True},

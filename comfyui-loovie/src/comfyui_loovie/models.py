@@ -91,6 +91,8 @@ class VariantSpec:
     max_reference_images: int | None = None
     # None inherits the model's max_reference_audios.
     max_reference_audios: int | None = None
+    # None inherits the model's max_reference_videos.
+    max_reference_videos: int | None = None
     # Optional per-variant workflow-name suffix override; defaults to the id.
     workflow_suffix: str | None = None
 
@@ -118,6 +120,11 @@ class ModelSpec:
     # The H3 ref2va graphs do: `LoovieAudioInput` -> `LoovieH3ReferenceToVideo`
     # `ref_audios` (H3 takes up to 3, 2-15 s each, 15 s combined, 15 MB each).
     max_reference_audios: int = 0
+    # Reference VIDEO clips accepted for ref2v (distinct from the single
+    # `motion` clip). Leave at 0 unless the model's workflow graph has a
+    # video-conditioning input that consumes `reference_video_urls` in ref2v
+    # mode; setting it advertises the capability in the manifest.
+    max_reference_videos: int = 0
     references_exclude_frames: bool = False
     audio: str = AUDIO_NONE
     # Source-video limits for edit/retake/extend/motion. 0 = unsupported.
@@ -313,6 +320,10 @@ def _pika(model_id: str, label: str, description: str, *, hd: bool = False) -> M
         # `LoovieAudioInput` node feeds `LoovieH3ReferenceToVideo`'s
         # `ref_audios`. HD has no ref2v mode, so it advertises none.
         max_reference_audios=0 if hd else 3,
+        # Reference clips (up to 3, 2-15 s each, decoded to 24 fps frames):
+        # `LoovieReferenceVideoInput` feeds `LoovieH3ReferenceToVideo`'s
+        # `ref_videos`. HD has no ref2v mode, so it advertises none.
+        max_reference_videos=0 if hd else 3,
         audio=AUDIO_ALWAYS,
         frame_step=17,
         frame_offset=5,
@@ -373,6 +384,9 @@ def _hyperflow_flash() -> ModelSpec:
         # wire `LoovieAudioInput` into `LoovieH3ReferenceToVideo`'s
         # `ref_audios`, so a voice/timbre reference actually reaches the model.
         max_reference_audios=3,
+        # H3 ref2v reference clips: `LoovieReferenceVideoInput` wired into
+        # `LoovieH3ReferenceToVideo`'s `ref_videos`.
+        max_reference_videos=3,
         audio=AUDIO_ALWAYS,
         frame_step=17,
         frame_offset=5,
@@ -789,6 +803,7 @@ def model_descriptor(spec: ModelSpec, *, default: bool) -> dict[str, Any]:
         descriptor["referenceCount"] = 1 if "i2v" in spec.capabilities else 0
         descriptor["maxReferenceImages"] = spec.max_reference_images
         descriptor["maxReferenceAudios"] = spec.max_reference_audios
+        descriptor["maxReferenceVideos"] = spec.max_reference_videos
         if spec.max_reference_images > 0:
             descriptor["referencesExcludeFrames"] = spec.references_exclude_frames
         descriptor["durations"] = list(spec.durations)
@@ -838,6 +853,11 @@ def model_descriptor(spec: ModelSpec, *, default: bool) -> dict[str, Any]:
             **(
                 {"maxReferenceAudios": variant.max_reference_audios}
                 if variant.max_reference_audios is not None
+                else {}
+            ),
+            **(
+                {"maxReferenceVideos": variant.max_reference_videos}
+                if variant.max_reference_videos is not None
                 else {}
             ),
         }
@@ -1139,6 +1159,19 @@ def validate_request_values(
         and (has_start_frame or has_end_frame)
     ):
         return "REFERENCES_UNSUPPORTED"
+
+    # Reference VIDEO clips. `motion` carries exactly one clip on its own
+    # contract (checked above); every other mode except ref2v takes none.
+    if reference_video_count > 0 and mode != "motion":
+        max_videos = (
+            variant.max_reference_videos
+            if variant.max_reference_videos is not None
+            else spec.max_reference_videos
+        )
+        if mode != "ref2v" or reference_video_count > max_videos:
+            return "REFERENCE_VIDEO_UNSUPPORTED"
+        if spec.references_exclude_frames and (has_start_frame or has_end_frame):
+            return "REFERENCES_UNSUPPORTED"
 
     if reference_audio_count > 0:
         max_audios = (
