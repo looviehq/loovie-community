@@ -50,7 +50,8 @@ def _resample_to_target_fps(
     if abs(fps - _TARGET_FPS) < 1e-3:
         return frames[:target_count]
     indices = np.minimum((np.arange(target_count) * fps / _TARGET_FPS).astype(int), count - 1)
-    return frames[indices]
+    picked: np.ndarray[Any, Any] = frames[indices]
+    return picked
 
 
 def _load_clip(url: str) -> torch.Tensor:
