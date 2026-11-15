@@ -109,6 +109,7 @@ The single most important endpoint. Tells the app what your server can do.
         "referenceCount": 1,          // frames for i2v
         "maxReferenceImages": 9,      // images for ref2v
         "maxReferenceAudios": 3,      // audio clips for ref2v (non-negative int, default 0)
+        "maxReferenceVideos": 3,      // video clips for ref2v (non-negative int, default 0)
         "referencesExcludeFrames": true,
         "resolution": ["480p", "768p"],
         "aspectRatios": ["auto", "16:9", "9:16", "1:1"],
@@ -122,7 +123,8 @@ The single most important endpoint. Tells the app what your server can do.
             "label": "HD",
             "capabilities": ["t2v", "i2v", "fl2v"],
             "maxReferenceImages": 0,
-            "maxReferenceAudios": 0     // optional per variant, like maxReferenceImages
+            "maxReferenceAudios": 0,    // optional per variant, like maxReferenceImages
+            "maxReferenceVideos": 0     // optional per variant, like maxReferenceImages
           }
         ],
         "promptCharLimit": 3000
@@ -284,7 +286,7 @@ Response (taskId is opaque):
   "retake_duration_seconds": 4,       // retake only
   "extend_side": "end",               // extend only: "start" or "end"
   "context_seconds": 4,               // retake/extend context window
-  "reference_video_urls": ["https://..."],  // motion only; exactly one
+  "reference_video_urls": ["https://..."],  // motion: exactly one; ref2v: up to maxReferenceVideos
   "camera_motion": "dolly_in",        // any mode that advertises it
   "source_strength": 0.6,             // edit/retake/extend/motion guidance strength
   "keep_original_audio": false,       // edit/motion only; mux the source track
@@ -307,6 +309,30 @@ advertises `maxReferenceAudios: 0` (or omits it) MUST reject any audio with
 `REFERENCE_AUDIO_UNSUPPORTED`; so MUST a request that is over budget, uses a
 mode other than `ref2v`, or carries URLs that are not http(s). Only advertise
 a non-zero value once the model's graph actually consumes the audio.
+
+`reference_video_urls` has two meanings, chosen by `mode`:
+
+- `motion`: exactly one clip, requires `start_frame_url` (see below).
+- `ref2v`: up to the model's (or variant's) `maxReferenceVideos` clips that
+  condition the generation (the subject, style or movement to carry over), used
+  alongside or instead of reference images and audio. A client that wants this
+  MUST send `mode: "ref2v"` explicitly: without a start frame the server cannot
+  tell a reference clip from a malformed motion request, and `mode` also stops a
+  stray start frame turning the request into `motion`. The app sends each clip
+  already trimmed to the span the user chose, as an https (or tunnel/public
+  asset) URL, exactly as for images and audio.
+
+A model that advertises `maxReferenceVideos: 0` (or omits it) MUST reject
+`reference_video_urls` in `ref2v` with `REFERENCE_VIDEO_UNSUPPORTED`; so MUST a
+request that is over budget, uses a mode other than `ref2v` or `motion`, or
+carries URLs that are not http(s). On models that declare
+`referencesExcludeFrames: true`, reference clips and first/last frames are
+mutually exclusive, like reference images. Only advertise a non-zero value once
+the model's graph actually consumes the clips. The reference implementation
+ships the video path on the two H3 `ref2v` models (`LoovieReferenceVideoInput`
+→ `LoovieH3ReferenceToVideo`'s `ref_videos`, clips resampled to 24 fps), so
+those advertise `maxReferenceVideos: 3`; LTX 2.5's `ref2v` graph has no
+video-conditioning input and advertises `0`.
 
 Reference audio is never valid on its own: MiniMax H3 requires at least one
 reference image or video alongside it, so a server MUST reject an audio-only
@@ -342,6 +368,7 @@ retake and extend also advertise their per-request windows.
 Source-video modes reject `start_frame_url`, `end_frame_url` and
 `reference_image_urls` (except `motion`, which requires a start frame). Use
 `SOURCE_VIDEO_REQUIRED`, `SOURCE_VIDEO_UNSUPPORTED`, `REFERENCE_VIDEO_REQUIRED`,
+`REFERENCE_VIDEO_UNSUPPORTED`,
 `RETAKE_RANGE_INVALID`, `EXTEND_SIDE_INVALID`, `CONTEXT_UNSUPPORTED`,
 `CAMERA_MOTION_UNSUPPORTED` and `KEEP_ORIGINAL_AUDIO_UNSUPPORTED` for the
 corresponding model-level rejections.

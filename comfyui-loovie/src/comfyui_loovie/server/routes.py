@@ -216,13 +216,17 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
         str(url).strip() for url in (body.get("reference_video_urls") or []) if str(url).strip()
     ]
     source_video = (body.get("source_video_url") or "").strip()
-    motion_video = reference_videos[0] if reference_videos else ""
+    # `motion` takes exactly one clip as its guide. In ref2v the same field
+    # carries up to `maxReferenceVideos` clips, so it is not a motion guide.
+    motion_video = ""
     source_strength = body.get("source_strength")
     try:
         strength = float(source_strength) if source_strength is not None else None
     except (TypeError, ValueError):
         strength = None
     mode = str(body.get("mode", "") or "").strip()
+    if reference_videos and mode != "ref2v":
+        motion_video = reference_videos[0]
     if strength is None:
         strength = _DEFAULT_SOURCE_STRENGTH.get(mode)
     keep_original_audio = bool(body.get("keep_original_audio", False))
@@ -292,6 +296,14 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
             ]
             for i, url in enumerate(reference_audios[:3], 1):
                 inputs[f"audio_url_{i}"] = url
+
+        elif cls == "LoovieReferenceVideoInput":
+            # H3 ref2v: up to three reference clips. Only ref2v carries them
+            # here; in `motion` the same request field is the single guide clip
+            # and belongs to `LoovieVideoInput`.
+            if mode == "ref2v":
+                for i, url in enumerate(reference_videos[:3], 1):
+                    inputs[f"video_url_{i}"] = url
 
         elif cls == "LoovieReferenceSheet":
             # Ingredients: up to four references tiled into one sheet.
@@ -455,6 +467,7 @@ _MODEL_ERROR_MESSAGES: dict[str, str] = {
     "SOURCE_VIDEO_REQUIRED": "This mode requires a source video.",
     "SOURCE_VIDEO_UNSUPPORTED": "That model cannot edit a source video.",
     "REFERENCE_VIDEO_REQUIRED": "This mode requires exactly one reference video.",
+    "REFERENCE_VIDEO_UNSUPPORTED": "That model cannot take reference videos here.",
     "RETAKE_RANGE_INVALID": "The retake time window is outside this model's limits.",
     "EXTEND_SIDE_INVALID": "extend_side must be 'start' or 'end'.",
     "CONTEXT_UNSUPPORTED": "That context length is outside this model's limits.",
@@ -1099,7 +1112,25 @@ async def create_video(request: web.Request) -> web.Response:
             },
             status=400,
         )
-    if reference_videos:
+    if reference_videos and (
+        not isinstance(reference_videos, list)
+        or not all(
+            isinstance(url, str) and url.strip().lower().startswith(("https://", "http://"))
+            for url in reference_videos
+        )
+    ):
+        return web.json_response(
+            {
+                "code": 400,
+                "msg": "reference_video_urls must be a list of http(s) URLs",
+                "fail_code": "REFERENCE_VIDEO_UNSUPPORTED",
+            },
+            status=400,
+        )
+    # In ref2v the field carries reference clips (count and mode are judged by
+    # `validate_request_values` against `maxReferenceVideos`). Everywhere else
+    # it is the single motion-control guide, with its own shape rules.
+    if reference_videos and str(body.get("mode", "") or "").strip() != "ref2v":
         if len(reference_videos) > 1:
             return web.json_response(
                 {

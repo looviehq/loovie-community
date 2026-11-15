@@ -45,6 +45,14 @@
       "audio_url_3": ""
     }
   },
+  "14": {
+    "class_type": "LoovieReferenceVideoInput",
+    "inputs": {
+      "video_url_1": "",
+      "video_url_2": "",
+      "video_url_3": ""
+    }
+  },
   "20": {
     "class_type": "HyperFlowGGUFLoader",
     "inputs": {
@@ -233,6 +241,14 @@
       ],
       "audio_count": [
         "13",
+        1
+      ],
+      "videos": [
+        "14",
+        0
+      ],
+      "video_count": [
+        "14",
         1
       ]
     }

@@ -287,6 +287,9 @@ components:
         maxReferenceAudios:
           type: integer
           minimum: 0
+        maxReferenceVideos:
+          type: integer
+          minimum: 0
     ImageModel:
       type: object
       required:
@@ -392,6 +395,14 @@ components:
           default: 0
           description: >-
             Audio clips accepted by ref2v (default 0). Overridable per variant.
+        maxReferenceVideos:
+          type: integer
+          minimum: 0
+          default: 0
+          description: >-
+            Video clips accepted by ref2v in `reference_video_urls` (default 0).
+            Overridable per variant. Unrelated to `motion`, which always takes
+            exactly one clip.
         referencesExcludeFrames:
           type: boolean
           description: >-
@@ -1173,14 +1184,19 @@ components:
             and image references.
         reference_video_urls:
           type: array
-          maxItems: 1
           items:
             type: string
             format: uri
           description: >-
-            A single motion-reference clip for `motion`. Requires
+            Meaning depends on `mode`. For `motion`: exactly one clip, requires
             `start_frame_url`; the model follows the clip's motion from that
-            frame.
+            frame. For `ref2v` (send `mode` explicitly): up to
+            `maxReferenceVideos` clips, already trimmed by the app, that
+            condition the generation. Rejected with
+            `REFERENCE_VIDEO_UNSUPPORTED` when the model advertises 0, the
+            count is over budget, the mode is neither `ref2v` nor `motion`, or
+            a URL is not http(s). Mutually exclusive with first/last frames when
+            `referencesExcludeFrames` is true.
         retake_start_seconds:
           type: number
           minimum: 0

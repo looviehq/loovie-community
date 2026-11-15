@@ -9,6 +9,9 @@ from `LoovieImageInput`, and the AUDIO list + AUDIO_COUNT from
 native H3 reference node. No empty/black placeholders are ever counted as
 references.
 
+Reference VIDEO clips (up to 3, 2-15 s each, IMAGE frames at 24 fps) come from
+`LoovieReferenceVideoInput` and become the numbered `ref_videos` entries.
+
 Reference AUDIO is a first-class H3 capability (up to 3 clips, 2-15 s each,
 15 s combined): the model conditions the generated soundtrack or a performance
 on it, so it is what makes lip-sync and voice/timbre references work. The
@@ -22,6 +25,7 @@ from __future__ import annotations
 from typing import Any
 
 _MAX_REFERENCE_AUDIOS = 3
+_MAX_REFERENCE_VIDEOS = 3
 
 
 class LoovieH3ReferenceToVideo:
@@ -48,6 +52,10 @@ class LoovieH3ReferenceToVideo:
                 # loading unchanged).
                 "audios": ("LOOVIE_AUDIO_LIST",),
                 "audio_count": ("INT", {"default": 0, "min": 0, "max": 3}),
+                # Wired from `LoovieReferenceVideoInput`: up to 3 clips as IMAGE
+                # frames at 24 fps, handed to `ref_videos`.
+                "videos": ("LOOVIE_VIDEO_LIST",),
+                "video_count": ("INT", {"default": 0, "min": 0, "max": 3}),
             },
         }
 
@@ -70,6 +78,8 @@ class LoovieH3ReferenceToVideo:
         ref_image_size: str = "match",
         audios: list[dict[str, Any]] | None = None,
         audio_count: int = 0,
+        videos: list[Any] | None = None,
+        video_count: int = 0,
     ) -> tuple[Any, Any]:
         from comfy_extras.nodes_minimax_h3 import MiniMaxH3ReferenceToVideo
 
@@ -79,6 +89,10 @@ class LoovieH3ReferenceToVideo:
         audio_list = list(audios or [])
         audio_total = max(0, min(int(audio_count), len(audio_list), _MAX_REFERENCE_AUDIOS))
         ref_audios = {f"ref_audio_{index + 1}": audio_list[index] for index in range(audio_total)}
+
+        video_list = list(videos or [])
+        video_total = max(0, min(int(video_count), len(video_list), _MAX_REFERENCE_VIDEOS))
+        ref_videos = {f"ref_video_{index + 1}": video_list[index] for index in range(video_total)}
 
         output = MiniMaxH3ReferenceToVideo.execute(
             clip=clip,
@@ -91,6 +105,7 @@ class LoovieH3ReferenceToVideo:
             audio_vae=audio_vae,
             ref_images=ref_images,
             ref_audios=ref_audios,
+            ref_videos=ref_videos,
         )
         result = output.result
         if not isinstance(result, tuple) or len(result) < 2:
