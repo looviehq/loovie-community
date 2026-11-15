@@ -18,7 +18,9 @@ WORKFLOWS = [
     "ltx25-t2v-fast",
     "ltx25-ref2v-fast",
     "pika-flex-ref2v-official",
+    "pika-flex-ref2v-turbo",
     "pika-flex-t2v-official",
+    "pika-flex-i2v-official",
 ]
 
 
@@ -32,7 +34,7 @@ def _validate(spec, variant_id="official", **kwargs):
         spec,
         find_variant(spec, variant_id),
         mode=kwargs.pop("mode", "ref2v"),
-        resolution="768p",
+        resolution=spec.resolutions[0],
         duration=8,
         **kwargs,
     )
