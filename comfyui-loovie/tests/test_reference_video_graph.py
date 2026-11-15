@@ -98,9 +98,7 @@ def test_video_input_node_contract() -> None:
     assert LoovieReferenceVideoInput().process() == ([], 0)
 
 
-@pytest.mark.skipif(
-    not hasattr(np, "arange"), reason="numpy is stubbed in this environment"
-)
+@pytest.mark.skipif(not hasattr(np, "arange"), reason="numpy is stubbed in this environment")
 def test_resample_converts_to_24_fps_and_caps_at_15_seconds() -> None:
     frames = np.arange(60).reshape(60, 1, 1, 1)
     # 2 s at 30 fps becomes 48 frames at 24 fps.
