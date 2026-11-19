@@ -63,7 +63,7 @@ Leave the other variables at their defaults unless you want to download fewer mo
 
 ## Step 6, First boot
 
-Click *Deploy* and wait. First boot downloads model weights into the attached volume; this typically takes 15 to 40 minutes depending on GPU class and HuggingFace bandwidth. Watch the pod logs, the entrypoint prints a status banner at the start and a model-availability summary after the downloader runs.
+Click *Deploy* and wait. First boot downloads model weights into the attached volume; this typically takes 15 to 40 minutes depending on GPU class and HuggingFace bandwidth. Watch the pod logs: the entrypoint prints a status banner, runs the downloader, then prints any model files an enabled workflow still needs (with the `LOOVIE_MODELS=...` command to fetch them).
 
 The health endpoint reports phases as the boot progresses:
 

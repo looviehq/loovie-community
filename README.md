@@ -37,7 +37,14 @@ pip install -r requirements.txt
 git clone https://github.com/looviehq/loovie-community.git
 COMFY_DIR=. ./loovie-community/comfyui-loovie/scripts/install.sh
 export HF_TOKEN=hf_xxx LOOVIE_API_TOKEN=$(bash loovie-community/scripts/new-token.sh)
-bash loovie-community/docker/download_models.sh && python main.py --listen 0.0.0.0 --port 8188
+
+# Download the weights your enabled workflows need. Use images, videos,
+# music or all; LOOVIE_MODELS=... limits it to individual model ids.
+LOOVIE_KIND=all bash loovie-community/docker/download_models.sh
+
+# Start-up and this check both name any model file that is still missing:
+python loovie-community/comfyui-loovie/scripts/check_models.py --models-root ./models
+python main.py --listen 0.0.0.0 --port 8188
 ```
 
 ### Restarting the server
@@ -55,6 +62,8 @@ make status     # pid + /loovie/health
 make logs       # tail the server log
 ```
 
+`make start` also checks the enabled workflows for missing weights and prints
+the `LOOVIE_MODELS=...` downloader command when something is absent.
 `make restart` kills the ComfyUI process, so any in-flight generation is lost
 and the app reports `BYO_HISTORY_MISSING`; retry it afterwards. `status` and the
 health probe also tell you whether the Loovie plugin actually loaded. Full

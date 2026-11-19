@@ -58,7 +58,11 @@ pip install -r loovie-community/comfyui-loovie/requirements.txt
 # 3. Configure the bearer token
 export LOOVIE_API_TOKEN="$(openssl rand -hex 32)"
 
-# 4. Start ComfyUI as usual
+# 4. Download the weights the enabled workflows use
+LOOVIE_KIND=all bash loovie-community/docker/download_models.sh
+python loovie-community/comfyui-loovie/scripts/check_models.py --models-root ./models
+
+# 5. Start ComfyUI as usual
 python main.py --listen 0.0.0.0 --port 8188
 ```
 
@@ -85,9 +89,11 @@ weights the shipped workflows require.
 
 The reference workflows expect the following weights to be present in
 `ComfyUI/models/`. Install them once; the workflows reference them by
-filename. The exact weight URLs are listed in
-[`docs/MODELS.md`](../docs/MODELS.md) (TBD) and `scripts/install.sh` can
-fetch a baseline set.
+filename. The exact weights are listed in [`docs/MODELS.md`](../docs/MODELS.md).
+Run [`docker/download_models.sh`](../docker/download_models.sh) before starting
+the server; a missing file makes that model fail with
+`BYO_MODEL_FILES_MISSING`. `scripts/check_models.py` (and `make start`) print
+the exact files that are still missing.
 
 | Workflow | Required model files |
 | --- | --- |

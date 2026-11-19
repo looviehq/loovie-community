@@ -79,6 +79,8 @@ For phone-to-LAN-server use, see [`docs/20-quickstart-your-own-machine.md`](../d
 | `COMFYUI_HOST` | no | `0.0.0.0` | Bind interface. Set to `127.0.0.1` for a loopback-only instance with no token. |
 | `COMFYUI_PORT` | no | `8188` | Bind port. |
 
+On every start the entrypoint checks the enabled workflows against the files under `LOOVIE_MODELS_ROOT`. If a model is incomplete it prints the missing filenames and the matching `LOOVIE_MODELS=...` download command. The server still starts; generations that need the missing files fail with `BYO_MODEL_FILES_MISSING` until they are downloaded.
+
 ### Model downloader (`download_models.sh`)
 
 Used on bare-metal ComfyUI installs and inside the container when `DOWNLOAD_MODELS=1`.

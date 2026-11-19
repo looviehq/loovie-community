@@ -5,7 +5,7 @@ This guide walks through the **ComfyUI reference implementation** ([`comfyui-loo
 ## Prerequisites
 
 - **GPU.** NVIDIA, 24 GB VRAM or more (see [GPU compatibility in `30-runpod.md`](30-runpod.md#gpu-compatibility-tested-at-launch); image works on 4090/5090, video tested only on 5090).
-- **Disk.** Plan on **at least 100 GB free** for the full reference model set: image models are ~24 GB, video models are ~70 GB (~99 GB downloaded for `LOOVIE_KIND=all`), plus headroom for intermediate decoded outputs, swap files, and ComfyUI's own cache. If you only run `LOOVIE_KIND=images` plan on ~30 GB free, `LOOVIE_KIND=videos` plan on ~80 GB free. See [`MODELS.md`](MODELS.md) for the per-model breakdown.
+- **Disk.** Plan on **at least 280 GB free** for the full reference model set (`LOOVIE_KIND=all` is roughly 262 GB), plus headroom for intermediate decoded outputs, swap files, and ComfyUI's own cache. `LOOVIE_KIND=images` is roughly 61 GB, `LOOVIE_KIND=videos` roughly 191 GB, and `LOOVIE_KIND=music` roughly 7 GB. See [`MODELS.md`](MODELS.md) for the per-model breakdown.
 - **Python.** 3.10, 3.11, or 3.12.
 - **git.**
 - **A HuggingFace account and read token**: [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md). You will need to accept a gated licence for at least one model. Do this first; the download will fail loudly if you skip it.
@@ -78,9 +78,25 @@ pip install -r requirements.txt
 cd ..
 ```
 
+HyperFlow H3 Flash additionally needs ComfyUI-GGUF and the HyperFlow nodes. Use
+the same pins as the Docker image:
+
+```sh
+# Still in ComfyUI/custom_nodes
+git clone https://github.com/city96/ComfyUI-GGUF.git
+git -C ComfyUI-GGUF checkout 6ea2651e7df66d7585f6ffee804b20e92fb38b8a
+pip install -r ComfyUI-GGUF/requirements.txt
+
+git clone https://github.com/Video-Rebirth/ComfyUI-HyperFlow-Flash.git
+git -C ComfyUI-HyperFlow-Flash checkout 20a22ab2b075f3c948eb5dba62637ff89fc0f363
+pip install -r ComfyUI-HyperFlow-Flash/requirements.txt
+```
+
 ### 3. Download the models
 
-Run the downloader from the **ComfyUI directory** (same place as steps 1–2). It reads [`docker/models.manifest`](../docker/models.manifest), which lists the FLUX.2 Klein and LTX 2.3 weights the reference workflows expect.
+Run the downloader from the **ComfyUI directory** (same place as steps 1–2). It reads [`docker/models.manifest`](../docker/models.manifest) and downloads the weights for the reference workflows you enable: FLUX.2 Klein, Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MiniMax H3 Image, LTX 2.3 / 2.5, Pika H3 Flex / HD, HyperFlow H3 Flash, YuE2 and Stable Audio 3.
+
+**This step is not optional.** A server can start with no models, but the first generation for a missing model fails with `BYO_MODEL_FILES_MISSING`. The start-up check and [`comfyui-loovie/scripts/check_models.py`](../comfyui-loovie/scripts/check_models.py) name the exact files to download.
 
 #### Environment variables
 
@@ -113,11 +129,12 @@ The script prints the resolved path and source at startup, for example:
 
 `LOOVIE_KIND` selects which rows from the manifest to pull:
 
-- `images`: FLUX.2 Klein + text encoder + VAE (~24 GB).
-- `videos`: LTX-2.3 + Gemma text encoder + upscaler + LoRA + ESRGAN (~70 GB).
-- `all`: both (~99 GB).
+- `images`: FLUX.2 Klein, Qwen-Image 2.1, FLUX 3 Klein, Krea 2, MiniMax H3 Image and their encoders/VAEs (~61 GB).
+- `videos`: LTX 2.3, LTX 2.5, Pika H3 Flex / HD and HyperFlow H3 Flash, including the shared H3 encoders/VAEs (~191 GB).
+- `music`: YuE2, Stable Audio 3 and the shared text encoder (~7 GB). This also covers sound effects.
+- `all`: every row (~262 GB).
 
-Pick the smallest set you need. `/loovie/capabilities` reflects what is actually on disk.
+Pick the smallest set you need. Add `LOOVIE_MODELS=` to limit a run to individual model ids, for example `LOOVIE_MODELS=hyperflow-h3-flash`. The downloader skips files that are already present, so it is safe to re-run after enabling another model. `/loovie/capabilities` reflects what is actually on disk.
 
 #### Command
 
@@ -125,13 +142,18 @@ From the **ComfyUI directory**:
 
 ```sh
 export HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-export LOOVIE_KIND=all                       # or images / videos
+export LOOVIE_KIND=all                       # or images / videos / music
 
 # Optional: force a specific models directory (overrides auto-detection)
 # export LOOVIE_MODELS_ROOT="$PWD/models"
 
 bash loovie-community/docker/download_models.sh
+
+# Name any file an enabled workflow still needs (also runs on make start):
+python loovie-community/comfyui-loovie/scripts/check_models.py --models-root "$PWD/models"
 ```
+
+If the check reports a missing file, copy the `LOOVIE_MODELS=...` command it prints, re-run the downloader, then start the server.
 
 Accept gated licences first: [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
 
@@ -167,7 +189,7 @@ cp .byo-server.env.example .byo-server.env   # first time only; see "Managing th
 make start
 ```
 
-`make start` launches the same `python main.py` command in the background, logs to `/tmp/loovie-comfy-<port>.log`, and waits until `/loovie/health` is ready. See [Managing the server](#managing-the-server) for the full set of targets and configuration.
+`make start` launches the same `python main.py` command in the background, logs to `/tmp/loovie-comfy-<port>.log`, and waits until `/loovie/health` is ready. Before launching it checks the enabled workflows for missing model files and prints the downloader command if anything is absent. See [Managing the server](#managing-the-server) for the full set of targets and configuration.
 
 ### 6. Verify it works
 
