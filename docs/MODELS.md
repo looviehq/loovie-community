@@ -30,6 +30,18 @@ follow carry the detail and the links.
 
 The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](../docker/models.manifest) and pulls the files from the HuggingFace repos below. Some of these are **gated**, meaning HuggingFace requires you to accept the licence on the web UI while logged in before the download will succeed. See [`25-huggingface-and-gated-models.md`](25-huggingface-and-gated-models.md).
 
+Download a whole modality or a single model before starting the server:
+
+```sh
+# images | videos | music | all
+LOOVIE_KIND=videos bash docker/download_models.sh
+
+# Limit that to one model id from models.manifest:
+LOOVIE_MODELS=hyperflow-h3-flash bash docker/download_models.sh
+```
+
+The downloader skips files that are already present, so it is safe to re-run after enabling another model. `make start` and `python comfyui-loovie/scripts/check_models.py --models-root /path/to/ComfyUI/models` print any file an enabled workflow still needs.
+
 > **This list reflects the current `v0.1.x-beta` line.** Adding a model in a PR also means adding it here. If you want to add a new reference workflow built on a different model, see [`80-adding-a-workflow.md`](80-adding-a-workflow.md).
 
 ## Image generation
@@ -221,6 +233,9 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 - **Planning VRAM:** 24 GB minimum, 32 GB recommended. The Q4_K_M Flash
   transformer is ~9 GB instead of the ~20 GB full H3 DiT, but the shared
   text encoder/VAEs dominate the footprint.
+- **Download:** `LOOVIE_KIND=videos LOOVIE_MODELS=hyperflow-h3-flash bash docker/download_models.sh`
+  fetches both GGUFs and the shared H3 encoder/VAEs. A missing GGUF is the
+  usual cause of `BYO_MODEL_FILES_MISSING` on the `ref2v` or `fl2v` modes.
 - **ComfyUI:** needs `ComfyUI-GGUF` and
   [`ComfyUI-HyperFlow-Flash`](https://github.com/Video-Rebirth/ComfyUI-HyperFlow-Flash)
   (`HyperFlowGGUFLoader` + `HyperFlowSigmas`). The shipped

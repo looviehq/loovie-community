@@ -17,6 +17,10 @@
 #
 # comfyui-loovie is loaded from custom_nodes/loovie. When that is a symlink
 # into this repo (the install.sh default), a restart picks up new code.
+#
+# Before starting, the script checks the enabled workflows for missing model
+# files and prints the downloader command when something needs downloading.
+# The server still starts: image-only or partial installs are valid.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -54,6 +58,18 @@ HEALTH_URL="http://${PROBE_HOST}:${PORT}/loovie/health"
 
 log() { printf '[byo-server] %s\n' "$*"; }
 fail() { printf '[byo-server] ERROR: %s\n' "$*" >&2; exit 1; }
+
+check_models() {
+  local checker="$ROOT/comfyui-loovie/scripts/check_models.py"
+  [[ -f "$checker" ]] || return 0
+  local py="$COMFY_PYTHON"
+  if ! command -v "$py" >/dev/null 2>&1 && [[ ! -x "$py" ]]; then
+    py="python3"
+  fi
+  log "checking enabled workflows for missing model files ..."
+  # Advisory only: a partial install (for example image-only) is valid.
+  "$py" "$checker" --models-root "${COMFY_DIR}/models" || true
+}
 
 pid_on_port() {
   local pid=""
@@ -109,6 +125,8 @@ cmd_start() {
   [[ -f "${COMFY_DIR}/main.py" ]] || fail "ComfyUI not found${COMFY_DIR:+ at COMFY_DIR=${COMFY_DIR}}. Copy .byo-server.env.example to .byo-server.env and set COMFY_DIR, or run with COMFY_DIR=/path/to/ComfyUI."
   command -v "$COMFY_PYTHON" >/dev/null 2>&1 || [[ -x "$COMFY_PYTHON" ]] \
     || fail "Python interpreter not found: ${COMFY_PYTHON}. Set COMFY_PYTHON in .byo-server.env."
+
+  check_models
 
   mkdir -p "$(dirname "$LOG")"
   log "starting ComfyUI from ${COMFY_DIR} on ${HOST}:${PORT} (log: ${LOG})"

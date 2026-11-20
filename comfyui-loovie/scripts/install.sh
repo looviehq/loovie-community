@@ -55,11 +55,15 @@ else
 fi
 
 if [[ "$WITH_MODELS" -eq 1 ]]; then
-  echo "Model fetching not yet automated. See docs/MODELS.md for the manifest."
+  echo "Run the model downloader after installing the Python deps:"
+  echo "  LOOVIE_KIND=all bash '$HERE/../docker/download_models.sh'"
 fi
 
 echo
 echo "Next steps:"
 echo "  1. Install Python deps:   pip install -r '$HERE/requirements.txt'"
 echo "  2. Set the bearer token:  export LOOVIE_API_TOKEN=\$(openssl rand -hex 32)"
-echo "  3. Start ComfyUI:         (cd '$COMFY_DIR' && python main.py --listen 0.0.0.0 --port 8188)"
+echo "  3. Download the models:   LOOVIE_KIND=all bash '$HERE/../docker/download_models.sh'"
+echo "     Check what an enabled workflow still needs:"
+echo "       python '$HERE/scripts/check_models.py' --models-root '$COMFY_DIR/models'"
+echo "  4. Start ComfyUI:         (cd '$COMFY_DIR' && python main.py --listen 0.0.0.0 --port 8188)"

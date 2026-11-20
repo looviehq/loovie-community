@@ -71,9 +71,15 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# Brief model availability summary
+# Model availability summary. Print the exact files a workflow still needs so
+# the operator can download them before the app gets a MODEL_FILES_MISSING.
 # ----------------------------------------------------------------------------
-if [[ -d "${MODELS_ROOT}" ]]; then
+checker="/opt/comfyui/custom_nodes/loovie/scripts/check_models.py"
+if [[ -f "${checker}" ]]; then
+  python3 "${checker}" \
+    --models-root "${MODELS_ROOT}" \
+    --manifest /opt/comfyui/loovie-models.manifest || true
+elif [[ -d "${MODELS_ROOT}" ]]; then
   image_files=$(find "${MODELS_ROOT}/diffusion_models" "${MODELS_ROOT}/checkpoints" -maxdepth 1 -name '*.safetensors' 2>/dev/null | wc -l | tr -d ' ')
   video_files=$(find "${MODELS_ROOT}/checkpoints" -maxdepth 1 -name 'ltx-2*' 2>/dev/null | wc -l | tr -d ' ')
   log "Models on disk: ${image_files} image checkpoint(s), ${video_files} video checkpoint(s) under ${MODELS_ROOT}."
