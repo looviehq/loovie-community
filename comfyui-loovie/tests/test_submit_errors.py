@@ -54,9 +54,26 @@ def test_missing_file_is_reported_with_node_and_folder() -> None:
             class_type="UNETLoader",
             input_name="unet_name",
             filename="hyperflow.gguf",
-            folders=("diffusion_models", "unet"),
+            folders=("diffusion_models", "unet", "unet_gguf"),
         )
     ]
+
+
+def test_gguf_file_found_through_comfyui_gguf_virtual_folder() -> None:
+    """Core diffusion_models omits `.gguf`; ComfyUI-GGUF exposes it as unet_gguf."""
+
+    graph = {"20": {"class_type": "HyperFlowGGUFLoader", "inputs": {"unet_name": "hyperflow.gguf"}}}
+    assert (
+        missing_model_files(
+            graph,
+            listing={
+                "diffusion_models": set(),
+                "unet": set(),
+                "unet_gguf": {"hyperflow.gguf"},
+            },
+        )
+        == []
+    )
 
 
 def test_present_file_is_not_reported() -> None:

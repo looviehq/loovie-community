@@ -25,12 +25,15 @@ logger = logging.getLogger("comfyui_loovie.helpers.model_files")
 #: Loader inputs that name a downloadable model file, and the ComfyUI folders
 #: that can satisfy them.
 MODEL_FILE_INPUTS: dict[str, tuple[str, ...]] = {
-    "unet_name": ("diffusion_models", "unet"),
+    # ComfyUI's core `diffusion_models` folder only lists its normal weight
+    # extensions. ComfyUI-GGUF registers `unet_gguf` as a virtual folder that
+    # lists the same directories with `.gguf` enabled, so check it last.
+    "unet_name": ("diffusion_models", "unet", "unet_gguf"),
     "ckpt_name": ("checkpoints",),
-    "clip_name": ("text_encoders", "clip"),
-    "clip_name1": ("text_encoders", "clip"),
-    "clip_name2": ("text_encoders", "clip"),
-    "clip_name3": ("text_encoders", "clip"),
+    "clip_name": ("text_encoders", "clip", "clip_gguf"),
+    "clip_name1": ("text_encoders", "clip", "clip_gguf"),
+    "clip_name2": ("text_encoders", "clip", "clip_gguf"),
+    "clip_name3": ("text_encoders", "clip", "clip_gguf"),
     "vae_name": ("vae",),
     "lora_name": ("loras",),
     "control_net_name": ("controlnet",),
