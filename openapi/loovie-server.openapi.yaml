@@ -780,7 +780,11 @@ components:
           description: Whether the server can render sung vocals from lyrics.
         supportsInstrumental:
           type: boolean
-          description: Whether the server can render instrumental (no-vocal) music.
+          description: >-
+            Whether the server accepts instrumental (no-vocal) requests. The
+            YuE2 reference honours it on a best-effort basis (no lyric sheet, no
+            ABC plan, and the upstream no-vocals style directive), because the
+            base checkpoint is a song model that can still sing without lyrics.
         promptCharLimit:
           type: integer
           minimum: 1

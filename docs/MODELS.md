@@ -298,6 +298,21 @@ The downloader skips files that are already present, so it is safe to re-run aft
   Loovie-operated infrastructure.
 - **Files:** `yue2_3b_int8_convrot.safetensors`.
 - **Approx size:** ~3.7 GB.
+- **Instrumental is best effort.** YuE2 is a song model: it writes a vocal
+  melody whether or not the lyric sheet has words, so an instrumental render
+  can still come back with wordless (or invented) vocals. The reference graph
+  does what upstream's own instrumental recipe does
+  ([`skills/yue2-music/instrumental`](https://github.com/multimodal-art-projection/YuE/tree/main/skills/yue2-music/instrumental)):
+  it drops the lyric sheet, skips the ABC plan (off mode) and folds
+  `Instrumental, …, no vocals, no singing, no choir, no spoken words` into the
+  style. Upstream's own summary records `absence_of_vocals_checked: false` for
+  that path. A render that must be reliably wordless needs an instrumental
+  LoRA (for example Mothersuperior's 279 MB YuE2 adapter) loaded in front of
+  the checkpoint, which this reference workflow does not ship.
+- **Duration is a cap, not a target.** `maxDurationSeconds` bounds the sampling
+  budget (25 semantic tokens per second); sampling stops as soon as the model
+  writes the song's end token, so a song whose structure finishes early ends
+  well before the requested length.
 
 ## Disk budget
 

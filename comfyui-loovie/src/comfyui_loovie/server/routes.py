@@ -401,8 +401,9 @@ def _inject_music_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None
     """Inject music-request values into `LoovieMusicInput` nodes.
 
     The YuE2 reference reads a style prompt and an optional lyric sheet.
-    `instrumental` moves the Vocal notes into the Ins voice in the score;
-    we pass it through so the graph decides how to realise it.
+    `instrumental` is passed through: the node blanks the lyric sheet, folds
+    the upstream no-vocals directive into the style and skips the ABC plan, so
+    a request never sings words it also marked instrumental.
     """
     prompt = str(body.get("prompt", "") or "")
     lyrics = str(body.get("lyrics", "") or "")
