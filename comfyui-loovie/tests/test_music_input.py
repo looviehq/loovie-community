@@ -43,6 +43,46 @@ def test_music_input_instrumental_disables_abc_and_sets_mode_off() -> None:
     assert mode == "off"
 
 
+def test_music_input_instrumental_folds_the_upstream_style_directive() -> None:
+    """YuE2 is a song model: the style itself has to forbid vocals."""
+    style, _, _, _, _, _ = LoovieMusicInput().build("warm lofi piano, 80 bpm", "", True, -1, 60.0)
+    assert style.startswith("Instrumental, warm lofi piano, 80 bpm")
+    for condition in ("no vocals", "no singing", "no choir", "no spoken words"):
+        assert condition in style
+
+
+def test_music_input_instrumental_never_sings_supplied_lyrics() -> None:
+    """The flag wins over a lyric sheet: nothing is sung on an instrumental."""
+    _, lyrics, _, _, _, _ = LoovieMusicInput().build(
+        "lofi beat", "[Verse]\nsome words", True, -1, 60.0
+    )
+    assert lyrics == ""
+
+
+def test_music_input_instrumental_style_is_idempotent() -> None:
+    """Re-running the directive never doubles it up."""
+    first, _, _, _, _, _ = LoovieMusicInput().build("lofi beat", "", True, -1, 60.0)
+    second, _, _, _, _, _ = LoovieMusicInput().build(first, "", True, -1, 60.0)
+    assert first == second
+    assert second.lower().count("no vocals") == 1
+
+
+def test_music_input_instrumental_with_empty_style_still_gets_a_style() -> None:
+    style, _, _, _, _, _ = LoovieMusicInput().build("", "", True, -1, 60.0)
+    assert style.startswith("Instrumental, expressive instrumental music")
+
+
+def test_music_input_leaves_a_vocal_request_untouched() -> None:
+    """Non-instrumental requests pass style and lyrics through verbatim."""
+    style, lyrics, abc_enabled, _, _, mode = LoovieMusicInput().build(
+        "warm lofi piano", "[Verse]\nwords", False, -1, 60.0
+    )
+    assert style == "warm lofi piano"
+    assert lyrics == "[Verse]\nwords"
+    assert abc_enabled is True
+    assert mode == "full"
+
+
 def test_music_input_casts_seed_and_duration() -> None:
     _, _, _, seed, duration, _ = LoovieMusicInput().build("style", "", False, 3, 90)
     assert seed == 3
