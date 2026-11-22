@@ -8,7 +8,7 @@
     "name": "Loovie",
     "url": "https://loovie.app"
   },
-  "homepage": "https://loovie.app",
+  "homepage": "https://api.loovie.app/v1/mcp",
   "repository": "https://github.com/looviehq/loovie-community",
   "license": "Apache-2.0",
   "keywords": [

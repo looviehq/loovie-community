@@ -9,7 +9,7 @@
     "name": "Loovie",
     "url": "https://loovie.app"
   },
-  "homepage": "https://loovie.app",
+  "homepage": "https://api.loovie.app/v1/mcp",
   "documentation": "https://github.com/looviehq/loovie-community/tree/main/loovie-mcp",
   "support": "https://github.com/looviehq/loovie-community/issues",
   "repository": {
