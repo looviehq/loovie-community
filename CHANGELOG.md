@@ -4,6 +4,35 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 > **Beta API stability.** While we are on the `0.x` line, the BYO HTTP contract (`openapi/loovie-server.openapi.yaml`) may introduce breaking changes between minor versions. Every breaking change is logged below and reflected in a bump of `info.version` on the spec (and `schemaVersion` on the capabilities manifest when the shape changes). Pin to a specific tag or commit SHA if you depend on the contract; strict semver kicks in at `1.0.0`.
 
+## [1.0.0](https://github.com/looviehq/loovie-community/compare/v0.3.0-beta.1...v1.0.0) (2026-11-23)
+
+
+### Features
+
+* **comfyui-loovie:** add HyperFlow H3 Flash video model ([#94](https://github.com/looviehq/loovie-community/issues/94)) ([2428536](https://github.com/looviehq/loovie-community/commit/2428536a68f7b9233ea34494da48efcf462acf19))
+* **comfyui-loovie:** add MiniMax H3 Image and bump ComfyUI to 0.45.0 ([#100](https://github.com/looviehq/loovie-community/issues/100)) ([f1b9892](https://github.com/looviehq/loovie-community/commit/f1b989231ddab34de804dc3e100f065ae6508ce6))
+* **comfyui-loovie:** add Qwen-Image 2.1, FLUX 3 Klein and Krea 2 ([#95](https://github.com/looviehq/loovie-community/issues/95)) ([2d0d6e9](https://github.com/looviehq/loovie-community/commit/2d0d6e9b0f5f1d7166413bdcb5b6512938d086e5))
+* **comfyui-loovie:** add reference audio to the BYO contract and manifest ([#103](https://github.com/looviehq/loovie-community/issues/103)) ([2979fd6](https://github.com/looviehq/loovie-community/commit/2979fd6448bb44b5470b3c78ff206801d5637622))
+* **comfyui-loovie:** answer 400 with the real reason instead of retrying ([#101](https://github.com/looviehq/loovie-community/issues/101)) ([2c7f4ae](https://github.com/looviehq/loovie-community/commit/2c7f4ae505d40adbed40e541ee0287f102953e87))
+* **comfyui-loovie:** check model files at startup and document downloads ([#109](https://github.com/looviehq/loovie-community/issues/109)) ([c2d9147](https://github.com/looviehq/loovie-community/commit/c2d91472753496ff738bc1f97edbbb366febe860))
+* **comfyui-loovie:** multi-model BYO contract and Stable Audio 3 SFX ([#92](https://github.com/looviehq/loovie-community/issues/92)) ([761297b](https://github.com/looviehq/loovie-community/commit/761297ba3b107c8d7468765d899ab5739867c17c))
+* **comfyui-loovie:** reference video clips for ref2v in the API contract ([#107](https://github.com/looviehq/loovie-community/issues/107)) ([a1fc999](https://github.com/looviehq/loovie-community/commit/a1fc9991da479e7115b5bbbe5016ed3177eb8411))
+* **comfyui-loovie:** runnable Pika H3 Flex graphs ([#93](https://github.com/looviehq/loovie-community/issues/93)) ([5f9df45](https://github.com/looviehq/loovie-community/commit/5f9df4535614a28600d626464062f96c70c07722))
+* **comfyui-loovie:** wire H3 reference audio through the ref2v graphs ([#105](https://github.com/looviehq/loovie-community/issues/105)) ([36b3af0](https://github.com/looviehq/loovie-community/commit/36b3af0dfda411eb9bbc612927be0611a5c08d58))
+* **release:** graduate the root package to 1.0.0 GA ([#113](https://github.com/looviehq/loovie-community/issues/113)) ([312498c](https://github.com/looviehq/loovie-community/commit/312498c66764c5eb3f89ed0b68097a73eeee6ca9))
+
+
+### Bug Fixes
+
+* **ci:** stamp dxt version from release tag and guard the upload ([#112](https://github.com/looviehq/loovie-community/issues/112)) ([8b4cb0e](https://github.com/looviehq/loovie-community/commit/8b4cb0e91d91f5bb5ffd073878d0e326679b830c))
+* **comfyui-loovie:** make YuE2 instrumental requests actually instrumental ([2b2d3d5](https://github.com/looviehq/loovie-community/commit/2b2d3d5eaa2df7bec7b2f738ceea490e8ccf3e45))
+* **mcp:** point plugin homepage at the MCP origin ([#111](https://github.com/looviehq/loovie-community/issues/111)) ([8fe2240](https://github.com/looviehq/loovie-community/commit/8fe2240adb1cbfdc2e23b72090c93ae22c57f5e8))
+
+
+### Documentation
+
+* **mcp:** align bundled skills with the current MCP tool surface ([#90](https://github.com/looviehq/loovie-community/issues/90)) ([a699c53](https://github.com/looviehq/loovie-community/commit/a699c531b7dbfa342e449cbbba768bedf592b554))
+
 ## [0.3.0-beta.1](https://github.com/looviehq/loovie-community/compare/v0.2.3-beta.1...v0.3.0-beta.1) (2026-10-17)
 
 
