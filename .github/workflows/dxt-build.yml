@@ -4,6 +4,17 @@ name: dxt-build
 # it as a release asset on every release-please tag.
 #
 # Tag format: `v*` (see release-please-config.json: include-v-in-tag = true).
+# Release-please attributes commits under `loovie-mcp/**` to the root `.`
+# component, so a change there cuts a plain `v*` release, not a `cli-v*` one.
+# The `cli-v*` tag only moves the `@loovie/mcp` npm package and does NOT carry
+# the bundle, so we deliberately do not trigger on it.
+#
+# The bundle version is stamped from the release tag at build time. The
+# committed loovie-mcp/manifest.json version tracks the `packages/cli`
+# component (the npm package), which `loovie-mcp/**` commits never bump, so
+# without stamping every bundle would ship the same stale version and Claude
+# Desktop would never offer an update.
+#
 # Spec:       Anthropic MCPB (formerly DXT) v0.3
 #               https://github.com/anthropics/dxt/blob/main/MANIFEST.md
 # Packager:   @anthropic-ai/mcpb (formerly @anthropic-ai/dxt)
@@ -16,11 +27,16 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to attach the asset to (e.g. v0.2.1-beta.1)'
+        description: 'Existing release tag to build and attach the asset to (e.g. v0.4.0-beta.1)'
         required: true
 
 permissions:
   contents: read
+
+concurrency:
+  # Releases are cut back to back; never let two packs race on the same asset.
+  group: dxt-build
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -31,11 +47,45 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # On tag push this is the tag. On workflow_dispatch the default
+          # checkout would be the branch the run was started from, which
+          # would silently pack main onto an older release.
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '20'
+
+      - name: Resolve tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          REF_NAME:  ${{ github.ref_name }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            echo "name=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=$REF_NAME" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Stamp bundle version
+        # Prefix/component stripping keeps `v1.2.3` and `cli-v1.2.3` both
+        # usable; the result must stay valid semver or mcpb validate fails.
+        working-directory: loovie-mcp
+        env:
+          TAG: ${{ steps.tag.outputs.name }}
+        run: |
+          VERSION="${TAG#cli-v}"
+          VERSION="${VERSION#v}"
+          echo "Stamping bundle version: $VERSION"
+          for manifest in manifest.json .claude-plugin/plugin.json; do
+            [ -f "$manifest" ] || continue
+            jq --arg version "$VERSION" '.version = $version' "$manifest" > "$manifest.tmp"
+            mv "$manifest.tmp" "$manifest"
+            echo "$manifest -> $(jq -r .version "$manifest")"
+          done
 
       - name: Install mcp-remote into the bundle
         # The Loovie MCP server is hosted remotely; mcp-remote is the
@@ -68,22 +118,28 @@ jobs:
           npx -y @anthropic-ai/mcpb@latest pack . ../loovie-mcp.dxt
           ls -la ../loovie-mcp.dxt
 
-      - name: Resolve tag
-        id: tag
+      - name: Wait for the release to exist
+        # release-please creates the release and the tag together, but the tag
+        # push event can reach this workflow before the release is readable.
         env:
-          INPUT_TAG: ${{ inputs.tag }}
-          REF_NAME:  ${{ github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG:      ${{ steps.tag.outputs.name }}
+          REPO:     ${{ github.repository }}
         run: |
-          if [ -n "$INPUT_TAG" ]; then
-            echo "name=$INPUT_TAG" >> "$GITHUB_OUTPUT"
-          else
-            echo "name=$REF_NAME" >> "$GITHUB_OUTPUT"
-          fi
+          for attempt in $(seq 1 20); do
+            if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+              echo "release $TAG is available"
+              exit 0
+            fi
+            echo "release $TAG not visible yet (attempt $attempt/20), retrying in 15s"
+            sleep 15
+          done
+          echo "::error::release $TAG was never created; nothing to attach the bundle to"
+          exit 1
 
       - name: Upload to GitHub Release
-        # Attaches loovie-mcp.dxt to the tag's release. release-please
-        # creates the release on tag push; this job runs after the tag is
-        # already live so the release exists.
+        # Attaches loovie-mcp.dxt to the tag's release with --clobber, so
+        # re-running this workflow for the same tag replaces the asset.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG:      ${{ steps.tag.outputs.name }}
@@ -93,6 +149,23 @@ jobs:
             --repo "$REPO" \
             --clobber
 
+      - name: Mark this release as Latest
+        # loovie-mcp/README.md links to releases/latest/download/loovie-mcp.dxt,
+        # which resolves to whichever release GitHub badges "Latest". A cli-v*
+        # release cut seconds after this one takes that badge and carries no
+        # bundle, so the install link 404s. That is exactly what happened with
+        # cli-v0.2.0. Claiming the badge here keeps the link working.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG:      ${{ steps.tag.outputs.name }}
+          REPO:     ${{ github.repository }}
+        run: |
+          if gh release edit "$TAG" --repo "$REPO" --latest; then
+            echo "release $TAG is now Latest"
+          else
+            echo "::warning::could not mark $TAG as Latest, releases/latest/download/loovie-mcp.dxt may 404"
+          fi
+
       - name: Summary
         env:
           TAG:  ${{ steps.tag.outputs.name }}
@@ -100,8 +173,8 @@ jobs:
         run: |
           {
             echo "## dxt-build"
-            echo "- tag:    $TAG"
-            echo "- asset:  loovie-mcp.dxt"
-            echo "- url:    https://github.com/$REPO/releases/download/$TAG/loovie-mcp.dxt"
-            echo "- latest: https://github.com/$REPO/releases/latest/download/loovie-mcp.dxt"
+            echo "- tag:     $TAG"
+            echo "- asset:   loovie-mcp.dxt"
+            echo "- version: $(jq -r .version loovie-mcp/manifest.json)"
+            echo "- url:     https://github.com/$REPO/releases/download/$TAG/loovie-mcp.dxt"
           } >> "$GITHUB_STEP_SUMMARY"
