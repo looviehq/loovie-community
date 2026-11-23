@@ -24,7 +24,7 @@
     ".": {
       "package-name": "loovie-community",
       "changelog-path": "CHANGELOG.md",
-      "release-as": "1.0.0",
+      "release-as": "",
       "extra-files": [
         {
           "type": "toml",
