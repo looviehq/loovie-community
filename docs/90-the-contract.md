@@ -481,7 +481,7 @@ Static bearer token of your choosing. Required for remote callers. Localhost (`1
 
 ## Server is poll-based
 
-Create returns a `taskId`. The app polls `/status` until terminal. The server does **not** push. (There is an optional `callback_url` field on create that the Loovie *cloud* uses for its own durability; BYO does not rely on it.)
+Create returns a `taskId`. The app polls `/status` until terminal. The server does **not** push progress over a socket. It can optionally push the finished result back to Loovie itself: a create request may carry a `delivery` block (callbacks + a job-scoped token), and the server then uploads the render and posts the terminal callback. That is opt-in per request and advertised through `delivery.directUpload` in `/loovie/capabilities`; without it, the device downloads the result and completes the job as before.
 
 ## Prompt length
 

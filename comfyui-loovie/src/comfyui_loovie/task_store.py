@@ -48,6 +48,13 @@ class TaskRecord:
     progress_step: int = 0
     progress_total: int = 0
     current_node: str | None = None
+    # Direct server delivery (optional). `delivery` is the block the caller
+    # supplied on create; the three fields below are this server's own
+    # progress through uploading + reporting the result to Loovie.
+    delivery: dict[str, object] | None = None
+    delivery_upload: str = "none"
+    delivery_callback: str = "none"
+    delivery_storage_key: str | None = None
 
 
 def _generate_task_id() -> str:

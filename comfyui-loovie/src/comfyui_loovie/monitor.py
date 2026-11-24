@@ -18,6 +18,7 @@ import uuid
 from typing import Any
 
 from .callback_sender import send_callback
+from .delivery import start_failure_delivery, start_success_delivery
 from .task_store import TaskState, TaskStore
 
 logger = logging.getLogger("comfyui_loovie.monitor")
@@ -203,6 +204,9 @@ def _mark_failed(task_id: str, fail_code: str, message: str) -> None:
     logger.error("Task %s failed: code=%s msg=%s", task_id, fail_code, message)
     if task is not None:
         send_callback(None, task_id, "failed", fail_code=fail_code, fail_msg=message)
+        # Direct delivery: report the failure itself when the create request
+        # asked for it. No-op otherwise.
+        start_failure_delivery(task_id, fail_code, message)
 
 
 def _finalize_from_history(
@@ -245,6 +249,9 @@ def _finalize_from_history(
             )
             logger.info("Task %s succeeded: result_url=%s", task_id, url)
             send_callback(None, task_id, "success", result_url=url)
+            # Direct delivery: upload + complete from this server so the phone
+            # does not have to be open. No-op without a delivery block.
+            start_success_delivery(task_id, url)
             return
 
         _mark_failed(
