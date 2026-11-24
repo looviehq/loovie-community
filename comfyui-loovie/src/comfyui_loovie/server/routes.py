@@ -197,6 +197,11 @@ def _log_safe_body(body: dict[str, Any]) -> dict[str, Any]:
         v = out.get(key)
         if isinstance(v, str) and v:
             out[key] = _redact(v)
+    # A direct-delivery block carries a job-scoped Loovie token. It must never
+    # reach the log, not even the development one.
+    delivery = out.get("delivery")
+    if isinstance(delivery, dict):
+        out["delivery"] = {**delivery, "token": "<redacted>"}
     return out
 
 
@@ -825,6 +830,17 @@ async def _setup_and_submit(
         aspect_ratio=str(body.get("aspect_ratio", "1:1")),
         workflow_name=workflow_name,
     )
+    # Optional direct delivery: the app forwards a job-scoped block so this
+    # server can upload + report the result itself. Kept opaque here; the
+    # delivery module validates/uses it. Without it, behaviour is unchanged.
+    delivery = body.get("delivery")
+    if isinstance(delivery, dict) and delivery.get("completeUrl"):
+        store.update_task(
+            task.task_id,
+            delivery=delivery,
+            delivery_upload="pending",
+            delivery_callback="pending",
+        )
 
     try:
         workflow_json = wf_manager.load_workflow(workflow_name)
@@ -983,6 +999,20 @@ async def _task_status_handler(request: web.Request) -> web.Response:
         data["totalSteps"] = task.progress_total
     if task.current_node:
         data["currentNode"] = task.current_node
+
+    # Direct delivery: tell the client what this server did about pushing the
+    # result back to Loovie, so it can skip its own download when we handled
+    # it. `storageKey` lets the client recover with a callback alone when the
+    # upload landed but our callback did not.
+    if isinstance(task.delivery, dict):
+        delivery: dict[str, Any] = {
+            "mode": "server",
+            "upload": task.delivery_upload,
+            "callback": task.delivery_callback,
+        }
+        if task.delivery_storage_key:
+            delivery["storageKey"] = task.delivery_storage_key
+        data["delivery"] = delivery
 
     if task.state == TaskState.SUCCESS and task.result_url:
         data["resultJson"] = json.dumps({"resultUrls": [task.result_url]})

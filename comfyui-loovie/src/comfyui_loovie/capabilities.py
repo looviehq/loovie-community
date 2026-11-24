@@ -188,6 +188,15 @@ def build_capabilities_manifest(
         if music is not None:
             manifest["music"] = music
 
+    # Direct delivery: this server can upload a finished render to Loovie and
+    # post the terminal callbacks itself, so a job completes with the phone
+    # closed. Opt-in per request (`delivery` block on create); the device path
+    # remains the default and the fallback.
+    manifest["delivery"] = {
+        "directUpload": True,
+        "kinds": ["image", "video", "music", "sfx"],
+    }
+
     return _for_contract(manifest, contract_version)
 
 
