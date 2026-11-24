@@ -31,7 +31,8 @@ def image_dimensions(aspect_ratio: str) -> tuple[int, int]:
 
 # LTX-friendly generation dimensions. Multiples of 32 are required by the
 # encoder/sampler; the post-decode crop trims back to the user-visible
-# target size in `TARGET_VIDEO_DIMENSIONS`.
+# target size in `TARGET_VIDEO_DIMENSIONS`. `480p` and `768p` are the MiniMax
+# H3 / Pika H3 Flex rows (H3 runs a 768 short edge at its training size).
 VIDEO_GEN_DIMENSIONS: Final[dict[tuple[str, str], tuple[int, int]]] = {
     ("16:9", "720p"): (1280, 720),
     ("16:9", "1080p"): (1920, 1088),
@@ -43,6 +44,16 @@ VIDEO_GEN_DIMENSIONS: Final[dict[tuple[str, str], tuple[int, int]]] = {
     ("3:4", "1080p"): (1088, 1440),
     ("1:1", "720p"): (736, 736),
     ("1:1", "1080p"): (1088, 1088),
+    ("16:9", "480p"): (832, 480),
+    ("9:16", "480p"): (480, 832),
+    ("4:3", "480p"): (640, 480),
+    ("3:4", "480p"): (480, 640),
+    ("1:1", "480p"): (480, 480),
+    ("16:9", "768p"): (1344, 768),
+    ("9:16", "768p"): (768, 1344),
+    ("4:3", "768p"): (1024, 768),
+    ("3:4", "768p"): (768, 1024),
+    ("1:1", "768p"): (768, 768),
 }
 
 TARGET_VIDEO_DIMENSIONS: Final[dict[tuple[str, str], tuple[int, int]]] = {
@@ -56,6 +67,16 @@ TARGET_VIDEO_DIMENSIONS: Final[dict[tuple[str, str], tuple[int, int]]] = {
     ("3:4", "1080p"): (1080, 1440),
     ("1:1", "720p"): (720, 720),
     ("1:1", "1080p"): (1080, 1080),
+    ("16:9", "480p"): (832, 480),
+    ("9:16", "480p"): (480, 832),
+    ("4:3", "480p"): (640, 480),
+    ("3:4", "480p"): (480, 640),
+    ("1:1", "480p"): (480, 480),
+    ("16:9", "768p"): (1344, 768),
+    ("9:16", "768p"): (768, 1344),
+    ("4:3", "768p"): (1024, 768),
+    ("3:4", "768p"): (768, 1024),
+    ("1:1", "768p"): (768, 768),
 }
 
 _DEFAULT_VIDEO_DIMENSIONS: Final[tuple[int, int]] = (960, 544)

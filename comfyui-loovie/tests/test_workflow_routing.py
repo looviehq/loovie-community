@@ -34,7 +34,12 @@ def test_resolve_workflow_name(body: dict[str, str], expected: str) -> None:
 def test_negative_prompt_keeps_workflow_default_when_unset() -> None:
     from comfyui_loovie.server.routes import _inject_inputs
 
-    wf = {"1": {"class_type": "LoovieTextInput", "inputs": {"prompt": "", "negative_prompt": "dflt"}}}
+    wf = {
+        "1": {
+            "class_type": "LoovieTextInput",
+            "inputs": {"prompt": "", "negative_prompt": "dflt"},
+        }
+    }
     _inject_inputs(wf, {"prompt": "p"})
     assert wf["1"]["inputs"]["negative_prompt"] == "dflt"
     _inject_inputs(wf, {"prompt": "p", "negative_prompt": "mine"})
@@ -44,7 +49,13 @@ def test_negative_prompt_keeps_workflow_default_when_unset() -> None:
 def test_registered_image_and_moss_workflows_exist() -> None:
     WorkflowManager.reset()
     names = WorkflowManager.get_instance().get_workflow_names()
-    for name in ("flux-3-klein", "flux-3-klein-edit", "moss-image", "ltx25-t2v-moss-fast", "ltx25-t2v-moss-pro"):
+    for name in (
+        "flux-3-klein",
+        "flux-3-klein-edit",
+        "moss-image",
+        "ltx25-t2v-moss-fast",
+        "ltx25-t2v-moss-pro",
+    ):
         assert name in names
     assert "flux-2-klein" not in names
 
@@ -53,6 +64,10 @@ def test_registered_image_and_moss_workflows_exist() -> None:
 def test_workflow_links_resolve(path: Path) -> None:
     graph = json.loads(path.read_text())
     for node_id, node in graph.items():
+        # `_`-prefixed top-level keys are documentation and are stripped before
+        # submission (see WorkflowManager.submit_workflow).
+        if node_id.startswith("_"):
+            continue
         for key, value in node["inputs"].items():
             if isinstance(value, list) and len(value) == 2 and isinstance(value[0], str):
                 assert value[0] in graph, f"{path.name}: {node_id}.{key} -> missing node {value[0]}"

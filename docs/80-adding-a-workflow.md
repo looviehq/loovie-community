@@ -64,18 +64,69 @@ workflows:
     max_wait_seconds: 300
 ```
 
-### 5. Update capabilities if you advertise new modes/variants/resolutions
+### 5. Advertise a model (and its recipes) if you want a picker row
+
+A workflow registered above is reachable by `workflow`, but the app will not
+show a model row for it. To make it selectable, add an entry under `models:`
+in `comfyui-loovie/config.yaml`:
+
+```yaml
+models:
+  my-model:
+    label: "My Model"
+    templates:            # mode -> registered workflow id
+      t2v: "my-model-t2v"
+      i2v: "my-model-frames"
+      fl2v: "my-model-frames"
+    capabilities: ["t2v", "i2v", "fl2v"]
+    referenceCount: 1
+    maxReferenceImages: 0
+    resolution: ["480p", "768p"]
+    aspectRatios: ["auto", "16:9", "9:16", "1:1"]
+    durations: [5, 6, 7, 8]
+    audio: "always"
+    variants:
+      fast:
+        label: "Fast"
+        default: true
+        steps: 4
+        shiftVideo: 6.0
+        shiftAudio: 3.0
+      hq:
+        label: "HQ"
+        description: "8 evaluations, maximum detail."
+        lora: "my-model-hq-comfyui_bf16.safetensors"
+        steps: 8
+        shiftVideo: 6.0
+        shiftAudio: 3.0
+```
+
+Rules worth knowing:
+
+- A model is advertised only when at least one of its `templates` workflows is
+  registered, so an uninstalled model never shows up as a broken option.
+- `variants` is the recipe list the app renders. Each recipe's `lora` (empty
+  means the trunk as-is), `steps`, `shiftVideo` and `shiftAudio` are applied to
+  the graph per request by `_apply_model_variant` in `server/routes.py`, so one
+  graph per mode serves every recipe.
+- A recipe can narrow the model with `capabilities`, `maxReferenceImages`,
+  `resolution` and `durations` (for example an HQ recipe that only runs at
+  768p). The app disables a recipe the current request cannot use.
+- `schemaVersion` is `2`: the manifest carries both this per-model `models`
+  view and the flat v1 `ss_videos` object for older app builds.
+
+### 6. Update the OpenAPI enums if you advertise new modes/variants/resolutions
 
 `src/comfyui_loovie/capabilities.py` is what generates the `/loovie/capabilities` response. If your workflow introduces a new mode (e.g. a new variant string), make sure it's already in the OpenAPI's closed enums in [`openapi/loovie-server.openapi.yaml`](../openapi/loovie-server.openapi.yaml). If it isn't, you're proposing a spec change, open a separate issue using the **[Spec change](https://github.com/looviehq/loovie-community/issues/new?template=spec_change.yml)** template, and bump `info.version` and `schemaVersion`. See [the beta API stability section of the README](../README.md#beta-api-stability--read-this-before-you-depend-on-the-contract).
 
-### 6. Test locally
+### 7. Test locally
 
 Run the server locally per [`20-quickstart-your-own-machine.md`](20-quickstart-your-own-machine.md). Verify:
 
 - `curl http://localhost:8188/loovie/capabilities | jq .` includes your workflow's parameters in `variants` / `aspectRatios` / `durations` / etc.
 - A test request (against the minimal example: `curl -X POST http://localhost:8188/images/create -H "Authorization: Bearer $LOOVIE_API_TOKEN" -d '{"prompt":"test", "mode":"t2i", "variant":"<your-variant>"}'`) returns a `taskId` and polling that taskId eventually returns `state: success`.
 
-### 7. Open a PR
+### 8. Open a PR
 
 Use the **[Workflow contribution](https://github.com/looviehq/loovie-community/issues/new?template=workflow_contribution.yml)** issue template to discuss first if it's a substantial addition, or open a PR directly for a small change.
 

@@ -171,7 +171,9 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
             inputs["prompt"] = body.get("prompt", "")
             # Keep the workflow's own default (e.g. MOSS-Image's quality
             # negative) when the caller sends none.
-            inputs["negative_prompt"] = body.get("negative_prompt") or inputs.get("negative_prompt", "")
+            inputs["negative_prompt"] = body.get("negative_prompt") or inputs.get(
+                "negative_prompt", ""
+            )
 
         elif cls == "LoovieSettings":
             inputs["aspect_ratio"] = body.get("aspect_ratio", "1:1")
@@ -268,17 +270,150 @@ def _resolve_music_workflow_name(body: dict[str, Any]) -> str:
     return "yue2-t2m-fast"
 
 
+def _resolve_model_workflow_name(body: dict[str, Any]) -> str | None:
+    """Workflow id for a `model` request, from that model's `templates`.
+
+    The BYO contract lets a request name a model and a recipe instead of a
+    workflow, so the server owns which graph runs. The mode decides the
+    template: `fl2v` when both frames are present, `i2v` with a start frame,
+    `t2v` otherwise. Unknown models return None so the caller can fall back
+    to the workflow/legacy mapping and the normal "Unknown workflow" error.
+    """
+    model_id = str(body.get("model", "") or "").strip()
+    if not model_id:
+        return None
+    triage = WorkflowManager.get_instance().video_model(model_id)
+    if triage is None:
+        return None
+    templates = triage.get("templates")
+    if not isinstance(templates, dict):
+        return None
+    start = (body.get("start_frame_url") or "").strip()
+    end = (body.get("end_frame_url") or "").strip()
+    has_references = bool(
+        body.get("reference_image_urls")
+        or body.get("reference_video_urls")
+        or body.get("reference_audio_urls")
+    )
+    if has_references:
+        mode = "ref2v"
+    elif start and end:
+        mode = "fl2v"
+    elif start:
+        mode = "i2v"
+    else:
+        mode = "t2v"
+    capabilities = [str(c) for c in triage.get("capabilities") or []]
+    if capabilities and mode not in capabilities:
+        # Never fall through to another model's graph: a request the model
+        # cannot serve is refused loudly by the caller's unknown-workflow
+        # error instead of silently dropping the references.
+        logger.warning(
+            "Model %s does not support mode %s; refusing to route it",
+            model_id,
+            mode,
+        )
+        return None
+    template = templates.get(mode) or templates.get("t2v")
+    return str(template) if template else None
+
+
+def _apply_model_variant(workflow: dict[str, Any], body: dict[str, Any]) -> None:
+    """Apply the requested recipe to a model graph, in place.
+
+    A recipe is the LoRA file, the sampler step count and the H3 flow
+    shifts. Graphs declare those nodes by class so this never has to know
+    node ids:
+
+    * `LoraLoaderModelOnly` gets `lora_name` + `strength_model`. A recipe
+      with no LoRA (the trunk itself) removes the node and re-points its
+      consumer at the trunk loader.
+    * `BasicScheduler` gets `steps`.
+    * `MiniMaxH3SigmaShift` gets `shift_video` / `shift_audio`.
+
+    A body with no model, or a model without variants, leaves the graph
+    untouched, which is what the LTX `variant` path expects.
+    """
+    model_id = str(body.get("model", "") or "").strip()
+    if not model_id:
+        return
+    model = WorkflowManager.get_instance().video_model(model_id)
+    if model is None:
+        return
+    variants = model.get("variants")
+    if not isinstance(variants, dict) or not variants:
+        return
+
+    variant_id = str(body.get("variant", "") or "").strip()
+    variant = variants.get(variant_id) if variant_id else None
+    if not isinstance(variant, dict):
+        default_id = next(
+            (
+                str(key)
+                for key, value in variants.items()
+                if isinstance(value, dict) and value.get("default")
+            ),
+            next(iter(variants)),
+        )
+        variant = variants.get(default_id)
+        if not isinstance(variant, dict):
+            return
+        variant_id = default_id
+
+    lora_name = str(variant.get("lora", "") or "").strip()
+    lora_node_ids = [
+        node_id
+        for node_id, node in workflow.items()
+        if node.get("class_type") == "LoraLoaderModelOnly"
+    ]
+    trunk_id = next(
+        (node_id for node_id, node in workflow.items() if node.get("class_type") == "UNETLoader"),
+        None,
+    )
+    if not lora_name:
+        for node_id in lora_node_ids:
+            upstream = workflow[node_id]["inputs"].get("model")
+            replacement = list(upstream) if upstream else ([trunk_id, 0] if trunk_id else None)
+            if replacement is None:
+                continue
+            for node in workflow.values():
+                for key, value in node.get("inputs", {}).items():
+                    if isinstance(value, list) and len(value) == 2 and value[0] == node_id:
+                        node["inputs"][key] = replacement
+            workflow.pop(node_id, None)
+    else:
+        for node_id in lora_node_ids:
+            workflow[node_id]["inputs"]["lora_name"] = lora_name
+            workflow[node_id]["inputs"]["strength_model"] = float(variant.get("strength") or 1.0)
+
+    steps = variant.get("steps")
+    for node in workflow.values():
+        if node.get("class_type") == "BasicScheduler" and isinstance(steps, int):
+            node["inputs"]["steps"] = max(1, steps)
+        elif node.get("class_type") == "MiniMaxH3SigmaShift":
+            if isinstance(variant.get("shiftVideo"), (int, float)):
+                node["inputs"]["shift_video"] = float(variant["shiftVideo"])
+            if isinstance(variant.get("shiftAudio"), (int, float)):
+                node["inputs"]["shift_audio"] = float(variant["shiftAudio"])
+
+    logger.info("Applied model recipe: model=%s variant=%s", model_id, variant_id)
+
+
 def _resolve_workflow_name(body: dict[str, Any], default: str) -> str:
     """Pick the workflow id to run based on the request body.
 
-    Honours an explicit `workflow` field, otherwise maps `mode + variant`
-    to a registered LTX 2.5 workflow, otherwise the image-mode mapping,
-    otherwise the caller-supplied default. `image_model: "moss-image"`
-    swaps FLUX 3 for MOSS-Image on t2i and as the first-frame stage of t2v.
+    Order: an explicit `workflow`, then a `model` (its `templates` entry for
+    the request's mode), then the legacy `mode + variant` mapping to a
+    registered LTX 2.5 workflow, then the image-mode mapping, then the
+    caller-supplied default. `image_model: "moss-image"` swaps FLUX 3 for
+    MOSS-Image on t2i and as the first-frame stage of t2v.
     """
     explicit = str(body.get("workflow", "") or "").strip()
     if explicit:
         return explicit
+    model_workflow = _resolve_model_workflow_name(body)
+    if model_workflow:
+        return model_workflow
     mode = str(body.get("mode", "") or "").strip()
     variant = str(body.get("variant", "") or "").strip()
     image_model = str(body.get("image_model", "") or "").strip()
@@ -349,6 +484,7 @@ async def _setup_and_submit(
     try:
         workflow_json = wf_manager.load_workflow(workflow_name)
         inject(workflow_json, body)
+        _apply_model_variant(workflow_json, body)
         comfy_prompt_id = await wf_manager.submit_workflow(workflow_json)
     except FileNotFoundError as exc:
         store.update_task(
@@ -509,7 +645,7 @@ async def create_video(request: web.Request) -> web.Response:
             status=400,
         )
 
-    if not body.get("workflow"):
+    if not body.get("workflow") and not body.get("model"):
         if start_frame and end_frame:
             body["workflow"] = "ltx25-fl2v-fast"
         elif start_frame:
@@ -638,7 +774,11 @@ async def health(_request: web.Request) -> web.Response:
 async def capabilities(_request: web.Request) -> web.Response:
     """Capability manifest probe. ALWAYS public; never auth-checked."""
     wf_manager = WorkflowManager.get_instance()
-    manifest = build_capabilities_manifest(wf_manager.get_workflow_names(), VERSION)
+    manifest = build_capabilities_manifest(
+        wf_manager.get_workflow_names(),
+        VERSION,
+        models=wf_manager.video_models(),
+    )
     return web.json_response(manifest)
 
 

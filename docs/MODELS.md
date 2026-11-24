@@ -59,6 +59,32 @@ The downloader (`docker/download_models.sh`) reads [`docker/models.manifest`](..
 - **Licence:** BSD-3-Clause (academic-friendly, broad commercial reuse allowed).
 - **Approx size:** ~64 MB.
 
+### MiniMax H3 with the Pika H3 Flex recipes (`pika-h3-flex`)
+
+- **Purpose:** optional second video model, advertised as `pika-h3-flex` with
+  three recipes: `official` (6 evaluations), `turbo` (4, the fast draft) and
+  `hq` (8, maximum detail). Native synchronized audio, 5 to 15 seconds,
+  480p / 768p. Frame-keyed only (t2v, i2v, fl2v), so it takes no reference
+  image set.
+- **How the recipes work:** one graph per mode
+  (`workflows/h3flex_t2v.json`, `workflows/h3flex_frames.json`) and the
+  recipe is applied per request from the `models:` block in
+  [`comfyui-loovie/config.yaml`](../comfyui-loovie/config.yaml): the LoRA
+  file, the sampler step count and the H3 flow shifts. Add a recipe by
+  editing that block, never by adding a graph or an app release.
+- **Weights:** the MiniMax H3 FL2VA trunk plus the Qwen3-VL 32B text encoder
+  and both VAEs, laid out exactly as ComfyUI's own "Image to Video (MiniMax
+  H3)" blueprint expects, plus one LoRA per recipe
+  (`minimax_h3_fl2v_turbo_4step_*.safetensors`,
+  `minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors`).
+- **`official` note:** Pika's official recipe re-noises between its six
+  knot evaluations. The reference graph samples with a uniform grid
+  (`euler`), which is what `turbo` and `hq` use, so `official` here is the
+  trunk at 6 steps rather than a bit-exact Pika reproduction. Point its
+  `lora` at your converted Pika adapter when you have one.
+- **Licence:** upstream MiniMax H3 and Pika H3 Flex terms apply. Read them
+  before downloading; nothing here relicenses either.
+
 ## Music generation
 
 ### YuE2 3B

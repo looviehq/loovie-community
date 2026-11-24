@@ -51,6 +51,11 @@ github\.com/looviehq/loovie-community/compare/v
 # - Smithery badge image endpoint returns 500 intermittently; the server page it links to is checked separately.
 ^https://smithery\.ai/badge/
 
+# - Smithery listing 404s until `.github/workflows/smithery-publish.yml`
+#   publishes it (it needs the SMITHERY_API_KEY secret and runs on release),
+#   so the README can carry the install path before the page exists.
+^https?://(www\.)?smithery\.ai/server/looviehq/loovie-mcp
+
 # - release-please changelogs link to compare/<prev>...<next> tags that only
 #   exist after the release PR is merged, so they 404 while the PR is open.
 github\.com/looviehq/loovie-community/compare/

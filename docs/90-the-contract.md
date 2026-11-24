@@ -72,9 +72,29 @@ The single most important endpoint. Tells the app what your server can do.
 
 ```jsonc
 {
-  "schemaVersion": 1,        // int, REQUIRED. Currently 1.
+  "schemaVersion": 2,        // int, REQUIRED. 1 = flat sections only, 2 = + models.
   "version": "0.1.0",        // optional string, telemetry only.
-  "images": {                // OMIT entire object if no image workflows.
+  "models": {                // v2: per-model view. Omit a modality you can't serve.
+    "ss_videos": [
+      {
+        "id": "pika-h3-flex",
+        "label": "Pika H3 Flex",
+        "capabilities": ["t2v", "i2v", "fl2v"],
+        "referenceCount": 1,
+        "maxReferenceImages": 0,
+        "resolution": ["480p", "768p"],
+        "variants": [
+          { "id": "official", "label": "Official", "default": true },
+          { "id": "turbo", "label": "Turbo", "draft": true },
+          { "id": "hq", "label": "HQ", "description": "8 evaluations, maximum detail." }
+        ],
+        "aspectRatios": ["auto", "16:9", "9:16", "1:1"],
+        "durations": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "audio": "always"
+      }
+    ]
+  },
+  "images": {                // v1 view, still required for old app builds.
     "capabilities": ["t2i", "i2i"],   // closed enum t2i|i2i
     "referenceCount": 4,              // int, max image_urls for i2i
     "resolution": ["720p", "1K", "2K"],   // closed enum
@@ -95,7 +115,9 @@ The single most important endpoint. Tells the app what your server can do.
 }
 ```
 
-**Hard rules.** Unknown enum values fail the entire parse, the app falls back to bundled defaults and fires `byo_caps_schema_unsupported` analytics. `schemaVersion` is currently `1`; bump only when the shape changes. Omit sections you can't serve. `promptCharLimit` `3000` is the server's real hard cap.
+**Hard rules.** Unknown enum values fail the entire parse, the app falls back to bundled defaults and fires `byo_caps_schema_unsupported` analytics. `schemaVersion` is currently `2` (the `models` view); `1` (flat sections only) is still accepted, so bump only when the shape changes. A model is advertised only when at least one of its `templates` workflows is registered, and the flat sections stay for older builds. Omit sections you can't serve. `promptCharLimit` `3000` is the server's real hard cap.
+
+**Variants.** A variant is a recipe inside a model, not a separate model: Pika H3 Flex declares `official` (Pika's 6-evaluation contract), `turbo` (4, the draft) and `hq` (8, maximum detail). A variant may narrow `capabilities`, `maxReferenceImages`, `resolution` and `durations`, so a recipe that only runs at one canvas never offers a pick it would reject. The recipe's implementation (LoRA file, sampler steps) is server-side and never appears in the manifest.
 
 ### `POST /images/create` (Bearer, conditional on `images`)
 

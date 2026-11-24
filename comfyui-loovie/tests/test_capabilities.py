@@ -129,10 +129,10 @@ def test_full_workflow_set_emits_all_sections() -> None:
     assert manifest["version"] == "0.1.0"
 
 
-def test_schema_version_is_one() -> None:
-    """The schema version is pinned to 1 until the manifest shape changes."""
+def test_schema_version_is_two() -> None:
+    """The manifest is v2 (per-model `models` view); bumps only with its shape."""
     manifest = build_capabilities_manifest(["flux-3-klein"], version="x")
-    assert manifest["schemaVersion"] == 1
+    assert manifest["schemaVersion"] == 2
 
 
 def test_image_section_uses_closed_enum_values() -> None:

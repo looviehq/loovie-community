@@ -160,6 +160,22 @@ class WorkflowManager:
     def get_workflow_names(self) -> list[str]:
         return list(self._config.get("workflows", {}).keys())
 
+    def video_models(self) -> dict[str, dict[str, Any]]:
+        """Model entries from the `models:` block (v2 manifest + routing).
+
+        Each entry declares its own recipes (`variants`) and the workflow
+        templates per mode (`templates`). An entry whose templates are not
+        registered is skipped by the capability manifest, so a model is only
+        offered when it can actually run.
+        """
+        models = self._config.get("models")
+        return models if isinstance(models, dict) else {}
+
+    def video_model(self, model_id: str) -> dict[str, Any] | None:
+        """One model entry by id, or None when it is not declared."""
+        entry = self.video_models().get(model_id)
+        return entry if isinstance(entry, dict) else None
+
     def load_workflow(self, workflow_name: str) -> dict[str, Any]:
         """Load a workflow template by registered name and return a deep copy."""
         if workflow_name in self._template_cache:

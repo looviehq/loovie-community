@@ -1,0 +1,312 @@
+{
+  "10": {
+    "inputs": {
+      "prompt": "",
+      "negative_prompt": ""
+    },
+    "class_type": "LoovieTextInput",
+    "_meta": {
+      "title": "Loovie Text Input"
+    }
+  },
+  "11": {
+    "inputs": {
+      "width": 1344,
+      "height": 768,
+      "num_frames": 121,
+      "fps": 24,
+      "audio_frames": 97,
+      "audio_fps": 25,
+      "with_audio": true,
+      "seed": -1
+    },
+    "class_type": "LoovieVideoSettings",
+    "_meta": {
+      "title": "Loovie Video Settings"
+    }
+  },
+  "15": {
+    "inputs": {
+      "width": [
+        "11",
+        0
+      ],
+      "height": [
+        "11",
+        1
+      ],
+      "latent_type": "sd3"
+    },
+    "class_type": "LoovieImageInput",
+    "_meta": {
+      "title": "Loovie Image Input (first / last frame)"
+    }
+  },
+  "20": {
+    "inputs": {
+      "unet_name": "minimax_h3_fl2va_pruned_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load MiniMax H3 FL2VA trunk"
+    }
+  },
+  "21": {
+    "inputs": {
+      "model": [
+        "20",
+        0
+      ],
+      "lora_name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "strength_model": 1.0
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load the Pika recipe (replaced per variant)"
+    }
+  },
+  "22": {
+    "inputs": {
+      "model": [
+        "21",
+        0
+      ],
+      "shift_video": 6.0,
+      "shift_audio": 3.0
+    },
+    "class_type": "MiniMaxH3SigmaShift",
+    "_meta": {
+      "title": "H3 flow shifts (replaced per variant)"
+    }
+  },
+  "23": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load MiniMax H3 text encoder (Qwen3-VL 32B)"
+    }
+  },
+  "24": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load MiniMax H3 Video VAE"
+    }
+  },
+  "25": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load MiniMax H3 Audio VAE"
+    }
+  },
+  "30": {
+    "inputs": {
+      "clip": [
+        "23",
+        0
+      ],
+      "vae": [
+        "24",
+        0
+      ],
+      "prompt": [
+        "10",
+        0
+      ],
+      "width": [
+        "11",
+        0
+      ],
+      "height": [
+        "11",
+        1
+      ],
+      "length": [
+        "11",
+        2
+      ],
+      "first_frame": [
+        "15",
+        5
+      ],
+      "last_frame": [
+        "15",
+        7
+      ]
+    },
+    "class_type": "MiniMaxH3ImageToVideo",
+    "_meta": {
+      "title": "MiniMax H3 conditioning + AV latent"
+    }
+  },
+  "50": {
+    "inputs": {
+      "noise_seed": [
+        "11",
+        7
+      ]
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "Random Noise"
+    }
+  },
+  "51": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "Sampler Select"
+    }
+  },
+  "52": {
+    "inputs": {
+      "model": [
+        "22",
+        0
+      ],
+      "scheduler": "simple",
+      "steps": 8,
+      "denoise": 1.0
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "Sigma schedule (steps replaced per variant)"
+    }
+  },
+  "53": {
+    "inputs": {
+      "model": [
+        "22",
+        0
+      ],
+      "conditioning": [
+        "30",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "Basic Guider (distilled, no CFG)"
+    }
+  },
+  "55": {
+    "inputs": {
+      "noise": [
+        "50",
+        0
+      ],
+      "guider": [
+        "53",
+        0
+      ],
+      "sampler": [
+        "51",
+        0
+      ],
+      "sigmas": [
+        "52",
+        0
+      ],
+      "latent_image": [
+        "30",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "Sampler (Advanced)"
+    }
+  },
+  "61": {
+    "inputs": {
+      "samples": [
+        "55",
+        0
+      ],
+      "vae": [
+        "24",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode (Video)"
+    }
+  },
+  "62": {
+    "inputs": {
+      "samples": [
+        "55",
+        0
+      ],
+      "vae": [
+        "25",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode (Audio)"
+    }
+  },
+  "loovie_audio_gate": {
+    "class_type": "LoovieAudioGate",
+    "inputs": {
+      "enabled": [
+        "11",
+        6
+      ],
+      "audio": [
+        "62",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Loovie Audio Gate"
+    }
+  },
+  "70": {
+    "inputs": {
+      "images": [
+        "61",
+        0
+      ],
+      "audio": [
+        "loovie_audio_gate",
+        0
+      ],
+      "fps": 24.0
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "71": {
+    "inputs": {
+      "video": [
+        "70",
+        0
+      ],
+      "filename_prefix": "loovie_h3flex",
+      "format": "mp4",
+      "codec": "h264"
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  }
+}

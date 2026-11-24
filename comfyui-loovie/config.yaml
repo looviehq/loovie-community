@@ -24,7 +24,9 @@ api_token: ""  # source from env LOOVIE_API_TOKEN
 output_base_url: "http://127.0.0.1:8188"
 
 # Global cap on a single generation. Per-workflow overrides below.
-max_wait_seconds: 300
+# Raised from 300 for Apple Silicon (MPS), where a 25-step MOSS-Image
+# render alone takes ~5 minutes.
+max_wait_seconds: 900
 
 # How often the monitor thread polls /history when the WebSocket fallback path
 # is in use.
@@ -90,3 +92,75 @@ workflows:
     file: "workflows/yue2_t2m_fast.json"
     description: "YuE2 text-to-music, full song with vocals from a style prompt and lyric sheet."
     max_wait_seconds: 600
+
+  h3flex-t2v:
+    file: "workflows/h3flex_t2v.json"
+    description: "Pika H3 Flex, text-to-video (MiniMax H3 trunk + a Pika recipe)."
+    max_wait_seconds: 900
+
+  h3flex-frames:
+    file: "workflows/h3flex_frames.json"
+    description: "Pika H3 Flex, image-to-video and first+last frame (MiniMax H3 trunk + a Pika recipe)."
+    max_wait_seconds: 900
+
+# Models are the v2 half of the capability manifest: one entry per selectable
+# model, with its own recipes (`variants`). The app renders the model row and
+# the variant row from this block, so a variant is added here, never in the
+# app. Entries are advertised only when at least one of their `templates`
+# workflows is registered above, so a model whose files you did not install
+# never appears as a broken option.
+#
+# `templates` maps a BYO mode to a registered workflow id. `/videos/create`
+# resolves `model` + `variant` through it, then applies the variant's recipe
+# (LoRA file, sampler step count, flow shifts) to that graph.
+models:
+  pika-h3-flex:
+    label: "Pika H3 Flex"
+    description: >
+      Pika's H3 Flex post-train of MiniMax H3. Native synchronized audio,
+      5 to 15 seconds, three recipes: Official (Pika's own sampling
+      contract), Turbo (4 evaluation draft, fastest) and HQ (8 evaluations,
+      maximum detail).
+    templates:
+      t2v: "h3flex-t2v"
+      i2v: "h3flex-frames"
+      fl2v: "h3flex-frames"
+    capabilities: ["t2v", "i2v", "fl2v"]
+    referenceCount: 1
+    # Pika's adapters are frame-keyed (FL2VA), so a reference image set is not
+    # part of this model; a reference request stays on a model that advertises
+    # ref2v.
+    maxReferenceImages: 0
+    resolution: ["480p", "768p"]
+    aspectRatios: ["auto", "16:9", "9:16", "1:1"]
+    durations: [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    audio: "always"
+    vramGb: 40
+    recommendedVramGb: 64
+    variants:
+      official:
+        label: "Official"
+        default: true
+        description: "Pika's own sampling contract, 6 evaluations."
+        # Pika's official adapter, converted for ComfyUI's LoRA loader. Empty
+        # means "run the trunk as-is"; fill this in when you have converted
+        # `pika_fl2va.bank.safetensors` to a ComfyUI LoRA.
+        lora: ""
+        steps: 6
+        shiftVideo: 12.0
+        shiftAudio: 3.0
+      turbo:
+        label: "Turbo"
+        draft: true
+        description: "4 evaluations. Fastest; may ghost limbs on hard motion."
+        lora: "minimax_h3_fl2v_turbo_4step_v0.1_comfyui_bf16.safetensors"
+        steps: 4
+        shiftVideo: 6.0
+        shiftAudio: 3.0
+      hq:
+        label: "HQ"
+        description: "8 evaluations, maximum detail. Slower than Turbo."
+        lora: "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors"
+        steps: 8
+        shiftVideo: 6.0
+        shiftAudio: 3.0

@@ -258,7 +258,10 @@ async def get_capabilities() -> JSONResponse:
 class ImageCreateRequest(BaseModel):
     prompt: str = Field(..., max_length=PROMPT_CHAR_LIMIT)
     mode: Literal["t2i", "i2i"] | None = None
-    variant: Literal["fast", "pro"] | None = None
+    # v2: model + model-scoped recipe id. Free strings, because recipes are
+    # declared per model; omitting both uses this example's default model.
+    model: str | None = Field(default=None, max_length=64)
+    variant: str | None = Field(default=None, max_length=64)
     aspect_ratio: Literal["auto", "1:1", "16:9", "9:16", "4:3"] | None = None
     image_urls: list[str] | None = None
     mask_url: str | None = None
@@ -290,9 +293,13 @@ async def get_image_status(taskId: str) -> JSONResponse:
 class VideoCreateRequest(BaseModel):
     prompt: str = Field(..., max_length=PROMPT_CHAR_LIMIT)
     mode: Literal["t2v", "i2v", "fl2v"] | None = None
-    variant: Literal["fast", "pro"] | None = None
+    # v2: model + model-scoped recipe id (see ImageCreateRequest).
+    model: str | None = Field(default=None, max_length=64)
+    variant: str | None = Field(default=None, max_length=64)
     aspect_ratio: Literal["auto", "16:9", "9:16", "1:1"] | None = None
-    resolution: Literal["720p", "1080p"] | None = None
+    # The contract admits every resolution a server may advertise, including
+    # the H3 family's 480p / 768p.
+    resolution: Literal["480p", "720p", "768p", "1080p"] | None = None
     duration: int | None = Field(default=None, ge=1)
     start_frame_url: str | None = None
     end_frame_url: str | None = None
