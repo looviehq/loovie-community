@@ -398,6 +398,43 @@ components:
           type: integer
           minimum: 1
           default: 3000
+    ReferenceDialect:
+      type: string
+      enum:
+        - minimax-h3
+        - minimax-h3-max
+        - seedance-2
+        - wan-3-0
+        - pika-h3-flex
+        - kling-o3
+        - none
+      description: >-
+        How this model wants references spelled inside the prompt. `minimax-h3`
+        is H3's numbered `<Picture N>` vocabulary; `seedance-2` is `@ImageN`;
+        `none` means the model has no positional contract, so a handle such as
+        `@Maya` is flattened to the bare name and described in a plain legend.
+    DialogueSyntax:
+      type: string
+      enum:
+        - h3
+        - language-hints
+        - none
+      description: >-
+        How this model wants spoken dialogue written. `h3` is MiniMax H3's
+        `<d>[Language] words</d>` blocks, the only form it speaks.
+        `language-hints` adds inline language hints for an audio-capable model
+        that does not use those blocks; `none` leaves speech as written.
+    PromptProfile:
+      type: object
+      description: >-
+        How to compile a user prompt into the shape this model reads. Omit it
+        (or omit either field, which defaults to `none`) when the model should
+        receive the prompt exactly as the user wrote it.
+      properties:
+        referenceDialect:
+          $ref: '#/components/schemas/ReferenceDialect'
+        dialogueSyntax:
+          $ref: '#/components/schemas/DialogueSyntax'
     VideoModel:
       type: object
       required:
@@ -538,6 +575,8 @@ components:
           type: integer
           minimum: 1
           default: 3000
+        prompt:
+          $ref: '#/components/schemas/PromptProfile'
     MusicModel:
       type: object
       required:

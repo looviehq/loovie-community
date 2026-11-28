@@ -305,6 +305,43 @@ def test_a_v3_client_sees_the_advanced_video_modes() -> None:
     assert ltx["cameraMotions"]
 
 
+def test_a_v3_manifest_declares_the_prompt_profile(
+    capabilities_validator: Draft202012Validator,
+) -> None:
+    """An H3 model tells Loovie how to spell references and dialogue."""
+
+    manifest = build_capabilities_manifest(H3_WORKFLOWS, version="x", contract_version=3)
+    _validate(manifest, capabilities_validator)
+    pika = next(model for model in manifest["models"]["ss_videos"] if model["id"] == "pika-flex")
+    assert pika["prompt"] == {"referenceDialect": "minimax-h3", "dialogueSyntax": "h3"}
+
+
+def test_a_v3_manifest_always_names_both_profile_fields(
+    capabilities_validator: Draft202012Validator,
+) -> None:
+    """A partially declared model says `none`, never omits the other key."""
+
+    manifest = build_capabilities_manifest(ALL_WORKFLOWS, version="x", contract_version=3)
+    _validate(manifest, capabilities_validator)
+    ltx = next(model for model in manifest["models"]["ss_videos"] if model["id"] == "ltx-2.5")
+    # LTX 2.5 ref2v builds ONE sheet, so it has no positional dialect to name.
+    assert ltx["prompt"] == {
+        "referenceDialect": "none",
+        "dialogueSyntax": "language-hints",
+    }
+
+
+def test_a_v2_client_gets_no_prompt_profile() -> None:
+    manifest = build_capabilities_manifest(H3_WORKFLOWS, version="x", contract_version=2)
+    pika = next(model for model in manifest["models"]["ss_videos"] if model["id"] == "pika-flex")
+    assert "prompt" not in pika
+
+
+def test_image_models_never_advertise_a_prompt_profile() -> None:
+    manifest = build_capabilities_manifest(["flux-2-klein"], version="x")
+    assert "prompt" not in manifest["models"]["images"][0]
+
+
 def test_repo_config_advertises_the_shipped_models() -> None:
     """The checked-in config enables exactly the workflows we ship by default."""
 

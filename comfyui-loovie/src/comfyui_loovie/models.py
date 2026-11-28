@@ -66,6 +66,39 @@ CAMERA_MOTIONS = (
     "focus_shift",
 )
 
+# How this model wants references SPELLED in the prompt. Loovie's compiler
+# (`compilePromptReferences`) reads this and rewrites the user's `@Tag`
+# handles into the model's own positional vocabulary, so the value has to
+# match what the graph actually feeds the model:
+#
+#   minimax-h3       H3 ref2va: numbered `<Picture N>` / `<Video N>` / `<Audio N>`
+#   minimax-h3-max   fal's H3 Max, bare `Image N` (no angle brackets)
+#   seedance-2       `@ImageN` / `@VideoN`
+#   wan-3-0          bare `ImageN` (no space)
+#   pika-h3-flex     Pika's hosted Flex API, `reference image N` prose
+#   kling-o3         elements (`@ElementN`) plus images (`@ImageN`)
+#   none             no positional contract; `@Tag` is flattened to the bare
+#                    name and given a plain legend, which is what a graph that
+#                    composites its references into ONE picture needs
+REFERENCE_DIALECTS = (
+    "minimax-h3",
+    "minimax-h3-max",
+    "seedance-2",
+    "wan-3-0",
+    "pika-h3-flex",
+    "kling-o3",
+    "none",
+)
+
+# How this model wants spoken dialogue written.
+#
+#   h3              `<d>[Language] words</d>` blocks, the only form H3 speaks
+#                   (words outside a block are scene description)
+#   language-hints  inline "in <Language>" hints for an audio-capable model
+#                   that does not use H3's block syntax
+#   none            speech is left exactly as the user wrote it
+DIALOGUE_SYNTAXES = ("h3", "language-hints", "none")
+
 # V1 closed enums. The legacy compatibility view must stay inside these; an old
 # app fails the WHOLE parse on an unknown value.
 _V1_VIDEO_MODES = ("t2v", "i2v", "fl2v")
@@ -154,6 +187,12 @@ class ModelSpec:
     frame_step: int = 0
     frame_offset: int = 0
     prompt_char_limit: int = 3000
+    # Prompt profile, declared so Loovie can compile a prompt into the shape
+    # THIS graph reads (see the constants above). Both default to `none`, which
+    # means the prompt is sent exactly as the user wrote it, so a model that
+    # declares nothing keeps the old behaviour.
+    reference_dialect: str = "none"
+    dialogue_syntax: str = "none"
     vram_gb: float | None = None
     recommended_vram_gb: float | None = None
     # Weight group that must be resident for this model. A switch between
@@ -208,6 +247,10 @@ def _ltx(model_id: str, prefix: str, generation: str) -> ModelSpec:
         aspect_ratios=("auto", "16:9", "9:16", "1:1", "4:3", "3:4"),
         durations=tuple(range(1, 9)) if generation == "2.3" else tuple(range(2, 11)),
         audio=AUDIO_OPTIONAL,
+        # LTX reads a prose prompt with no positional reference vocabulary, so
+        # there is nothing to compile; its audio path does take the inline
+        # language hints the hosted LTX renders already get.
+        dialogue_syntax="language-hints",
         vram_gb=24,
         recommended_vram_gb=32,
         residency_group=f"{model_id}-group",
@@ -269,6 +312,11 @@ def _ltx25() -> ModelSpec:
         max_upscale_factor=2,
         camera_motions=CAMERA_MOTIONS,
         supports_keep_original_audio=True,
+        # `ref2v` builds ONE reference sheet (`LoovieReferenceSheet`), so the
+        # prompt addresses the composite by description, not by ordinal:
+        # `none` flattens `@Tag` to a bare name and appends a plain legend.
+        reference_dialect="none",
+        dialogue_syntax="language-hints",
         vram_gb=24,
         recommended_vram_gb=32,
         residency_group=f"{model_id}-group",
@@ -327,6 +375,13 @@ def _pika(model_id: str, label: str, description: str, *, hd: bool = False) -> M
         audio=AUDIO_ALWAYS,
         frame_step=17,
         frame_offset=5,
+        # H3 ref2va hands the model numbered `ref_image_N` entries and the
+        # tokenizer labels them `<Picture N>`, so the prompt names references by
+        # ordinal. Speech only exists inside `<d>` blocks. HD takes no
+        # references, but it is the same H3 stack and the dialect costs nothing
+        # to declare, so a variant that gains refs inherits the right one.
+        reference_dialect="minimax-h3",
+        dialogue_syntax="h3",
         vram_gb=24,
         recommended_vram_gb=32,
         residency_group="h3-fl2va",
@@ -390,6 +445,10 @@ def _hyperflow_flash() -> ModelSpec:
         audio=AUDIO_ALWAYS,
         frame_step=17,
         frame_offset=5,
+        # Same H3 reference and dialogue vocabulary as Pika Flex: numbered
+        # `<Picture N>` references, speech only inside `<d>` blocks.
+        reference_dialect="minimax-h3",
+        dialogue_syntax="h3",
         vram_gb=24,
         recommended_vram_gb=32,
         residency_group="hyperflow-h3-fl2va",
@@ -752,6 +811,22 @@ def find_variant(spec: ModelSpec, variant_id: str | None) -> VariantSpec | None:
     return None
 
 
+def _prompt_profile(spec: ModelSpec) -> dict[str, str] | None:
+    """The declared prompt profile, or None when the model needs no shaping.
+
+    Both fields are always present: a consumer that reads only one of them gets
+    the model's real answer for the other instead of a missing key it has to
+    guess a default for.
+    """
+
+    if spec.reference_dialect == "none" and spec.dialogue_syntax == "none":
+        return None
+    return {
+        "referenceDialect": spec.reference_dialect,
+        "dialogueSyntax": spec.dialogue_syntax,
+    }
+
+
 def model_descriptor(spec: ModelSpec, *, default: bool) -> dict[str, Any]:
     """The v2 `models.*` entry for one model."""
 
@@ -808,6 +883,9 @@ def model_descriptor(spec: ModelSpec, *, default: bool) -> dict[str, Any]:
             descriptor["referencesExcludeFrames"] = spec.references_exclude_frames
         descriptor["durations"] = list(spec.durations)
         descriptor["audio"] = spec.audio
+        prompt_profile = _prompt_profile(spec)
+        if prompt_profile is not None:
+            descriptor["prompt"] = prompt_profile
         if spec.max_source_video_seconds and any(
             mode in spec.capabilities for mode in (*SOURCE_VIDEO_MODES, "motion")
         ):

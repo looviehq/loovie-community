@@ -108,6 +108,23 @@ entries. Do **not** advertise a model whose weights or required nodes are
 missing; the server's startup check and the workflow-fixture tests exist to
 catch that before a user taps Generate.
 
+Also declare its **prompt profile**, two fields on the `ModelSpec`:
+
+```python
+reference_dialect="minimax-h3",   # how the graph hands references to the model
+dialogue_syntax="h3",             # how the model wants spoken lines written
+```
+
+`reference_dialect` is what makes `@Maya` arrive as the spelling your model was
+trained on instead of raw text: `minimax-h3` for numbered `<Picture N>`
+references (any H3 `ref2va` graph), `seedance-2`, `wan-3-0`, `kling-o3`, or
+`none` for a graph that composites its references into one picture. Both
+fields default to `none`, which sends the prompt exactly as the user wrote it,
+so a model that declares nothing keeps working. Declare `h3` only where the
+graph feeds an H3 checkpoint, and `language-hints` for an audio model that does
+not use `<d>` blocks. [`90-the-contract.md`](90-the-contract.md#prompt-profile)
+has the values and the two rules that follow from them.
+
 ## Recipe
 
 ### 1. Author the workflow in ComfyUI
