@@ -531,6 +531,36 @@ def test_ingredient_prompt_already_in_the_two_part_format_is_left_alone() -> Non
     assert workflow["10"]["inputs"]["prompt"] == prompt
 
 
+def test_h3_ref2v_gets_no_reference_sheet_prelude() -> None:
+    """H3 numbers its references, so a "one sheet" sentence is a lie.
+
+    `pika-flex-ref2v-official` feeds `LoovieImageInput` into
+    `LoovieH3ReferenceToVideo`, and the H3 tokenizer emits its own
+    `<Picture N>:` label per entry. Prefixing "the attached reference sheet
+    shows the characters, props and setting" tells the model to read a
+    composite that never reaches it and fights the ordinals Loovie compiles
+    into the same prompt.
+    """
+
+    workflow = _workflow("pika-flex-ref2v-official.json")
+    _inject_inputs(
+        workflow,
+        {
+            "mode": "ref2v",
+            "prompt": "<Picture 1> sits beside <Picture 2>.",
+            "reference_image_urls": [
+                "https://example.com/a.png",
+                "https://example.com/b.png",
+            ],
+        },
+    )
+    # Both references still ride the numbered slots.
+    assert workflow["12"]["inputs"]["image_url_1"] == "https://example.com/a.png"
+    assert workflow["12"]["inputs"]["image_url_2"] == "https://example.com/b.png"
+    # And the prompt reaches the model exactly as written.
+    assert workflow["10"]["inputs"]["prompt"] == "<Picture 1> sits beside <Picture 2>."
+
+
 def test_upscale_injection_sets_the_mode_and_keeps_source_audio() -> None:
     workflow = _workflow("ltx25_upscale_fast.json")
     _inject_inputs(

@@ -205,6 +205,36 @@ def _log_safe_body(body: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+_REFERENCE_SHEET_PRELUDE = (
+    "Reference sheet: the attached reference sheet shows the characters, props and setting.\n"
+)
+
+
+def _reference_prelude(workflow: dict[str, Any]) -> str:
+    """The sentence a reference prompt needs in front of it, or `""`.
+
+    Only the INGREDIENTS graph needs telling what its references are: it tiles
+    them into ONE sheet (`LoovieReferenceSheet`), so a prompt has to address
+    that composite rather than individual pictures.
+
+    The H3 ref2v graphs wire numbered `ref_image_N` entries straight into
+    `MiniMaxH3ReferenceToVideo`, and the H3 tokenizer emits its own
+    `<Picture N>:` label per entry. A "reference sheet" sentence there
+    describes an image the model never receives and contradicts the ordinals a
+    compiled prompt names, so those graphs get no prelude at all.
+
+    Read off the graph, not the request `mode`: `ref2v` covers both shapes, and
+    the wiring is the only thing that says which one this server actually runs.
+    """
+
+    has_sheet = False
+    for node in workflow.values():
+        if node.get("class_type") == "LoovieReferenceSheet":
+            has_sheet = True
+            break
+    return _REFERENCE_SHEET_PRELUDE if has_sheet else ""
+
+
 def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
     """Walk the workflow JSON and inject API values into Loovie nodes."""
     image_urls = list(body.get("image_urls") or [])
@@ -246,6 +276,9 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
     if camera_clause and camera_clause.lower() not in prompt.lower():
         prompt = f"{prompt.rstrip('. ')}. {camera_clause}"
 
+    # `""` on a graph whose references reach the model individually.
+    reference_prelude = _reference_prelude(workflow)
+
     if reference_urls and not start_frame:
         # ref2v: references ride the same image slots as i2i.
         image_urls = reference_urls
@@ -260,12 +293,10 @@ def _inject_inputs(workflow: dict[str, Any], body: dict[str, Any]) -> None:
 
         if cls == "LoovieTextInput":
             injected_prompt = prompt
-            if mode == "ref2v" and "generated video:" not in prompt.lower():
-                injected_prompt = (
-                    "Reference sheet: the attached reference sheet shows the "
-                    "characters, props and setting.\n"
-                    f"Generated video: {prompt}"
-                )
+            # Already in the two-part form: left exactly as given.
+            already_laid_out = "generated video:" in prompt.lower()
+            if mode == "ref2v" and reference_prelude and not already_laid_out:
+                injected_prompt = f"{reference_prelude}Generated video: {prompt}"
             inputs["prompt"] = injected_prompt
             if body.get("negative_prompt") is not None:
                 inputs["negative_prompt"] = body.get("negative_prompt")
