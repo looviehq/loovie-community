@@ -110,6 +110,10 @@ def _for_contract(manifest: dict[str, Any], contract_version: int) -> dict[str, 
             "maxUpscaleFactor",
             "cameraMotions",
             "supportsKeepOriginalAudio",
+            # The prompt profile is a v3 addition. Nothing downstream of a v2
+            # manifest reads it, and leaving it in would advertise a capability
+            # the client speaking v2 has no way to honour.
+            "prompt",
         ):
             model.pop(key, None)
     return manifest

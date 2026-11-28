@@ -115,6 +115,10 @@ The single most important endpoint. Tells the app what your server can do.
         "aspectRatios": ["auto", "16:9", "9:16", "1:1"],
         "durations": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
         "audio": "always",            // none | optional | always
+        "prompt": {                   // optional prompt profile, see below
+          "referenceDialect": "minimax-h3",
+          "dialogueSyntax": "h3"
+        },
         "variants": [
           { "id": "official", "label": "Official", "default": true },
           { "id": "turbo", "label": "Turbo", "draft": true },
@@ -486,6 +490,28 @@ Create returns a `taskId`. The app polls `/status` until terminal. The server do
 ## Prompt length
 
 The contract advertises a `promptCharLimit` (default 3000) per section. The server MUST reject prompts longer than this with a `400`-class response. Hard cap is 3000; the app caps input to whatever you advertise.
+
+## Prompt profile
+
+Optional, per video model. It tells Loovie how to compile a user prompt into the shape your graph reads, so a handle like `@Maya` becomes the reference spelling your model was trained on instead of reaching it as raw text:
+
+```jsonc
+"prompt": {
+  "referenceDialect": "minimax-h3",   // how references are addressed
+  "dialogueSyntax": "h3"              // how spoken lines are written
+}
+```
+
+- `referenceDialect`: `minimax-h3` (numbered `<Picture N>`), `minimax-h3-max` (`Image N`), `seedance-2` (`@ImageN`), `wan-3-0` (`ImageN`), `pika-h3-flex` (`reference image N`), `kling-o3` (`@ElementN` plus `@ImageN`), or `none`.
+- `dialogueSyntax`: `h3` (`<d>[Language] words</d>` blocks), `language-hints` (inline language hints), or `none`.
+- Omit the block, or either field, and the prompt is sent exactly as the user wrote it. That is also the default for both fields, so declaring nothing changes nothing.
+
+Declare it only when the graph can honour it. Two rules follow:
+
+1. `referenceDialect` describes what the graph FEEDS the model. A graph that passes numbered reference images declares `minimax-h3`; a graph that composites its references into one picture declares `none`, because there is no second picture to name.
+2. Do not add your own prompt preamble that describes a shape the graph does not have. If the graph receives numbered references, a sentence about "the attached reference sheet" contradicts them.
+
+The reference implementation derives its own ref2v prelude from the graph for this reason (`_reference_prelude` in `server/routes.py`).
 
 ## failCode vocabulary
 

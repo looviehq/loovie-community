@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from comfyui_loovie.models import (
+    DIALOGUE_SYNTAXES,
+    REFERENCE_DIALECTS,
     available_models,
     default_model,
     find_variant,
     legacy_section,
+    model_descriptor,
     residency_group,
     resolve_workflow,
     validate_request_values,
@@ -28,6 +33,58 @@ HYPERFLOW_WORKFLOWS = [
     for mode in ("t2v", "i2v", "fl2v", "ref2v")
     for variant in ("fast", "flash", "hq")
 ]
+
+# Every video model in the catalogue, one workflow each, for the invariants
+# that have to hold across the whole set rather than on one row.
+ALL_VIDEO_WORKFLOWS = [
+    *HYPERFLOW_WORKFLOWS,
+    *H3_WORKFLOWS,
+    "pika-flex-hd-t2v-hd",
+    "ltx23-t2v-fast",
+    "ltx25-t2v-fast",
+]
+
+
+def test_h3_models_declare_the_h3_prompt_vocabulary() -> None:
+    """H3 takes numbered `<Picture N>` references and speaks `<d>` blocks.
+
+    A BYO H3 graph that declares anything else gets a prompt in a vocabulary
+    its model does not answer to: the references reach it unaddressed and the
+    dialogue comes out as improvised phonemes.
+    """
+
+    models = available_models({}, ALL_VIDEO_WORKFLOWS)
+    for model_id in ("hyperflow-h3-flash", "pika-flex", "pika-flex-hd"):
+        spec = next(m for m in models if m.id == model_id)
+        assert spec.reference_dialect == "minimax-h3", model_id
+        assert spec.dialogue_syntax == "h3", model_id
+
+
+def test_sheet_and_prose_models_declare_no_reference_dialect() -> None:
+    """LTX ref2v composites its references, so there is no ordinal to name."""
+
+    models = available_models({}, ALL_VIDEO_WORKFLOWS)
+    for model_id in ("ltx-2.3", "ltx-2.5"):
+        spec = next(m for m in models if m.id == model_id)
+        assert spec.reference_dialect == "none", model_id
+        # Both are audio-capable and do not use H3's block syntax.
+        assert spec.dialogue_syntax == "language-hints", model_id
+
+
+def test_every_catalogue_model_declares_a_known_profile() -> None:
+    """The manifest is the app's only warning, and it parses leniently."""
+
+    for spec in available_models({}, ALL_VIDEO_WORKFLOWS):
+        assert spec.reference_dialect in REFERENCE_DIALECTS, spec.id
+        assert spec.dialogue_syntax in DIALOGUE_SYNTAXES, spec.id
+
+
+def test_a_model_with_no_profile_emits_no_prompt_block() -> None:
+    """Absent means "send the prompt as written", so the block is omitted."""
+
+    spec = next(m for m in available_models({}, ALL_VIDEO_WORKFLOWS) if m.id == "ltx-2.5")
+    quiet = replace(spec, reference_dialect="none", dialogue_syntax="none")
+    assert "prompt" not in model_descriptor(quiet, default=True)
 
 
 def test_hyperflow_flash_offers_all_h3_modes() -> None:
